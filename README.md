@@ -36,6 +36,6 @@ panel şu adreste yayında olur: **https://yumurcak-app.web.app**
 
 ## Giriş
 
-Panel, mobil uygulamadaki admin hesabıyla (aynı email/şifre) giriş
-yapıyor. `kullanicilar` kaydında `rol: 'admin'` olmayan hesaplar panele
-giremiyor.
+Panel, mobil uygulamadaki admin (yönetici) hesabıyla (aynı email/şifre)
+giriş yapıyor. `kullanicilar` kaydında `rol: 'yonetici'` olmayan hesaplar
+panele giremiyor.
