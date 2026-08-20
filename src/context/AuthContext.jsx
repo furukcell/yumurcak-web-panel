@@ -67,8 +67,10 @@ export function AuthProvider({ children }) {
           ...userSnap.val(),
         };
 
-        // Web paneli SADECE admin rolüne açık — bkz. docs/web-panel-plan.md
-        if (userData.rol !== 'admin') {
+        // Web paneli SADECE admin (yönetici) rolüne açık — bkz. docs/web-panel-plan.md
+        // NOT: veritabanındaki gerçek rol değeri 'admin' değil 'yonetici'
+        // (bkz. mobil src/constants.js -> ROLLER.YONETICI ve database.rules.json).
+        if (userData.rol !== 'yonetici') {
           setErisimHatasi('Bu panel sadece kreş yöneticileri içindir.');
           await signOut(auth);
           setYukleniyor(false);
