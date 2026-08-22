@@ -10,6 +10,10 @@ import ClassesPage from './pages/ClassesPage';
 import ChildrenPage from './pages/ChildrenPage';
 import TeachersPage from './pages/TeachersPage';
 import ParentsPage from './pages/ParentsPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import EventsPage from './pages/EventsPage';
+import PollsPage from './pages/PollsPage';
+import MessagesPage from './pages/MessagesPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -39,6 +43,10 @@ function Gate() {
         <Route path="/cocuklar" element={<ChildrenPage />} />
         <Route path="/ogretmenler" element={<TeachersPage />} />
         <Route path="/veliler" element={<ParentsPage />} />
+        <Route path="/duyurular" element={<AnnouncementsPage />} />
+        <Route path="/etkinlikler" element={<EventsPage />} />
+        <Route path="/anketler" element={<PollsPage />} />
+        <Route path="/mesajlar" element={<MessagesPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
