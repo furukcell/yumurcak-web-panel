@@ -13,6 +13,11 @@ import {
   CalendarOutlined,
   BarsOutlined,
   MessageOutlined,
+  CoffeeOutlined,
+  ScheduleOutlined,
+  CarOutlined,
+  GiftOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +45,12 @@ function buildMenuItems(unreadCount) {
       icon: <MessageOutlined />,
       label: unreadCount > 0 ? <span>Mesajlar <Badge count={unreadCount} size="small" style={{ marginLeft: 4 }} /></span> : 'Mesajlar',
     },
+    { key: '/yemek-listesi', icon: <CoffeeOutlined />, label: 'Yemek Listesi' },
+    { key: '/ders-programi', icon: <ScheduleOutlined />, label: 'Ders Programı' },
+    { key: '/nobet-cizelgesi', icon: <SolutionOutlined />, label: 'Nöbet Çizelgesi' },
+    { key: '/personel-gorevleri', icon: <SolutionOutlined />, label: 'Personel Görevleri' },
+    { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
+    { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
   ];
 }
 
