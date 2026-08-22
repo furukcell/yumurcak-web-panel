@@ -5,6 +5,10 @@ import {
   BarChartOutlined,
   LogoutOutlined,
   UserOutlined,
+  TeamOutlined,
+  SmileOutlined,
+  ReadOutlined,
+  ContactsOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,11 +17,15 @@ import { THEME } from '../theme';
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-// FAZ 0'da sadece Dashboard + İstatistik var; sonraki fazlarda buraya
-// yeni menü öğeleri eklenecek (bkz. docs/web-panel-plan.md).
+// Faz 0-1'de Dashboard + İstatistik, Faz 2'de Çekirdek Yönetim (CRUD)
+// eklendi (bkz. docs/web-panel-plan.md).
 const MENU_ITEMS = [
   { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
   { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
+  { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
+  { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
+  { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
+  { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
 ];
 
 export default function PanelLayout() {
