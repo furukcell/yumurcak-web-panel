@@ -19,6 +19,11 @@ import {
   GiftOutlined,
   SolutionOutlined,
   WalletOutlined,
+  SettingOutlined,
+  BgColorsOutlined,
+  CrownOutlined,
+  BellOutlined,
+  FileProtectOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -53,6 +58,11 @@ function buildMenuItems(unreadCount) {
     { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
     { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
     { key: '/odemeler', icon: <WalletOutlined />, label: 'Ödemeler' },
+    { key: '/ayarlar/kurum', icon: <SettingOutlined />, label: 'Kurum Bilgileri' },
+    { key: '/ayarlar/tema', icon: <BgColorsOutlined />, label: 'Tema Ayarları' },
+    { key: '/ayarlar/abonelik', icon: <CrownOutlined />, label: 'Abonelik' },
+    { key: '/ayarlar/kurum-zili', icon: <BellOutlined />, label: 'Kurum Zili' },
+    { key: '/yasal-belgeler', icon: <FileProtectOutlined />, label: 'Yasal Belgeler' },
   ];
 }
 
