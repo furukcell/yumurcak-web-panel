@@ -16,4 +16,9 @@ export const THEME = {
   bg: '#F8F6FF',
   card: '#FFFFFF',
   border: '#EEEAF8',
+  // Görsel kimlik tokenleri (sidebar/header/kartlar için) — bkz. PanelLayout.jsx
+  radius: 14,
+  radiusSm: 10,
+  shadow: '0 4px 16px rgba(76, 41, 156, 0.06)',
+  shadowLg: '0 12px 32px rgba(76, 41, 156, 0.10)',
 };
