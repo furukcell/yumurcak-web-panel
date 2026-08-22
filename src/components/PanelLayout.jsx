@@ -18,6 +18,7 @@ import {
   CarOutlined,
   GiftOutlined,
   SolutionOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,7 @@ function buildMenuItems(unreadCount) {
     { key: '/personel-gorevleri', icon: <SolutionOutlined />, label: 'Personel Görevleri' },
     { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
     { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
+    { key: '/odemeler', icon: <WalletOutlined />, label: 'Ödemeler' },
   ];
 }
 
