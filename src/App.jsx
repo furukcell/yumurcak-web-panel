@@ -20,6 +20,7 @@ import DutyRosterPage from './pages/DutyRosterPage';
 import StaffTasksPage from './pages/StaffTasksPage';
 import ServicePage from './pages/ServicePage';
 import BirthdayCalendarPage from './pages/BirthdayCalendarPage';
+import PaymentsPage from './pages/PaymentsPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -59,6 +60,7 @@ function Gate() {
         <Route path="/personel-gorevleri" element={<StaffTasksPage />} />
         <Route path="/servis" element={<ServicePage />} />
         <Route path="/dogum-gunleri" element={<BirthdayCalendarPage />} />
+        <Route path="/odemeler" element={<PaymentsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
