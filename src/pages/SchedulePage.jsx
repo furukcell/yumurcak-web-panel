@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Button, List, Tag, Drawer, Input, Select, message, Popconfirm, Space, Empty } from 'antd';
-import { LeftOutlined, RightOutlined, CopyOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, CopyOutlined, PlusOutlined, DeleteOutlined, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { createNotification } from '../utils/notificationCenter';
+import { fetchInstitutionInfo, buildMonthlyDocumentHtml, printHtmlDocument } from '../services/documentPdf';
 import {
   getDaysOfMonth, getMonthKey, getMonthLabel, shiftMonth, createInitialValues, countPublished,
   publishMonth, unpublishMonth, copyFromPreviousMonth, fetchActiveMonthValues, forClass,
@@ -134,6 +135,7 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [publishedCount, setPublishedCount] = useState(0);
 
   useEffect(() => {
@@ -216,6 +218,20 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
   const selectedDay = days.find((day) => day.dateKey === selectedDateKey) || null;
   const selectedItems = values[selectedDateKey]?.etkinlikler || [];
 
+  async function doPrint() {
+    setPrinting(true);
+    try {
+      const kres = await fetchInstitutionInfo(kresId);
+      const records = days.map((day) => ({ tarih: day.dateKey, etkinlikler: values[day.dateKey]?.etkinlikler || [] })).filter((r) => hasScheduleContent({ etkinlikler: r.etkinlikler }));
+      const html = buildMonthlyDocumentHtml({ docType: 'ders', kres, monthLabel, sinifAd: sinif.ad, records });
+      printHtmlDocument(html);
+    } catch {
+      message.error('Yazdırılacak belge oluşturulamadı.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   return (
     <div>
       <Button onClick={onBack} style={{ marginBottom: 12 }}>‹ Sınıflara Dön</Button>
@@ -237,7 +253,10 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
         </div>
       )}
 
-      <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth} style={{ marginBottom: 14 }}>Geçen Ayı Kopyala</Button>
+      <Space style={{ marginBottom: 14 }}>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+      </Space>
 
       <List
         dataSource={days}

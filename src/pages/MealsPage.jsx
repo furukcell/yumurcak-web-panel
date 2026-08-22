@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Button, List, Tag, Select, Drawer, message, Empty, Space, Popconfirm } from 'antd';
-import { LeftOutlined, RightOutlined, CopyOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, CopyOutlined, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { createNotification } from '../utils/notificationCenter';
+import { fetchInstitutionInfo, buildMonthlyDocumentHtml, printHtmlDocument } from '../services/documentPdf';
 import {
   getDaysOfMonth, getMonthKey, getMonthLabel, shiftMonth, createInitialValues, countPublished,
   publishMonth, unpublishMonth, copyFromPreviousMonth, fetchActiveMonthValues,
@@ -57,6 +58,7 @@ export default function MealsPage() {
   const [copying, setCopying] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
   const [publishedCount, setPublishedCount] = useState(0);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     if (!kresId) { setPublishedCount(0); return; }
@@ -137,6 +139,22 @@ export default function MealsPage() {
     }
   }
 
+  async function doPrint() {
+    setPrinting(true);
+    try {
+      const kres = await fetchInstitutionInfo(kresId);
+      const records = days
+        .map((day) => ({ tarih: day.dateKey, ogunler: values[day.dateKey] }))
+        .filter((r) => hasMealContent(r.ogunler));
+      const html = buildMonthlyDocumentHtml({ docType: 'yemek', kres, monthLabel, records });
+      printHtmlDocument(html);
+    } catch (error) {
+      message.error('Yazdırılacak belge oluşturulamadı.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   const selectedDay = days.find((day) => day.dateKey === selectedDateKey) || null;
   const selectedValue = values[selectedDateKey] || emptyMealValue();
 
@@ -166,7 +184,10 @@ export default function MealsPage() {
         </div>
       )}
 
-      <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth} style={{ marginBottom: 14 }}>Geçen Ayı Kopyala</Button>
+      <Space style={{ marginBottom: 14 }}>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+      </Space>
 
       <List
         dataSource={days}

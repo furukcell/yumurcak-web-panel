@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Typography, Button, List, Empty, Spin } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Typography, Button, List, Empty, Spin, message } from 'antd';
+import { LeftOutlined, RightOutlined, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, get, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { getMonthLabel, shiftMonth } from '../services/monthlyDocuments';
+import { fetchInstitutionInfo, buildBirthdayCalendarHtml, printHtmlDocument } from '../services/documentPdf';
 
 const { Title, Text } = Typography;
 
@@ -19,6 +20,7 @@ export default function BirthdayCalendarPage() {
   const monthLabel = useMemo(() => getMonthLabel(monthDate), [monthDate]);
 
   const [loading, setLoading] = useState(true);
+  const [printing, setPrinting] = useState(false);
   const [children, setChildren] = useState([]);
   const [sinifMap, setSinifMap] = useState({});
 
@@ -59,10 +61,26 @@ export default function BirthdayCalendarPage() {
       .sort((a, b) => a.gun - b.gun);
   }, [children, sinifMap, monthDate]);
 
+  async function doPrint() {
+    setPrinting(true);
+    try {
+      const kres = await fetchInstitutionInfo(kresId);
+      const html = buildBirthdayCalendarHtml({ kres, monthLabel, records: birthdays });
+      printHtmlDocument(html);
+    } catch {
+      message.error('Yazdırılacak belge oluşturulamadı.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   return (
     <div>
       <Title level={3} style={{ marginBottom: 4 }}>Doğum Günü Takvimi</Title>
       <Text type="secondary">Çocukların kayıtlı doğum tarihinden otomatik hesaplanır</Text>
+      <div style={{ marginTop: 10 }}>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 16px' }}>
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => setMonthDate((prev) => shiftMonth(prev, -1))} />

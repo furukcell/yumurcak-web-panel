@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Button, Input, message, Popconfirm, Space } from 'antd';
-import { LeftOutlined, RightOutlined, PlusOutlined, DeleteOutlined, CopyOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, PlusOutlined, DeleteOutlined, CopyOutlined, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
+import { fetchInstitutionInfo, buildMonthlyDocumentHtml, printHtmlDocument } from '../services/documentPdf';
 import {
   getMonthKey, getMonthLabel, shiftMonth, countPublished, publishSingleRecord, unpublishMonth,
   fetchActiveSingleRecord,
@@ -42,6 +43,7 @@ export default function StaffTasksPage() {
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [publishedCount, setPublishedCount] = useState(0);
 
   useEffect(() => {
@@ -133,6 +135,20 @@ export default function StaffTasksPage() {
     }
   }
 
+  async function doPrint() {
+    setPrinting(true);
+    try {
+      const kres = await fetchInstitutionInfo(kresId);
+      const record = { baslik: baslik.trim() || `${monthLabel} Görev Listesi`, bolumler: bolumler.filter((s) => s.baslik.trim() || s.icerik.trim()) };
+      const html = buildMonthlyDocumentHtml({ docType: 'gorev', kres, monthLabel, records: [record] });
+      printHtmlDocument(html);
+    } catch {
+      message.error('Yazdırılacak belge oluşturulamadı.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   return (
     <div>
       <Title level={3} style={{ marginBottom: 4 }}>Personel Görev Listesi</Title>
@@ -153,7 +169,10 @@ export default function StaffTasksPage() {
         </div>
       )}
 
-      <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth} style={{ marginBottom: 14 }}>Geçen Ayı Kopyala</Button>
+      <Space style={{ marginBottom: 14 }}>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+      </Space>
 
       {!loadingDraft && (
         <>

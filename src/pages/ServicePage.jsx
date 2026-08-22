@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Tabs, Table, Button, Drawer, Form, Input, Switch, Tag, message, Empty, Space, Popconfirm, Spin } from 'antd';
-import { PlusOutlined, LeftOutlined, RightOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import { PlusOutlined, LeftOutlined, RightOutlined, EyeInvisibleOutlined, EyeTwoTone, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update, remove, query, orderByChild, equalTo } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database } from '../config/firebase';
@@ -9,6 +9,7 @@ import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
 import { getSecondaryAuth } from '../utils/secondaryAuth';
+import { fetchInstitutionInfo, buildServiceListHtml, printHtmlDocument } from '../services/documentPdf';
 
 const { Title, Text } = Typography;
 
@@ -197,6 +198,7 @@ function AssignmentsTab() {
   const [vehicles, setVehicles] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [savingId, setSavingId] = useState(null);
+  const [printing, setPrinting] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -257,11 +259,41 @@ function AssignmentsTab() {
 
   const serviceChildCount = useMemo(() => children.filter((c) => drafts[c.id]?.servisKullaniyor).length, [children, drafts]);
 
+  async function doPrint() {
+    const serviceChildren = children.filter((c) => drafts[c.id]?.servisKullaniyor);
+    if (serviceChildren.length === 0) { message.warning('Servis kullanan çocuk kaydı yok.'); return; }
+    setPrinting(true);
+    try {
+      const kres = await fetchInstitutionInfo(kresId);
+      const records = serviceChildren.map((child) => {
+        const draft = drafts[child.id];
+        const vehicle = vehicles.find((v) => v.id === draft.servisId);
+        return {
+          ad: `${child.ad || ''} ${child.soyad || ''}`.trim(),
+          sinifAd: sinifMap[child.sinifId] || '',
+          servisAd: vehicle ? (vehicle.ad || vehicle.plaka || '') : '',
+          alisSaati: draft.alisSaati || '',
+          birakisSaati: draft.birakisSaati || '',
+          servisNotu: draft.servisNotu || '',
+        };
+      });
+      const html = buildServiceListHtml({ kres, records });
+      printHtmlDocument(html);
+    } catch {
+      message.error('Servis listesi oluşturulamadı.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>;
 
   return (
     <div>
-      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>{serviceChildCount} çocuk servis kullanıyor</Text>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <Text type="secondary">{serviceChildCount} çocuk servis kullanıyor</Text>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+      </div>
       {children.length === 0 ? <Empty description="Kayıtlı çocuk yok" /> : children.map((child) => {
         const draft = drafts[child.id] || { servisKullaniyor: false, servisId: '', alisSaati: '', birakisSaati: '', servisNotu: '' };
         return (
