@@ -14,6 +14,12 @@ import AnnouncementsPage from './pages/AnnouncementsPage';
 import EventsPage from './pages/EventsPage';
 import PollsPage from './pages/PollsPage';
 import MessagesPage from './pages/MessagesPage';
+import MealsPage from './pages/MealsPage';
+import SchedulePage from './pages/SchedulePage';
+import DutyRosterPage from './pages/DutyRosterPage';
+import StaffTasksPage from './pages/StaffTasksPage';
+import ServicePage from './pages/ServicePage';
+import BirthdayCalendarPage from './pages/BirthdayCalendarPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -47,6 +53,12 @@ function Gate() {
         <Route path="/etkinlikler" element={<EventsPage />} />
         <Route path="/anketler" element={<PollsPage />} />
         <Route path="/mesajlar" element={<MessagesPage />} />
+        <Route path="/yemek-listesi" element={<MealsPage />} />
+        <Route path="/ders-programi" element={<SchedulePage />} />
+        <Route path="/nobet-cizelgesi" element={<DutyRosterPage />} />
+        <Route path="/personel-gorevleri" element={<StaffTasksPage />} />
+        <Route path="/servis" element={<ServicePage />} />
+        <Route path="/dogum-gunleri" element={<BirthdayCalendarPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
