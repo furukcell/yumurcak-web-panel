@@ -1,6 +1,25 @@
 import { ref, get, set } from 'firebase/database';
 import { database } from '../config/firebase';
 
+export function normalizeUsername(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+export function usernameToEmail(username) {
+  const clean = normalizeUsername(username);
+  if (clean.includes('@')) return clean;
+  const safe = clean
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9._-]/g, '');
+  return `${safe || 'kullanici'}@yumurcak.local`;
+}
+
+
 // Mobil uygulamadaki authHelpers.js'den birebir taşındı — Firebase Auth
 // UID'sini kullanicilar/{id} kaydına bağlayan index. authKullaniciIndex'te
 // yoksa (nadiren) tüm kullanicilar taranarak authUid alanına göre aranır.
