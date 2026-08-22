@@ -21,6 +21,11 @@ import StaffTasksPage from './pages/StaffTasksPage';
 import ServicePage from './pages/ServicePage';
 import BirthdayCalendarPage from './pages/BirthdayCalendarPage';
 import PaymentsPage from './pages/PaymentsPage';
+import InstitutionSettingsPage from './pages/InstitutionSettingsPage';
+import ThemePage from './pages/ThemePage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import BellPage from './pages/BellPage';
+import LegalDocumentsPage from './pages/LegalDocumentsPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -61,6 +66,11 @@ function Gate() {
         <Route path="/servis" element={<ServicePage />} />
         <Route path="/dogum-gunleri" element={<BirthdayCalendarPage />} />
         <Route path="/odemeler" element={<PaymentsPage />} />
+        <Route path="/ayarlar/kurum" element={<InstitutionSettingsPage />} />
+        <Route path="/ayarlar/tema" element={<ThemePage />} />
+        <Route path="/ayarlar/abonelik" element={<SubscriptionPage />} />
+        <Route path="/ayarlar/kurum-zili" element={<BellPage />} />
+        <Route path="/yasal-belgeler" element={<LegalDocumentsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
