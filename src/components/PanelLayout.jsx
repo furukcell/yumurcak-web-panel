@@ -85,30 +85,102 @@ export default function PanelLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} theme="light" width={230}>
-        <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text strong style={{ color: THEME.primary, fontSize: collapsed ? 16 : 20 }}>
-            {collapsed ? 'Y' : 'Yumurcak'}
-          </Text>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        theme="light"
+        width={236}
+        style={{ background: '#FDFCFF', borderRight: `1px solid ${THEME.border}` }}
+      >
+        <div
+          style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: 10,
+            padding: collapsed ? 0 : '0 20px',
+          }}
+        >
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 11,
+              background: THEME.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 17,
+              flexShrink: 0,
+              boxShadow: '0 4px 10px rgba(108,61,235,0.28)',
+            }}
+          >
+            🐣
+          </div>
+          {!collapsed && (
+            <Text strong style={{ color: THEME.text, fontSize: 18, letterSpacing: -0.2 }}>
+              Yumurcak
+            </Text>
+          )}
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-        />
+        <div style={{ padding: '4px 10px' }}>
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{ background: 'transparent', border: 'none' }}
+          />
+        </div>
       </Sider>
       <Layout>
-        <Header style={{ background: '#fff', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${THEME.border}` }}>
-          <Text strong>{kres?.ad || kres?.isim || 'Kreş'}</Text>
+        <Header
+          style={{
+            background: '#fff',
+            padding: '0 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 2px 12px rgba(25, 26, 35, 0.04)',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>🏫</span>
+            <Text strong style={{ fontSize: 15 }}>{kres?.ad || kres?.isim || 'Kreş'}</Text>
+          </div>
           <Dropdown menu={userMenu} placement="bottomRight">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                cursor: 'pointer',
+                padding: '6px 12px 6px 6px',
+                borderRadius: 999,
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = THEME.bg)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
               <Avatar icon={<UserOutlined />} style={{ background: THEME.primary }} />
-              <Text>{kullanici?.ad || kullanici?.kullaniciAdi || kullanici?.email}</Text>
+              <Text style={{ fontWeight: 600 }}>{kullanici?.ad || kullanici?.kullaniciAdi || kullanici?.email}</Text>
             </div>
           </Dropdown>
         </Header>
-        <Content style={{ margin: 20, background: '#fff', padding: 20, borderRadius: 12 }}>
+        <Content
+          style={{
+            margin: 24,
+            background: THEME.card,
+            padding: 24,
+            borderRadius: THEME.radius,
+            boxShadow: THEME.shadow,
+            border: `1px solid ${THEME.border}`,
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
