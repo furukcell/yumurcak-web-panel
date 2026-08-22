@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Typography } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Typography, Badge } from 'antd';
 import {
   DashboardOutlined,
   BarChartOutlined,
@@ -9,30 +9,47 @@ import {
   SmileOutlined,
   ReadOutlined,
   ContactsOutlined,
+  NotificationOutlined,
+  CalendarOutlined,
+  BarsOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
+import { useUnreadMessagesCount } from '../utils/messageHelpers';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-// Faz 0-1'de Dashboard + İstatistik, Faz 2'de Çekirdek Yönetim (CRUD)
-// eklendi (bkz. docs/web-panel-plan.md).
-const MENU_ITEMS = [
-  { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-  { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
-  { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
-  { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
-  { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
-  { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
-];
+// Faz 0-1: Dashboard + İstatistik, Faz 2: Çekirdek Yönetim (CRUD),
+// Faz 3: İletişim eklendi (bkz. docs/web-panel-plan.md).
+function buildMenuItems(unreadCount) {
+  return [
+    { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
+    { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
+    { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
+    { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
+    { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
+    { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
+    { key: '/duyurular', icon: <NotificationOutlined />, label: 'Duyurular' },
+    { key: '/etkinlikler', icon: <CalendarOutlined />, label: 'Etkinlikler' },
+    { key: '/anketler', icon: <BarsOutlined />, label: 'Anketler' },
+    {
+      key: '/mesajlar',
+      icon: <MessageOutlined />,
+      label: unreadCount > 0 ? <span>Mesajlar <Badge count={unreadCount} size="small" style={{ marginLeft: 4 }} /></span> : 'Mesajlar',
+    },
+  ];
+}
 
 export default function PanelLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { kullanici, kres, cikisYap } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const unreadCount = useUnreadMessagesCount(kullanici?.uid || kullanici?.id);
+  const menuItems = buildMenuItems(unreadCount);
 
   const userMenu = {
     items: [
@@ -54,7 +71,7 @@ export default function PanelLayout() {
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={MENU_ITEMS}
+          items={menuItems}
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
