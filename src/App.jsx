@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './pages/LoginPage';
 import PanelLayout from './components/PanelLayout';
 import DashboardPage from './pages/DashboardPage';
@@ -29,6 +30,7 @@ import LegalDocumentsPage from './pages/LegalDocumentsPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
+  const location = useLocation();
 
   if (yukleniyor) {
     return (
@@ -46,31 +48,33 @@ function Gate() {
     );
   }
 
+  const b = (element) => <ErrorBoundary resetKey={location.pathname}>{element}</ErrorBoundary>;
+
   return (
     <Routes>
       <Route element={<PanelLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/istatistik" element={<StatisticsPage />} />
-        <Route path="/siniflar" element={<ClassesPage />} />
-        <Route path="/cocuklar" element={<ChildrenPage />} />
-        <Route path="/ogretmenler" element={<TeachersPage />} />
-        <Route path="/veliler" element={<ParentsPage />} />
-        <Route path="/duyurular" element={<AnnouncementsPage />} />
-        <Route path="/etkinlikler" element={<EventsPage />} />
-        <Route path="/anketler" element={<PollsPage />} />
-        <Route path="/mesajlar" element={<MessagesPage />} />
-        <Route path="/yemek-listesi" element={<MealsPage />} />
-        <Route path="/ders-programi" element={<SchedulePage />} />
-        <Route path="/nobet-cizelgesi" element={<DutyRosterPage />} />
-        <Route path="/personel-gorevleri" element={<StaffTasksPage />} />
-        <Route path="/servis" element={<ServicePage />} />
-        <Route path="/dogum-gunleri" element={<BirthdayCalendarPage />} />
-        <Route path="/odemeler" element={<PaymentsPage />} />
-        <Route path="/ayarlar/kurum" element={<InstitutionSettingsPage />} />
-        <Route path="/ayarlar/tema" element={<ThemePage />} />
-        <Route path="/ayarlar/abonelik" element={<SubscriptionPage />} />
-        <Route path="/ayarlar/kurum-zili" element={<BellPage />} />
-        <Route path="/yasal-belgeler" element={<LegalDocumentsPage />} />
+        <Route path="/" element={b(<DashboardPage />)} />
+        <Route path="/istatistik" element={b(<StatisticsPage />)} />
+        <Route path="/siniflar" element={b(<ClassesPage />)} />
+        <Route path="/cocuklar" element={b(<ChildrenPage />)} />
+        <Route path="/ogretmenler" element={b(<TeachersPage />)} />
+        <Route path="/veliler" element={b(<ParentsPage />)} />
+        <Route path="/duyurular" element={b(<AnnouncementsPage />)} />
+        <Route path="/etkinlikler" element={b(<EventsPage />)} />
+        <Route path="/anketler" element={b(<PollsPage />)} />
+        <Route path="/mesajlar" element={b(<MessagesPage />)} />
+        <Route path="/yemek-listesi" element={b(<MealsPage />)} />
+        <Route path="/ders-programi" element={b(<SchedulePage />)} />
+        <Route path="/nobet-cizelgesi" element={b(<DutyRosterPage />)} />
+        <Route path="/personel-gorevleri" element={b(<StaffTasksPage />)} />
+        <Route path="/servis" element={b(<ServicePage />)} />
+        <Route path="/dogum-gunleri" element={b(<BirthdayCalendarPage />)} />
+        <Route path="/odemeler" element={b(<PaymentsPage />)} />
+        <Route path="/ayarlar/kurum" element={b(<InstitutionSettingsPage />)} />
+        <Route path="/ayarlar/tema" element={b(<ThemePage />)} />
+        <Route path="/ayarlar/abonelik" element={b(<SubscriptionPage />)} />
+        <Route path="/ayarlar/kurum-zili" element={b(<BellPage />)} />
+        <Route path="/yasal-belgeler" element={b(<LegalDocumentsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
