@@ -24,6 +24,7 @@ import {
   CrownOutlined,
   BellOutlined,
   FileProtectOutlined,
+  BankOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -108,16 +109,16 @@ export default function PanelLayout() {
               width: 34,
               height: 34,
               borderRadius: 11,
-              background: THEME.primary,
+              background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.primaryDark})`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 17,
               flexShrink: 0,
               boxShadow: '0 4px 10px rgba(108,61,235,0.28)',
+              padding: 6,
             }}
           >
-            🐣
+            <img src="/favicon.svg" alt="Yumurcak" style={{ width: '100%', height: '100%', filter: 'brightness(0) invert(1)' }} />
           </div>
           {!collapsed && (
             <Text strong style={{ color: THEME.text, fontSize: 18, letterSpacing: -0.2 }}>
@@ -138,18 +139,35 @@ export default function PanelLayout() {
       <Layout>
         <Header
           style={{
-            background: '#fff',
+            background: 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             padding: '0 24px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 2px 12px rgba(25, 26, 35, 0.04)',
-            position: 'relative',
+            boxShadow: '0 2px 12px rgba(25, 26, 35, 0.05)',
+            position: 'sticky',
+            top: 0,
             zIndex: 2,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 16 }}>🏫</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 9,
+                background: THEME.primarySoft,
+                color: THEME.primaryDark,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 15,
+              }}
+            >
+              <BankOutlined />
+            </div>
             <Text strong style={{ fontSize: 15 }}>{kres?.ad || kres?.isim || 'Kreş'}</Text>
           </div>
           <Dropdown menu={userMenu} placement="bottomRight">
