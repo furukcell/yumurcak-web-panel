@@ -98,7 +98,8 @@ export default function PaymentsPage() {
       setLoading(false);
     }
 
-    const odemelerUnsub = onValue(ref(database, 'odemeler'), (snap) => { odemelerData = safeObject(snap.val()); odemelerLoaded = true; build(); }, () => { odemelerLoaded = true; build(); });
+    const odemelerTarget = kresId ? query(ref(database, 'odemeler'), orderByChild('kresId'), equalTo(kresId)) : ref(database, 'odemeler');
+    const odemelerUnsub = onValue(odemelerTarget, (snap) => { odemelerData = safeObject(snap.val()); odemelerLoaded = true; build(); }, () => { odemelerLoaded = true; build(); });
     const childrenTarget = kresId ? query(ref(database, 'cocuklar'), orderByChild('kresId'), equalTo(kresId)) : ref(database, 'cocuklar');
     const childrenUnsub = onValue(childrenTarget, (snap) => {
       childrenData = safeObject(snap.val());
@@ -161,7 +162,8 @@ export default function PaymentsPage() {
     try { values = await form.validateFields(); } catch { return; }
     if (!selectedChildId) { message.error('Çocuk seçmelisin.'); return; }
     const finalTutar = toNumber(values.tutar);
-    if (!finalTutar) { message.error('Geçerli bir tutar gir.'); return; }
+    if (!finalTutar || finalTutar <= 0) { message.error('Geçerli bir tutar gir (0\'dan büyük olmalı).'); return; }
+    if (!Number.isInteger(selectedYear) || selectedYear < 2000 || selectedYear > 2100) { message.error('Geçerli bir yıl gir.'); return; }
 
     setSaving(true);
     try {
@@ -274,11 +276,18 @@ export default function PaymentsPage() {
           </Space>
 
           <Form.Item label="Yıl">
-            <Input value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value) || new Date().getFullYear())} placeholder="2026" maxLength={4} />
+            <Input value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value.replace(/[^0-9]/g, '')) || new Date().getFullYear())} placeholder="2026" maxLength={4} />
           </Form.Item>
 
-          <Form.Item name="tutar" label="Tutar (₺)" rules={[{ required: true, message: 'Zorunlu' }]}>
-            <Input placeholder="7500" />
+          <Form.Item
+            name="tutar"
+            label="Tutar (₺)"
+            rules={[
+              { required: true, message: 'Zorunlu' },
+              { validator: (_, value) => (toNumber(value) > 0 ? Promise.resolve() : Promise.reject(new Error('0\'dan büyük bir tutar gir'))) },
+            ]}
+          >
+            <Input placeholder="7500" inputMode="decimal" />
           </Form.Item>
 
           <Text strong>Durum</Text>

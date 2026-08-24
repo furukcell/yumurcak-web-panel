@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Card, Button, Tag, Row, Col, Empty, message, Spin } from 'antd';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, onValue, update, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
@@ -50,8 +50,9 @@ export default function BellPage() {
 
   useEffect(() => {
     setLoading(true);
+    const bellTarget = kresId ? query(ref(database, 'kurumZili'), orderByChild('kresId'), equalTo(kresId)) : ref(database, 'kurumZili');
     const unsub = onValue(
-      ref(database, 'kurumZili'),
+      bellTarget,
       (snap) => {
         const liste = toList(snap.val())
           .filter((item) => !kresId || !item.kresId || item.kresId === kresId || item.kurumId === kresId)

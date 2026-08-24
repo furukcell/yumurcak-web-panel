@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
-import { getSecondaryAuth } from '../utils/secondaryAuth';
+import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 import { fetchInstitutionInfo, buildServiceListHtml, printHtmlDocument } from '../services/documentPdf';
 
 const { Title, Text } = Typography;
@@ -105,6 +105,7 @@ function VehiclesTab() {
         const credential = await createUserWithEmailAndPassword(secondaryAuth, email, kaydedilenSifre);
         authUid = credential.user.uid;
         await signOut(secondaryAuth).catch(() => {});
+        await releaseSecondaryAuth('yumurcak-servisci-create');
       }
 
       const kresIdFinal = oldVehicle?.kresId || kresId || 'default-kres';
@@ -219,7 +220,7 @@ function AssignmentsTab() {
       setSinifMap(map);
     });
 
-    const serviceUnsub = onValue(ref(database, 'servisBilgileri'), (snap) => setServiceMap(snap.val() || {}));
+    const serviceUnsub = onValue(query(ref(database, 'servisBilgileri'), orderByChild('kresId'), equalTo(kresId)), (snap) => setServiceMap(snap.val() || {}));
     const vehiclesUnsub = onValue(query(ref(database, 'servisler'), orderByChild('kresId'), equalTo(kresId)), (snap) => {
       const data = snap.val() || {};
       const list = Object.entries(data).map(([id, v]) => ({ id, ...v }));
@@ -363,9 +364,10 @@ function DailyTrackingTab() {
   }, [kresId]);
 
   useEffect(() => {
-    const unsub = onValue(ref(database, 'servisBilgileri'), (snap) => setServiceMap(snap.val() || {}));
+    if (!kresId) return;
+    const unsub = onValue(query(ref(database, 'servisBilgileri'), orderByChild('kresId'), equalTo(kresId)), (snap) => setServiceMap(snap.val() || {}));
     return () => unsub();
-  }, []);
+  }, [kresId]);
 
   useEffect(() => {
     setLoading(true);

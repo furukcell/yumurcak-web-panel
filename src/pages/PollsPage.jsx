@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Card, Button, Input, Space, Tag, message, Empty, Progress, Popconfirm, Row, Col } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, DeleteOutlined } from '@ant-design/icons';
-import { ref, onValue, push, update, remove } from 'firebase/database';
+import { ref, onValue, push, update, remove, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
@@ -73,8 +73,9 @@ export default function PollsPage() {
 
   useEffect(() => {
     setLoading(true);
+    const pollsTarget = kresId ? query(ref(database, 'anketler'), orderByChild('kresId'), equalTo(kresId)) : ref(database, 'anketler');
     const unsub = onValue(
-      ref(database, 'anketler'),
+      pollsTarget,
       (snap) => {
         const list = toList(snap.val())
           .filter((item) => !kresId || !item.kresId || item.kresId === kresId || item.kurumId === kresId)

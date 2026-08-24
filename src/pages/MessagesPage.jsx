@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Typography, Input, Button, Tag, Empty, Spin, Segmented, message } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
-import { ref, onValue, update, push, get, query, orderByChild, limitToLast, endBefore, increment } from 'firebase/database';
+import { ref, onValue, update, push, get, query, orderByChild, equalTo, limitToLast, endBefore, increment } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
@@ -58,17 +58,18 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const unsubs = [];
-    const listen = (path, setter) => {
-      const unsub = onValue(ref(database, path), (snap) => {
+    const listenFiltered = (path, setter) => {
+      const target = query(ref(database, path), orderByChild('kresId'), equalTo(kresId));
+      const unsub = onValue(target, (snap) => {
         setter(snap.val() || {});
         setLoading(false);
       });
       unsubs.push(unsub);
     };
-    listen('kullanicilar', setUsers);
-    listen('siniflar', setClasses);
-    listen('cocuklar', setChildren);
-    listen('mesajKonusmalari', setConversations);
+    listenFiltered('kullanicilar', setUsers);
+    listenFiltered('siniflar', setClasses);
+    listenFiltered('cocuklar', setChildren);
+    listenFiltered('mesajKonusmalari', setConversations);
     return () => unsubs.forEach((unsub) => unsub && unsub());
   }, [kresId]);
 
