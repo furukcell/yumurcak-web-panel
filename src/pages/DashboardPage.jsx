@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography, Row, Col, Card, Statistic, Spin, List, Empty, Tag } from 'antd';
 import {
   ReadOutlined, SmileOutlined, TeamOutlined, ContactsOutlined, CrownOutlined,
-  NotificationOutlined, CalendarOutlined, GiftOutlined, RightOutlined,
+  NotificationOutlined, CalendarOutlined, GiftOutlined, RightOutlined, WalletOutlined,
 } from '@ant-design/icons';
 import { ref, onValue, get, query, orderByChild, equalTo } from 'firebase/database';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,36 @@ import { THEME } from '../theme';
 import { parseChildBirthDate } from '../utils/childDates';
 
 const { Title, Text, Paragraph } = Typography;
+
+function safeObject(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+function toNumber(value) {
+  if (typeof value === 'number') return value;
+  const clean = String(value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
+  const number = Number(clean);
+  return Number.isFinite(number) ? number : 0;
+}
+function formatMoney(value) {
+  const number = toNumber(value);
+  return number > 0 ? `${number.toLocaleString('tr-TR')} ₺` : '-';
+}
+function normalizeDurum(item = {}) {
+  const v = String(item.durum || item.status || '').toLowerCase().trim();
+  if (['odendi', 'ödendi', 'paid', 'tamamlandi', 'tamamlandı'].includes(v)) return 'odendi';
+  if (['gecikti', 'geçti', 'late', 'overdue'].includes(v)) return 'gecikti';
+  const due = item.sonOdemeTarihi || item.dueDate;
+  if (due && Date.parse(due) < Date.now()) return 'gecikti';
+  return 'bekliyor';
+}
+function getChildName(cocuk = {}, odeme = {}) {
+  return `${cocuk.ad || ''} ${cocuk.soyad || ''}`.trim() || cocuk.adSoyad || cocuk.isim || odeme.cocukAd || odeme.cocukAdi || odeme.childName || 'Çocuk';
+}
+function getMonthKey(o = {}) {
+  if (o.tarih && String(o.tarih).length >= 7) return String(o.tarih).slice(0, 7);
+  const yil = Number(o.yil || o.year);
+  const ay = Number(o.ay || o.month);
+  if (yil && ay) return `${yil}-${String(ay).padStart(2, '0')}`;
+  return '';
+}
 
 const OZET_ITEMS = [
   { key: 'sinifSayisi', label: 'Sınıf', icon: <ReadOutlined />, color: THEME.blue },
@@ -71,6 +101,7 @@ export default function DashboardPage() {
   const [duyurular, setDuyurular] = useState([]);
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [dogumGunleri, setDogumGunleri] = useState([]);
+  const [bekleyenOdemeler, setBekleyenOdemeler] = useState([]);
   const [ozetYukleniyor, setOzetYukleniyor] = useState(true);
 
   useEffect(() => {
@@ -198,6 +229,50 @@ export default function DashboardPage() {
     return () => { duyuruUnsub(); etkinlikUnsub(); cocukIndexUnsub(); };
   }, [kresId]);
 
+  // Bekleyen Ödemeler: PaymentsPage'deki aynı mantık — odemeler + cocuklar
+  // join edilip durum='odendi' olmayanlar (bekliyor/gecikti) en eskiden
+  // yeniye sıralanıp ilk 3'ü gösterilir.
+  useEffect(() => {
+    if (!kresId) return;
+    let odemelerData = {};
+    let childrenData = {};
+    let odemelerLoaded = false;
+    let childrenLoaded = false;
+
+    function build() {
+      if (!odemelerLoaded || !childrenLoaded) return;
+      const liste = Object.entries(odemelerData)
+        .map(([id, o]) => ({ id, ...safeObject(o) }))
+        .filter((o) => !o.kresId || o.kresId === kresId || o.kurumId === kresId)
+        .map((o) => {
+          const cocuk = safeObject(childrenData[o.cocukId] || childrenData[o.childId]);
+          return {
+            id: o.id,
+            durum: normalizeDurum(o),
+            cocukAd: getChildName(cocuk, o),
+            tutar: formatMoney(o.tutar || o.amount),
+            monthKey: getMonthKey(o),
+          };
+        })
+        .filter((o) => o.durum !== 'odendi')
+        .sort((a, b) => (a.monthKey || '9999').localeCompare(b.monthKey || '9999'));
+      setBekleyenOdemeler(liste.slice(0, 3));
+    }
+
+    const odemelerUnsub = onValue(
+      query(ref(database, 'odemeler'), orderByChild('kresId'), equalTo(kresId)),
+      (snap) => { odemelerData = safeObject(snap.val()); odemelerLoaded = true; build(); },
+      () => { odemelerLoaded = true; build(); }
+    );
+    const childrenUnsub = onValue(
+      query(ref(database, 'cocuklar'), orderByChild('kresId'), equalTo(kresId)),
+      (snap) => { childrenData = safeObject(snap.val()); childrenLoaded = true; build(); },
+      () => { childrenLoaded = true; build(); }
+    );
+
+    return () => { odemelerUnsub(); childrenUnsub(); };
+  }, [kresId]);
+
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
 
   return (
@@ -271,7 +346,7 @@ export default function DashboardPage() {
       )}
 
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} md={6}>
           <SummaryPanel
             title="Son Duyurular"
             icon={<NotificationOutlined />}
@@ -286,7 +361,7 @@ export default function DashboardPage() {
             }))}
           />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} md={6}>
           <SummaryPanel
             title="Yaklaşan Etkinlikler"
             icon={<CalendarOutlined />}
@@ -301,7 +376,7 @@ export default function DashboardPage() {
             }))}
           />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} md={6}>
           <SummaryPanel
             title="Yaklaşan Doğum Günleri"
             icon={<GiftOutlined />}
@@ -316,6 +391,24 @@ export default function DashboardPage() {
             }))}
           />
         </Col>
+        <Col xs={24} sm={12} md={6}>
+          <SummaryPanel
+            title="Bekleyen Ödemeler"
+            icon={<WalletOutlined />}
+            color={THEME.orange}
+            loading={ozetYukleniyor}
+            emptyText="Bekleyen ödeme yok 🎉"
+            onSeeAll={() => navigate('/odemeler')}
+            items={bekleyenOdemeler.map((o) => ({
+              key: o.id,
+              primary: o.cocukAd,
+              secondary: o.tutar,
+              tag: o.durum === 'gecikti'
+                ? { text: 'Gecikti', color: THEME.red }
+                : { text: 'Bekliyor', color: THEME.orange },
+            }))}
+          />
+        </Col>
       </Row>
 
       <Paragraph type="secondary" style={{ marginTop: 20 }}>
@@ -326,8 +419,8 @@ export default function DashboardPage() {
   );
 }
 
-// Dashboard'daki üç mini özet paneli (duyurular / etkinlikler / doğum
-// günleri) için tekrar kullanılan kart bileşeni.
+// Dashboard'daki mini özet panelleri (duyurular / etkinlikler / doğum
+// günleri / bekleyen ödemeler) için tekrar kullanılan kart bileşeni.
 function SummaryPanel({ title, icon, color, items, loading, emptyText, onSeeAll }) {
   return (
     <Card
@@ -368,9 +461,16 @@ function SummaryPanel({ title, icon, color, items, loading, emptyText, onSeeAll 
           split={false}
           renderItem={(item) => (
             <List.Item style={{ padding: '6px 0', border: 'none' }}>
-              <div style={{ width: '100%' }}>
-                <Text style={{ fontSize: 13, fontWeight: 600, display: 'block' }} ellipsis>{item.primary}</Text>
-                {item.secondary && <Text type="secondary" style={{ fontSize: 11 }}>{item.secondary}</Text>}
+              <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <Text style={{ fontSize: 13, fontWeight: 600, display: 'block' }} ellipsis>{item.primary}</Text>
+                  {item.secondary && <Text type="secondary" style={{ fontSize: 11 }}>{item.secondary}</Text>}
+                </div>
+                {item.tag && (
+                  <Tag color={item.tag.color} style={{ margin: 0, fontSize: 10, lineHeight: '16px', flexShrink: 0 }}>
+                    {item.tag.text}
+                  </Tag>
+                )}
               </div>
             </List.Item>
           )}
