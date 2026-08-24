@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Row, Col, Card, Statistic, Spin } from 'antd';
-import { ReadOutlined, SmileOutlined, TeamOutlined, ContactsOutlined, CrownOutlined } from '@ant-design/icons';
-import { ref, onValue } from 'firebase/database';
+import { Typography, Row, Col, Card, Statistic, Spin, List, Empty, Tag } from 'antd';
+import {
+  ReadOutlined, SmileOutlined, TeamOutlined, ContactsOutlined, CrownOutlined,
+  NotificationOutlined, CalendarOutlined, GiftOutlined, RightOutlined,
+} from '@ant-design/icons';
+import { ref, onValue, get, query, orderByChild, equalTo } from 'firebase/database';
+import { useNavigate } from 'react-router-dom';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
+import { parseChildBirthDate } from '../utils/childDates';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -57,10 +62,16 @@ function getSubscriptionText(sub) {
 export default function DashboardPage() {
   const { kullanici, kres } = useAuth();
   const kresId = kullanici?.kresId || 'kres001';
+  const navigate = useNavigate();
 
   const [istatistik, setIstatistik] = useState(EMPTY_STATS);
   const [abonelik, setAbonelik] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(true);
+
+  const [duyurular, setDuyurular] = useState([]);
+  const [etkinlikler, setEtkinlikler] = useState([]);
+  const [dogumGunleri, setDogumGunleri] = useState([]);
+  const [ozetYukleniyor, setOzetYukleniyor] = useState(true);
 
   useEffect(() => {
     const subUnsub = onValue(ref(database, `abonelikler/${kresId}`), (snap) => {
@@ -122,6 +133,69 @@ export default function DashboardPage() {
       summaryUnsub();
       indexListeners.forEach((unsub) => unsub && unsub());
     };
+  }, [kresId]);
+
+  // Bugünkü Özet: son duyurular + yaklaşan etkinlikler + yaklaşan doğum
+  // günleri. Sayfalardaki (Announcements/Events/BirthdayCalendar) aynı
+  // Firebase yollarını okur, sadece burada en yakın 3 kayıt gösterilir.
+  useEffect(() => {
+    if (!kresId) { setOzetYukleniyor(false); return; }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const duyuruUnsub = onValue(
+      query(ref(database, 'duyurular'), orderByChild('kresId'), equalTo(kresId)),
+      (snap) => {
+        const data = snap.val();
+        const list = data ? Object.entries(data).map(([id, v]) => ({ id, ...v })) : [];
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setDuyurular(list.slice(0, 3));
+      },
+      () => setDuyurular([])
+    );
+
+    const etkinlikUnsub = onValue(
+      query(ref(database, 'etkinlikler'), orderByChild('kresId'), equalTo(kresId)),
+      (snap) => {
+        const data = snap.val();
+        const list = data ? Object.entries(data).map(([id, v]) => ({ id, ...v })) : [];
+        const upcoming = list
+          .filter((e) => e.aktif !== false)
+          .map((e) => ({ ...e, _date: parseChildBirthDate(e.tarih) }))
+          .filter((e) => e._date && e._date >= today)
+          .sort((a, b) => a._date - b._date);
+        setEtkinlikler(upcoming.slice(0, 3));
+      },
+      () => setEtkinlikler([])
+    );
+
+    const cocukIndexUnsub = onValue(
+      ref(database, `kresCocuklari/${kresId}`),
+      async (snap) => {
+        const idsData = snap.val();
+        if (!idsData) { setDogumGunleri([]); setOzetYukleniyor(false); return; }
+        const ids = Object.keys(idsData);
+        const results = await Promise.all(
+          ids.map((id) => get(ref(database, `cocuklar/${id}`)).then((s) => (s.exists() ? { id, ...s.val() } : null)))
+        );
+        const withNextBirthday = results
+          .filter(Boolean)
+          .map((child) => {
+            const birth = parseChildBirthDate(child.dogumTarihi);
+            if (!birth) return null;
+            const next = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+            if (next < today) next.setFullYear(next.getFullYear() + 1);
+            return { id: child.id, ad: `${child.ad || ''} ${child.soyad || ''}`.trim(), next, gunKala: Math.round((next - today) / 86400000) };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.next - b.next);
+        setDogumGunleri(withNextBirthday.slice(0, 3));
+        setOzetYukleniyor(false);
+      },
+      () => setOzetYukleniyor(false)
+    );
+
+    return () => { duyuruUnsub(); etkinlikUnsub(); cocukIndexUnsub(); };
   }, [kresId]);
 
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
@@ -196,10 +270,112 @@ export default function DashboardPage() {
         </Row>
       )}
 
+      <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+        <Col xs={24} md={8}>
+          <SummaryPanel
+            title="Son Duyurular"
+            icon={<NotificationOutlined />}
+            color={THEME.red}
+            loading={ozetYukleniyor}
+            emptyText="Henüz duyuru yok"
+            onSeeAll={() => navigate('/duyurular')}
+            items={duyurular.map((d) => ({
+              key: d.id,
+              primary: d.title || d.baslik || 'Duyuru',
+              secondary: d.createdAt ? new Date(d.createdAt).toLocaleDateString('tr-TR') : '',
+            }))}
+          />
+        </Col>
+        <Col xs={24} md={8}>
+          <SummaryPanel
+            title="Yaklaşan Etkinlikler"
+            icon={<CalendarOutlined />}
+            color={THEME.teal}
+            loading={ozetYukleniyor}
+            emptyText="Yaklaşan etkinlik yok"
+            onSeeAll={() => navigate('/etkinlikler')}
+            items={etkinlikler.map((e) => ({
+              key: e.id,
+              primary: e.baslik || 'Etkinlik',
+              secondary: `${e.tarih || ''}${e.saat ? ' · ' + e.saat : ''}`,
+            }))}
+          />
+        </Col>
+        <Col xs={24} md={8}>
+          <SummaryPanel
+            title="Yaklaşan Doğum Günleri"
+            icon={<GiftOutlined />}
+            color={THEME.gold}
+            loading={ozetYukleniyor}
+            emptyText="Yaklaşan doğum günü yok"
+            onSeeAll={() => navigate('/dogum-gunleri')}
+            items={dogumGunleri.map((c) => ({
+              key: c.id,
+              primary: c.ad || 'Çocuk',
+              secondary: c.gunKala === 0 ? 'Bugün 🎉' : c.gunKala === 1 ? 'Yarın' : `${c.gunKala} gün sonra`,
+            }))}
+          />
+        </Col>
+      </Row>
+
       <Paragraph type="secondary" style={{ marginTop: 20 }}>
         {kres?.ad ? `${kres.ad} için özet bilgiler yukarıda. ` : ''}
         Detaylı analiz için sol menüden İstatistik sayfasına göz atabilirsin.
       </Paragraph>
     </div>
+  );
+}
+
+// Dashboard'daki üç mini özet paneli (duyurular / etkinlikler / doğum
+// günleri) için tekrar kullanılan kart bileşeni.
+function SummaryPanel({ title, icon, color, items, loading, emptyText, onSeeAll }) {
+  return (
+    <Card
+      size="small"
+      style={{ borderColor: THEME.border, height: '100%' }}
+      styles={{ body: { padding: 16 } }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              width: 30, height: 30, borderRadius: 9,
+              background: `${color}1A`, color,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+            }}
+          >
+            {icon}
+          </div>
+          <Text strong style={{ fontSize: 13 }}>{title}</Text>
+        </div>
+        <RightOutlined
+          onClick={onSeeAll}
+          style={{ fontSize: 11, color: THEME.muted, cursor: 'pointer' }}
+        />
+      </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 16 }}><Spin size="small" /></div>
+      ) : items.length === 0 ? (
+        <Empty
+          description={<Text type="secondary" style={{ fontSize: 12 }}>{emptyText}</Text>}
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          style={{ padding: '8px 0' }}
+        />
+      ) : (
+        <List
+          size="small"
+          dataSource={items}
+          split={false}
+          renderItem={(item) => (
+            <List.Item style={{ padding: '6px 0', border: 'none' }}>
+              <div style={{ width: '100%' }}>
+                <Text style={{ fontSize: 13, fontWeight: 600, display: 'block' }} ellipsis>{item.primary}</Text>
+                {item.secondary && <Text type="secondary" style={{ fontSize: 11 }}>{item.secondary}</Text>}
+              </div>
+            </List.Item>
+          )}
+        />
+      )}
+    </Card>
   );
 }
