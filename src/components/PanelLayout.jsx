@@ -146,13 +146,39 @@ export default function PanelLayout() {
             zIndex: 2,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            onClick={() => navigate('/ayarlar/kurum')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              cursor: 'pointer',
+              padding: '6px 14px 6px 6px',
+              borderRadius: 999,
+              transition: 'background 0.15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = THEME.bg)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
             <img
-              src="/logo.png"
-              alt="Yumurcak Kreş"
-              style={{ width: 28, height: 28, borderRadius: '50%' }}
+              src={kres?.logoUrl || '/logo.png'}
+              alt={kres?.ad || kres?.isim || 'Kurum'}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: `2px solid ${THEME.primarySoft}`,
+              }}
             />
-            <Text strong style={{ fontSize: 15 }}>{kres?.ad || kres?.isim || 'Kreş'}</Text>
+            <div style={{ lineHeight: 1.15 }}>
+              <Text strong style={{ fontSize: 17, letterSpacing: -0.2, display: 'block' }}>
+                {kres?.ad || kres?.isim || 'Kreş'}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>
+                Kurum profilini görüntüle
+              </Text>
+            </div>
           </div>
           <Dropdown menu={userMenu} placement="bottomRight">
             <div
