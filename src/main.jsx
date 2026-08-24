@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           colorBgLayout: THEME.bg,
           borderRadius: THEME.radiusSm,
           borderRadiusLG: THEME.radius,
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         },
         components: {
           Card: {
