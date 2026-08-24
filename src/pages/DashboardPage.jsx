@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Row, Col, Card, Statistic, Spin } from 'antd';
+import { ReadOutlined, SmileOutlined, TeamOutlined, ContactsOutlined, CrownOutlined } from '@ant-design/icons';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -8,10 +9,10 @@ import { THEME } from '../theme';
 const { Title, Text, Paragraph } = Typography;
 
 const OZET_ITEMS = [
-  { key: 'sinifSayisi', label: 'Sınıf', icon: '🏫', color: THEME.blue },
-  { key: 'cocukSayisi', label: 'Çocuk', icon: '👶', color: THEME.orange },
-  { key: 'ogretmenSayisi', label: 'Öğretmen', icon: '👨‍🏫', color: THEME.primary },
-  { key: 'veliSayisi', label: 'Veli', icon: '👨‍👩‍👧', color: THEME.green },
+  { key: 'sinifSayisi', label: 'Sınıf', icon: <ReadOutlined />, color: THEME.blue },
+  { key: 'cocukSayisi', label: 'Çocuk', icon: <SmileOutlined />, color: THEME.orange },
+  { key: 'ogretmenSayisi', label: 'Öğretmen', icon: <TeamOutlined />, color: THEME.primary },
+  { key: 'veliSayisi', label: 'Veli', icon: <ContactsOutlined />, color: THEME.green },
 ];
 
 const EMPTY_STATS = {
@@ -129,13 +130,14 @@ export default function DashboardPage() {
     <div>
       <div
         style={{
-          background: THEME.primary,
+          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryDark} 100%)`,
           borderRadius: 20,
           padding: '20px 24px',
           marginBottom: 20,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          boxShadow: '0 14px 32px rgba(76, 41, 156, 0.22)',
         }}
       >
         <div>
@@ -143,7 +145,21 @@ export default function DashboardPage() {
           <Title level={3} style={{ color: '#fff', margin: '4px 0 0' }}>{adSoyad}</Title>
           <Text style={{ color: 'rgba(255,255,255,0.78)' }}>{getSubscriptionText(abonelik)}</Text>
         </div>
-        <div style={{ fontSize: 36 }}>👑</div>
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 16,
+            background: 'rgba(255,255,255,0.16)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 24,
+            color: '#FFD97A',
+          }}
+        >
+          <CrownOutlined />
+        </div>
       </div>
 
       <Title level={5} style={{ marginBottom: 12 }}>Genel Özet</Title>
@@ -156,7 +172,22 @@ export default function DashboardPage() {
           {OZET_ITEMS.map((item) => (
             <Col xs={12} md={6} key={item.key}>
               <Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}>
-                <div style={{ fontSize: 26 }}>{item.icon}</div>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    background: `${item.color}1A`,
+                    color: item.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 20,
+                    margin: '0 auto 10px',
+                  }}
+                >
+                  {item.icon}
+                </div>
                 <Statistic value={istatistik[item.key]} valueStyle={{ color: item.color, fontWeight: 900, fontSize: 22 }} />
                 <Text type="secondary" style={{ fontWeight: 700, fontSize: 12 }}>{item.label}</Text>
               </Card>
