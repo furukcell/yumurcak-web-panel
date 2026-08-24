@@ -7,7 +7,7 @@ import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { generateId, asArray } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
-import { getSecondaryAuth } from '../utils/secondaryAuth';
+import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 
 const { Title, Text } = Typography;
 
@@ -191,6 +191,7 @@ export default function ParentsPage() {
         const credential = await createUserWithEmailAndPassword(secondaryAuth, email, kaydedilenSifre);
         authUid = credential.user.uid;
         await signOut(secondaryAuth).catch(() => {});
+        await releaseSecondaryAuth('yumurcak-parent-create');
       }
 
       const nextKresId = oldVeli.kresId || kresId || 'default-kres';

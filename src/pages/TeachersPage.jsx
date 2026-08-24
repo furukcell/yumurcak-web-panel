@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
-import { getSecondaryAuth } from '../utils/secondaryAuth';
+import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 
 const { Title, Text } = Typography;
 
@@ -162,6 +162,7 @@ export default function TeachersPage() {
         const credential = await createUserWithEmailAndPassword(secondaryAuth, email, kaydedilenSifre);
         authUid = credential.user.uid;
         await signOut(secondaryAuth).catch(() => {});
+        await releaseSecondaryAuth('yumurcak-teacher-create');
       }
 
       const nextKresId = oldTeacher.kresId || kresId || 'default-kres';
