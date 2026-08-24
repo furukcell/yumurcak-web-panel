@@ -24,7 +24,6 @@ import {
   CrownOutlined,
   BellOutlined,
   FileProtectOutlined,
-  BankOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -104,22 +103,17 @@ export default function PanelLayout() {
             padding: collapsed ? 0 : '0 20px',
           }}
         >
-          <div
+          <img
+            src="/logo.png"
+            alt="Yumurcak Kreş"
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 11,
-              background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.primaryDark})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
               flexShrink: 0,
-              boxShadow: '0 4px 10px rgba(108,61,235,0.28)',
-              padding: 6,
+              boxShadow: '0 3px 10px rgba(76,41,156,0.22)',
             }}
-          >
-            <img src="/favicon.svg" alt="Yumurcak" style={{ width: '100%', height: '100%', filter: 'brightness(0) invert(1)' }} />
-          </div>
+          />
           {!collapsed && (
             <Text strong style={{ color: THEME.text, fontSize: 18, letterSpacing: -0.2 }}>
               Yumurcak
@@ -153,21 +147,11 @@ export default function PanelLayout() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 9,
-                background: THEME.primarySoft,
-                color: THEME.primaryDark,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 15,
-              }}
-            >
-              <BankOutlined />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Yumurcak Kreş"
+              style={{ width: 28, height: 28, borderRadius: '50%' }}
+            />
             <Text strong style={{ fontSize: 15 }}>{kres?.ad || kres?.isim || 'Kreş'}</Text>
           </div>
           <Dropdown menu={userMenu} placement="bottomRight">
