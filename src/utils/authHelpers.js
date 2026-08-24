@@ -23,20 +23,29 @@ export function usernameToEmail(username) {
 // Mobil uygulamadaki authHelpers.js'den birebir taşındı — Firebase Auth
 // UID'sini kullanicilar/{id} kaydına bağlayan index. authKullaniciIndex'te
 // yoksa (nadiren) tüm kullanicilar taranarak authUid alanına göre aranır.
+// NOT: database.rules.json'da kullanicilar'ın üst-seviye .read'i artık
+// kresId-filtreli sorgu şartına bağlı (bkz. cocuklar/siniflar deseni) —
+// bu sorgusuz tarama kresId bilinmeden yapıldığı için rules tarafından
+// reddedilir. O yüzden try/catch ile sarılı: index eksikse (nadir durum)
+// kullanıcı bulunamadı sonucuna düşer, login akışı çökmez.
 export async function findUserIdByAuthUid(authUid) {
   if (!authUid) return null;
 
   const indexSnap = await get(ref(database, `authKullaniciIndex/${authUid}`));
   if (indexSnap.exists()) return indexSnap.val();
 
-  const usersSnap = await get(ref(database, 'kullanicilar'));
-  const users = usersSnap.val() || {};
-  const found = Object.entries(users).find(([, user]) => user?.authUid === authUid);
+  try {
+    const usersSnap = await get(ref(database, 'kullanicilar'));
+    const users = usersSnap.val() || {};
+    const found = Object.entries(users).find(([, user]) => user?.authUid === authUid);
 
-  if (found) {
-    const [foundUserId] = found;
-    set(ref(database, `authKullaniciIndex/${authUid}`), foundUserId).catch(() => {});
-    return foundUserId;
+    if (found) {
+      const [foundUserId] = found;
+      set(ref(database, `authKullaniciIndex/${authUid}`), foundUserId).catch(() => {});
+      return foundUserId;
+    }
+  } catch (error) {
+    console.warn('authKullaniciIndex eksik ve tüm kullanicilar taranamadı (rules kısıtlaması):', error?.code || error?.message || error);
   }
 
   return null;
