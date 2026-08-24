@@ -20,20 +20,16 @@ export const NODE_KEYS = [
   'medikalBilgiler',
 ];
 
-// Bu düğümlerin Firebase kuralı, filtresiz tam okumayı reddedip sadece
-// orderByChild('kresId').equalTo(...) sorgusuna izin veriyor (bkz. mobil
-// database.rules.json). Web tarafında da aynı sorgu şekli kullanılmalı.
-export const KRES_FILTERED_NODES = new Set([
-  'cocuklar',
-  'siniflar',
-  'yoklamalar',
-  'gunlukRaporlar',
-  'etkinlikler',
-  'yemekListeleri',
-  'duyurular',
-  'ilacTakipFormlari',
-  'medikalBilgiler',
-]);
+// database.rules.json'daki tüm bu node'ların üst-seviye .read kuralı artık
+// (cocuklar/siniflar deseniyle) kresId-filtreli sorgu şartına bağlı —
+// sorgusuz tam okuma hiçbirinde çalışmıyor, web tarafında da hepsi
+// query(orderByChild('kresId'), equalTo(kresId)) ile okunmalı.
+//
+// Ayrıca her node için limitToLast ile bir üst sınır kondu: mobil tarafta
+// (AdminStatisticsScreen.js için) konuşulup ertelenen "son N kayıt" fikri
+// burada uygulandı — kreş büyüdükçe istatistik sayfasının tüm geçmişi tek
+// seferde çekip yavaşlamasını önlemek için.
+export const STATISTICS_RECORD_LIMIT = 500;
 
 // Yönetici Aktivite Geçmişi — hangi öğretmenin hangi bilgiyi hangi saatte
 // girdiğini gösteren log.
