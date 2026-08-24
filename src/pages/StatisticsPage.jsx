@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Tabs, Row, Col, Card, Progress, Tag, Spin, Empty, Statistic } from 'antd';
-import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, onValue, query, orderByChild, equalTo, limitToLast } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import {
   NODE_KEYS,
-  KRES_FILTERED_NODES,
+  STATISTICS_RECORD_LIMIT,
   toList,
   buildStatistics,
   formatTL,
@@ -19,7 +19,7 @@ const { Title, Text, Paragraph } = Typography;
 // (bkz. src/utils/statisticsHelpers.js), UI antd bileşenleriyle kuruldu.
 export default function StatisticsPage() {
   const { kullanici } = useAuth();
-  const kresId = kullanici?.kresId || 'kres001';
+  const kresId = kullanici?.kresId || null;
   const [raw, setRaw] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -28,10 +28,10 @@ export default function StatisticsPage() {
     const loaded = {};
     setLoading(true);
 
+    if (!kresId) { setLoading(false); return undefined; }
+
     const unsubscribers = NODE_KEYS.map((node) => {
-      const target = KRES_FILTERED_NODES.has(node)
-        ? query(ref(database, node), orderByChild('kresId'), equalTo(kresId))
-        : ref(database, node);
+      const target = query(ref(database, node), orderByChild('kresId'), equalTo(kresId), limitToLast(STATISTICS_RECORD_LIMIT));
 
       return onValue(
         target,
