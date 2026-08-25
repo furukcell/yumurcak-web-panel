@@ -10,6 +10,8 @@ import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { parseChildBirthDate } from '../utils/childDates';
+import { useUnreadMessagesCount } from '../utils/messageHelpers';
+import QuickActions from '../components/QuickActions';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -93,6 +95,7 @@ export default function DashboardPage() {
   const { kullanici, kres } = useAuth();
   const kresId = kullanici?.kresId || 'kres001';
   const navigate = useNavigate();
+  const unreadMessages = useUnreadMessagesCount(kullanici?.uid || kullanici?.id);
 
   const [istatistik, setIstatistik] = useState(EMPTY_STATS);
   const [abonelik, setAbonelik] = useState(null);
@@ -277,6 +280,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} />
       <div
         style={{
           background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryDark} 100%)`,
