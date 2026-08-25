@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Spin } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
+import trTR from 'antd/locale/tr_TR';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import { THEME, applyKresTheme } from './theme';
+import { getThemeById } from './theme/themes';
 import LoginPage from './pages/LoginPage';
 import PanelLayout from './components/PanelLayout';
 import DashboardPage from './pages/DashboardPage';
@@ -83,11 +86,79 @@ function Gate() {
   );
 }
 
+// kres.temaId'ye göre hem antd token'larını (Button/Menu/Input renkleri)
+// hem de global THEME sabitini (bkz. theme.js) günceller — AuthContext'teki
+// canlı kres dinleyicisi sayesinde Tema Ayarları'ndan yeni bir pastel tema
+// kaydedilince panel sayfa yenilemeden anında yeni renklere geçer.
+function ThemedApp() {
+  const { kres } = useAuth();
+  const activeTheme = useMemo(() => getThemeById(kres?.temaId), [kres?.temaId]);
+
+  useEffect(() => {
+    applyKresTheme(kres?.temaId);
+  }, [kres?.temaId]);
+
+  return (
+    <ConfigProvider
+      locale={trTR}
+      theme={{
+        token: {
+          colorPrimary: activeTheme.primary,
+          colorLink: activeTheme.primary,
+          colorBgLayout: activeTheme.bg,
+          borderRadius: THEME.radiusSm,
+          borderRadiusLG: THEME.radius,
+          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        },
+        components: {
+          Card: {
+            borderRadiusLG: THEME.radius,
+            boxShadowTertiary: THEME.shadow,
+          },
+          Button: {
+            borderRadius: 10,
+            controlHeight: 38,
+            fontWeight: 600,
+          },
+          Menu: {
+            itemBorderRadius: 12,
+            itemSelectedBg: activeTheme.primarySoft,
+            itemSelectedColor: activeTheme.primaryDark,
+            itemHoverBg: '#F5F2FF',
+            itemHeight: 42,
+            iconSize: 17,
+          },
+          Table: {
+            borderRadiusLG: THEME.radius,
+            headerBg: '#FAF9FF',
+          },
+          Input: {
+            borderRadius: THEME.radiusSm,
+            controlHeight: 38,
+          },
+          Select: {
+            borderRadius: THEME.radiusSm,
+            controlHeight: 38,
+          },
+          Tag: {
+            borderRadiusSM: 999,
+          },
+          Drawer: {
+            borderRadiusLG: THEME.radius,
+          },
+        },
+      }}
+    >
+      <Gate />
+    </ConfigProvider>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Gate />
+        <ThemedApp />
       </AuthProvider>
     </BrowserRouter>
   );
