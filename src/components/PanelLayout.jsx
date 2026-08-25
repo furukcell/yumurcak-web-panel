@@ -89,6 +89,7 @@ function buildMenuItems(unreadCount) {
       children: [
         { key: '/siniflar', icon: coloredIcon(ReadOutlined, THEME.blue), label: 'Sınıflar' },
         { key: '/cocuklar', icon: coloredIcon(SmileOutlined, THEME.orange), label: 'Çocuklar' },
+        { key: '/yoneticiler', icon: coloredIcon(CrownOutlined, THEME.gold), label: 'Yöneticiler' },
         { key: '/ogretmenler', icon: coloredIcon(TeamOutlined, THEME.primary), label: 'Öğretmenler' },
         { key: '/veliler', icon: coloredIcon(ContactsOutlined, THEME.green), label: 'Veliler' },
       ],
