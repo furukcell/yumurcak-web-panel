@@ -113,6 +113,7 @@ export default function AnnouncementsPage() {
 
     setSaving(true);
     try {
+      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
       const data = {
         title: values.title.trim(),
         baslik: values.title.trim(),
@@ -120,6 +121,8 @@ export default function AnnouncementsPage() {
         icerik: values.message.trim(),
         kresId,
         sentBy: 'admin',
+        senderName,
+        senderId: kullanici?.uid || kullanici?.id || '',
         priority: values.isUrgent ? 'urgent' : 'normal',
         targetRole,
         sinifId: targetRole === 'sinif' ? selectedClassId : '',
@@ -129,7 +132,15 @@ export default function AnnouncementsPage() {
       if (editingId) {
         const existingSnap = await get(ref(database, `duyurular/${editingId}`));
         const existing = existingSnap.exists() ? existingSnap.val() : {};
-        await set(ref(database, `duyurular/${editingId}`), { ...existing, ...data, createdAt: existing.createdAt || Date.now() });
+        // Düzenleyen kişi orijinal göndereni değiştirmesin — sadece
+        // gönderen bilgisi hiç yoksa (eski kayıt) doldurulsun.
+        await set(ref(database, `duyurular/${editingId}`), {
+          ...existing,
+          ...data,
+          senderName: existing.senderName || data.senderName,
+          senderId: existing.senderId || data.senderId,
+          createdAt: existing.createdAt || Date.now(),
+        });
       } else {
         await push(ref(database, 'duyurular'), { ...data, createdAt: Date.now() });
 
@@ -195,7 +206,10 @@ export default function AnnouncementsPage() {
                 <Tag color="purple">{getTargetLabel(item.targetRole)}</Tag>
               </div>
               <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginBottom: 4 }}>{item.message || item.icerik}</Paragraph>
-              <Text type="secondary" style={{ fontSize: 12 }}>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {item.senderName ? `${item.senderName} · ` : ''}
+                {item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}
+              </Text>
             </div>
           </List.Item>
         )}
