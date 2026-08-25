@@ -10,6 +10,7 @@ import StatisticsPage from './pages/StatisticsPage';
 import ClassesPage from './pages/ClassesPage';
 import ChildrenPage from './pages/ChildrenPage';
 import TeachersPage from './pages/TeachersPage';
+import AdministratorsPage from './pages/AdministratorsPage';
 import ParentsPage from './pages/ParentsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import EventsPage from './pages/EventsPage';
@@ -58,6 +59,7 @@ function Gate() {
         <Route path="/siniflar" element={b(<ClassesPage />)} />
         <Route path="/cocuklar" element={b(<ChildrenPage />)} />
         <Route path="/ogretmenler" element={b(<TeachersPage />)} />
+        <Route path="/yoneticiler" element={b(<AdministratorsPage />)} />
         <Route path="/veliler" element={b(<ParentsPage />)} />
         <Route path="/duyurular" element={b(<AnnouncementsPage />)} />
         <Route path="/etkinlikler" element={b(<EventsPage />)} />
