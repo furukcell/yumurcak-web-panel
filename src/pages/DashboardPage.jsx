@@ -11,7 +11,9 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { parseChildBirthDate } from '../utils/childDates';
 import { useUnreadMessagesCount } from '../utils/messageHelpers';
+import { getSubscriptionStatus } from '../utils/subscriptionStatus';
 import QuickActions from '../components/QuickActions';
+import TodayCards from '../components/TodayCards';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -80,11 +82,21 @@ function normalizeStats(data = {}) {
   };
 }
 
-function getSubscriptionText(sub) {
+// utils/subscriptionStatus.js'deki getSubscriptionStatus()'un ürettiği
+// remainingDays'i banner metnine ekleyen web'e özgü küçük yardımcı.
+function getSubscriptionBannerText(sub, status) {
   if (!sub) return 'İlk 1 ay ücretsiz deneme';
-  if (sub.durum === 'aktif') return sub.plan === 'yillik' ? 'Yıllık abonelik aktif' : 'Aylık abonelik aktif';
-  if (sub.durum === 'demo') return `Demo aktif · ${sub.demoBitisTarihi || sub.bitisTarihi || ''}`;
-  return 'Abonelik durumu kontrol edilmeli';
+  if (status.key === 'expired') return 'Abonelik süresi doldu';
+
+  const isDemo = String(sub.durum || sub.status || '').toLowerCase().includes('demo');
+  if (isDemo) {
+    return status.remainingDays != null ? `Demo aktif · ${status.remainingDays} gün kaldı` : 'Demo aktif';
+  }
+  if (status.aktif) {
+    const planText = sub.plan === 'yillik' ? 'Yıllık abonelik aktif' : 'Aylık abonelik aktif';
+    return status.remainingDays != null ? `${planText} · ${status.remainingDays} gün kaldı` : planText;
+  }
+  return status.message || 'Abonelik durumu kontrol edilmeli';
 }
 
 // Mobildeki DashboardScreen.js'deki özet kart mantığının web karşılığı:
@@ -277,6 +289,8 @@ export default function DashboardPage() {
   }, [kresId]);
 
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
+  const subStatus = getSubscriptionStatus(abonelik);
+  const subUrgent = subStatus.key === 'expiring_soon' || subStatus.key === 'expired';
 
   return (
     <div>
@@ -296,7 +310,26 @@ export default function DashboardPage() {
         <div>
           <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 13 }}>Hoş Geldiniz 👋</Text>
           <Title level={3} style={{ color: '#fff', margin: '4px 0 0' }}>{adSoyad}</Title>
-          <Text style={{ color: 'rgba(255,255,255,0.78)' }}>{getSubscriptionText(abonelik)}</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.78)' }}>{getSubscriptionBannerText(abonelik, subStatus)}</Text>
+          {subUrgent && (
+            <div style={{ marginTop: 8 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  background: subStatus.key === 'expired' ? 'rgba(255,77,109,0.28)' : 'rgba(255,159,28,0.28)',
+                  color: '#fff',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+                onClick={() => navigate('/ayarlar/abonelik')}
+              >
+                {subStatus.key === 'expired' ? '⚠️ Abonelik yenilenmeli' : `⚠️ ${subStatus.remainingDays} gün kaldı, yenile`}
+              </span>
+            </div>
+          )}
         </div>
         <div
           style={{
@@ -314,6 +347,8 @@ export default function DashboardPage() {
           <CrownOutlined />
         </div>
       </div>
+
+      <TodayCards navigate={navigate} kresId={kresId} />
 
       <Title level={5} style={{ marginBottom: 12 }}>Genel Özet</Title>
       {yukleniyor ? (
