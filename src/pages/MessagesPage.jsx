@@ -267,18 +267,19 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
     setText('');
     try {
       const now = Date.now();
+      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
       const mergedMeta = normalizeConversationMeta({ ...conversationMeta, ...conversation });
       const participants = getParticipantIds(mergedMeta).filter(Boolean);
       if (!participants.includes(currentUserId)) participants.push(currentUserId);
 
       await push(ref(database, `mesajlar/${conversationId}`), {
-        gonderenId: currentUserId, gonderenRol: currentRole, metin: clean, createdAt: now, okunduBy: { [currentUserId]: now },
+        gonderenId: currentUserId, gonderenRol: currentRole, gonderenAdi: senderName, metin: clean, createdAt: now, okunduBy: { [currentUserId]: now },
       });
 
       const { okunmamisSayac, sonOkuma, ...metaWithoutCounters } = mergedMeta;
       const updates = {
         ...metaWithoutCounters, id: conversationId,
-        sonMesaj: clean, sonMesajAt: now, sonGonderenId: currentUserId, aktif: true, updatedAt: now,
+        sonMesaj: clean, sonMesajAt: now, sonGonderenId: currentUserId, sonGonderenAdi: senderName, adminAdi: senderName, aktif: true, updatedAt: now,
         [`sonOkuma/${currentUserId}`]: now,
         [`okunmamisSayac/${currentUserId}`]: 0,
       };
@@ -295,7 +296,6 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
 
       const receiverIds = participants.filter((id) => id && id !== currentUserId);
       if (receiverIds.length > 0) {
-        const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yumurcak Kreş';
         createUserNotification({
           kresId: kresId || mergedMeta.kresId || '',
           userIds: receiverIds,
@@ -346,11 +346,18 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
                 const read = isReadByOtherParticipant(item, conversation, currentUserId);
                 return (
                   <div key={item.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10 }}>
-                    <div style={{ maxWidth: '70%', borderRadius: 16, padding: '9px 13px', background: mine ? THEME.primary : '#fff', border: mine ? 'none' : `1px solid ${THEME.border}` }}>
-                      <div style={{ color: mine ? '#fff' : THEME.text, fontSize: 14 }}>{item.metin}</div>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
-                        <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.72)' : THEME.muted }}>{formatMessageTime(item.createdAt)}</Text>
-                        {mine && <Text style={{ fontSize: 10, fontWeight: 700, color: read ? '#BFFFD2' : 'rgba(255,255,255,0.72)' }}>{read ? 'Okundu' : 'Gönderildi'}</Text>}
+                    <div style={{ maxWidth: '70%' }}>
+                      {mine && item.gonderenAdi && (
+                        <Text style={{ fontSize: 10, color: THEME.muted, display: 'block', textAlign: 'right', marginBottom: 2 }}>
+                          {item.gonderenAdi}
+                        </Text>
+                      )}
+                      <div style={{ borderRadius: 16, padding: '9px 13px', background: mine ? THEME.primary : '#fff', border: mine ? 'none' : `1px solid ${THEME.border}` }}>
+                        <div style={{ color: mine ? '#fff' : THEME.text, fontSize: 14 }}>{item.metin}</div>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+                          <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.72)' : THEME.muted }}>{formatMessageTime(item.createdAt)}</Text>
+                          {mine && <Text style={{ fontSize: 10, fontWeight: 700, color: read ? '#BFFFD2' : 'rgba(255,255,255,0.72)' }}>{read ? 'Okundu' : 'Gönderildi'}</Text>}
+                        </div>
                       </div>
                     </div>
                   </div>
