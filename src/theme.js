@@ -1,5 +1,13 @@
 // Mobil uygulamadaki src/screens/teacher/teacherShared.js içindeki THEME
 // ile aynı palet — web paneli görsel olarak mobil ile tutarlı olsun diye.
+// NOT: bu obje artık "sabit" değil — applyKresTheme() ile kres'in seçtiği
+// pastel temaya göre marka renkleri (primary/bg/text/border vb.) runtime'da
+// mutate ediliyor (bkz. App.jsx -> ThemedApp, AuthContext.jsx). Durum
+// renkleri (orange/green/red/blue/teal/purple/gold) bilinçli olarak
+// SABİT kalıyor — "gecikti" hep kırmızı, "ödendi" hep yeşil olsun diye,
+// tema ne olursa olsun anlamları değişmesin.
+import { getThemeById } from './theme/themes';
+
 export const THEME = {
   primary: '#6C3DEB',
   primaryDark: '#4B22B8',
@@ -22,3 +30,17 @@ export const THEME = {
   shadow: '0 4px 16px rgba(76, 41, 156, 0.06)',
   shadowLg: '0 12px 32px rgba(76, 41, 156, 0.10)',
 };
+
+// Kres'in Tema Ayarları'nda (ThemePage.jsx) seçtiği pastel paketi THEME
+// objesinin üzerine yazar — referans aynı kaldığı için import eden ~25
+// dosyanın hiçbiri değişmeden günceli okur, tek şart o bileşenin AuthContext
+// değişimiyle yeniden render olması (bkz. App.jsx).
+const BRAND_KEYS = ['primary', 'primaryDark', 'primarySoft', 'text', 'muted', 'bg', 'card', 'border'];
+
+export function applyKresTheme(temaId) {
+  const preset = getThemeById(temaId);
+  BRAND_KEYS.forEach((key) => {
+    if (preset[key] !== undefined) THEME[key] = preset[key];
+  });
+  return THEME;
+}
