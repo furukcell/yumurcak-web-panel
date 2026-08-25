@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { ref, get } from 'firebase/database';
+import { ref, get, onValue } from 'firebase/database';
 import { auth, database } from '../config/firebase';
-import { findUserIdByAuthUid, getKresForUser } from '../utils/authHelpers';
+import { findUserIdByAuthUid } from '../utils/authHelpers';
 
 const AuthContext = createContext(null);
 
@@ -77,9 +77,11 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        const kresObj = await getKresForUser(userData);
+        // NOT: kres artık burada tek seferlik get() ile değil, aşağıdaki
+        // ayrı useEffect'te canlı (onValue) dinleniyor — Tema Ayarları'ndan
+        // yeni bir pastel tema kaydedilince panel sayfa yenilemeden
+        // güncellensin diye (bkz. App.jsx -> ThemedApp, theme.js).
         setKullanici(userData);
-        setKres(kresObj);
         setYukleniyor(false);
       } catch (error) {
         console.warn('Auth kontrol hatası:', error);
@@ -90,6 +92,17 @@ export function AuthProvider({ children }) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const kresId = kullanici?.kresId;
+    if (!kresId) { setKres(null); return undefined; }
+    const unsub = onValue(
+      ref(database, `kresler/${kresId}`),
+      (snap) => setKres(snap.exists() ? { id: kresId, ...snap.val() } : null),
+      () => setKres(null)
+    );
+    return () => unsub();
+  }, [kullanici?.kresId]);
 
   return (
     <AuthContext.Provider value={{ kullanici, kres, yukleniyor, erisimHatasi, girisYap, cikisYap }}>
