@@ -46,6 +46,31 @@ function groupLabel(text) {
   );
 }
 
+// Her menü ikonunu kendi renginde küçük bir rozet içine alır — dashboard
+// özet kartlarındaki (renkli soft-circle) mantığın sidebar karşılığı.
+// Amaç: mockup'taki canlı/renkli ikon hissini korumak; antd'nin varsayılan
+// tek-renk (gri/mor) menü ikon davranışını burada bilinçli olarak eziyoruz.
+function coloredIcon(Icon, color) {
+  return (
+    <span
+      style={{
+        width: 24,
+        height: 24,
+        borderRadius: 7,
+        background: `${color}1F`,
+        color,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 13,
+        flexShrink: 0,
+      }}
+    >
+      <Icon />
+    </span>
+  );
+}
+
 function buildMenuItems(unreadCount) {
   return [
     {
@@ -53,8 +78,8 @@ function buildMenuItems(unreadCount) {
       type: 'group',
       label: groupLabel('Genel'),
       children: [
-        { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-        { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
+        { key: '/', icon: coloredIcon(DashboardOutlined, THEME.primary), label: 'Dashboard' },
+        { key: '/istatistik', icon: coloredIcon(BarChartOutlined, THEME.blue), label: 'İstatistik' },
       ],
     },
     {
@@ -62,10 +87,10 @@ function buildMenuItems(unreadCount) {
       type: 'group',
       label: groupLabel('Kurum Yönetimi'),
       children: [
-        { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
-        { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
-        { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
-        { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
+        { key: '/siniflar', icon: coloredIcon(ReadOutlined, THEME.blue), label: 'Sınıflar' },
+        { key: '/cocuklar', icon: coloredIcon(SmileOutlined, THEME.orange), label: 'Çocuklar' },
+        { key: '/ogretmenler', icon: coloredIcon(TeamOutlined, THEME.primary), label: 'Öğretmenler' },
+        { key: '/veliler', icon: coloredIcon(ContactsOutlined, THEME.green), label: 'Veliler' },
       ],
     },
     {
@@ -73,12 +98,12 @@ function buildMenuItems(unreadCount) {
       type: 'group',
       label: groupLabel('İletişim'),
       children: [
-        { key: '/duyurular', icon: <NotificationOutlined />, label: 'Duyurular' },
-        { key: '/etkinlikler', icon: <CalendarOutlined />, label: 'Etkinlikler' },
-        { key: '/anketler', icon: <BarsOutlined />, label: 'Anketler' },
+        { key: '/duyurular', icon: coloredIcon(NotificationOutlined, THEME.red), label: 'Duyurular' },
+        { key: '/etkinlikler', icon: coloredIcon(CalendarOutlined, THEME.teal), label: 'Etkinlikler' },
+        { key: '/anketler', icon: coloredIcon(BarsOutlined, THEME.purple), label: 'Anketler' },
         {
           key: '/mesajlar',
-          icon: <MessageOutlined />,
+          icon: coloredIcon(MessageOutlined, THEME.blue),
           label: unreadCount > 0 ? <span>Mesajlar <Badge count={unreadCount} size="small" style={{ marginLeft: 4 }} /></span> : 'Mesajlar',
         },
       ],
@@ -88,13 +113,13 @@ function buildMenuItems(unreadCount) {
       type: 'group',
       label: groupLabel('Günlük Operasyon'),
       children: [
-        { key: '/yemek-listesi', icon: <CoffeeOutlined />, label: 'Yemek Listesi' },
-        { key: '/ders-programi', icon: <ScheduleOutlined />, label: 'Ders Programı' },
-        { key: '/nobet-cizelgesi', icon: <SolutionOutlined />, label: 'Nöbet Çizelgesi' },
-        { key: '/personel-gorevleri', icon: <SolutionOutlined />, label: 'Personel Görevleri' },
-        { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
-        { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
-        { key: '/odemeler', icon: <WalletOutlined />, label: 'Ödemeler' },
+        { key: '/yemek-listesi', icon: coloredIcon(CoffeeOutlined, THEME.orange), label: 'Yemek Listesi' },
+        { key: '/ders-programi', icon: coloredIcon(ScheduleOutlined, THEME.teal), label: 'Ders Programı' },
+        { key: '/nobet-cizelgesi', icon: coloredIcon(SolutionOutlined, THEME.gold), label: 'Nöbet Çizelgesi' },
+        { key: '/personel-gorevleri', icon: coloredIcon(SolutionOutlined, THEME.primary), label: 'Personel Görevleri' },
+        { key: '/servis', icon: coloredIcon(CarOutlined, THEME.blue), label: 'Servis' },
+        { key: '/dogum-gunleri', icon: coloredIcon(GiftOutlined, THEME.gold), label: 'Doğum Günleri' },
+        { key: '/odemeler', icon: coloredIcon(WalletOutlined, THEME.green), label: 'Ödemeler' },
       ],
     },
     {
@@ -102,11 +127,11 @@ function buildMenuItems(unreadCount) {
       type: 'group',
       label: groupLabel('Ayarlar'),
       children: [
-        { key: '/ayarlar/kurum', icon: <SettingOutlined />, label: 'Kurum Bilgileri' },
-        { key: '/ayarlar/tema', icon: <BgColorsOutlined />, label: 'Tema Ayarları' },
-        { key: '/ayarlar/abonelik', icon: <CrownOutlined />, label: 'Abonelik' },
-        { key: '/ayarlar/kurum-zili', icon: <BellOutlined />, label: 'Kurum Zili' },
-        { key: '/yasal-belgeler', icon: <FileProtectOutlined />, label: 'Yasal Belgeler' },
+        { key: '/ayarlar/kurum', icon: coloredIcon(SettingOutlined, THEME.muted), label: 'Kurum Bilgileri' },
+        { key: '/ayarlar/tema', icon: coloredIcon(BgColorsOutlined, THEME.purple), label: 'Tema Ayarları' },
+        { key: '/ayarlar/abonelik', icon: coloredIcon(CrownOutlined, THEME.gold), label: 'Abonelik' },
+        { key: '/ayarlar/kurum-zili', icon: coloredIcon(BellOutlined, THEME.red), label: 'Kurum Zili' },
+        { key: '/yasal-belgeler', icon: coloredIcon(FileProtectOutlined, THEME.blue), label: 'Yasal Belgeler' },
       ],
     },
   ];
