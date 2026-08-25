@@ -29,6 +29,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { useUnreadMessagesCount } from '../utils/messageHelpers';
+import NotificationToasts from './NotificationToasts';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -157,6 +158,7 @@ export default function PanelLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      <NotificationToasts kullanici={kullanici} />
       <Sider
         collapsible
         collapsed={collapsed}
