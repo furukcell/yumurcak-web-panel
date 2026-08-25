@@ -357,7 +357,7 @@ export default function DashboardPage() {
             items={duyurular.map((d) => ({
               key: d.id,
               primary: d.title || d.baslik || 'Duyuru',
-              secondary: d.createdAt ? new Date(d.createdAt).toLocaleDateString('tr-TR') : '',
+              secondary: [d.senderName, d.createdAt ? new Date(d.createdAt).toLocaleDateString('tr-TR') : ''].filter(Boolean).join(' · '),
             }))}
           />
         </Col>
