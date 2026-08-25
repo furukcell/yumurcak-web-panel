@@ -53,7 +53,7 @@ export default function ThemePage() {
   return (
     <div>
       <Title level={3} style={{ marginBottom: 4 }}>Tema Ayarları</Title>
-      <Text type="secondary">Bu seçim aynı kreşe bağlı veli ve öğretmen ekranlarına uygulanır.</Text>
+      <Text type="secondary">Bu seçim web panelinize, veli ve öğretmen ekranlarına uygulanır.</Text>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 16, padding: 16, margin: '16px 0 20px' }}>
         <div>
