@@ -35,34 +35,80 @@ const { Text } = Typography;
 
 // Faz 0-1: Dashboard + İstatistik, Faz 2: Çekirdek Yönetim (CRUD),
 // Faz 3: İletişim eklendi (bkz. docs/web-panel-plan.md).
+// FAZ X: Sidebar 5 mantıksal bölüme ayrıldı (Genel / Kurum Yönetimi /
+// İletişim / Günlük Operasyon / Ayarlar) — 21 maddelik tek düz liste
+// yerine göz taraması kolay gruplu yapı (bkz. sidebar-mockup.html).
+function groupLabel(text) {
+  return (
+    <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#B3AFCB' }}>
+      {text}
+    </span>
+  );
+}
+
 function buildMenuItems(unreadCount) {
   return [
-    { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
-    { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
-    { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
-    { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
-    { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
-    { key: '/duyurular', icon: <NotificationOutlined />, label: 'Duyurular' },
-    { key: '/etkinlikler', icon: <CalendarOutlined />, label: 'Etkinlikler' },
-    { key: '/anketler', icon: <BarsOutlined />, label: 'Anketler' },
     {
-      key: '/mesajlar',
-      icon: <MessageOutlined />,
-      label: unreadCount > 0 ? <span>Mesajlar <Badge count={unreadCount} size="small" style={{ marginLeft: 4 }} /></span> : 'Mesajlar',
+      key: 'grp-genel',
+      type: 'group',
+      label: groupLabel('Genel'),
+      children: [
+        { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
+        { key: '/istatistik', icon: <BarChartOutlined />, label: 'İstatistik' },
+      ],
     },
-    { key: '/yemek-listesi', icon: <CoffeeOutlined />, label: 'Yemek Listesi' },
-    { key: '/ders-programi', icon: <ScheduleOutlined />, label: 'Ders Programı' },
-    { key: '/nobet-cizelgesi', icon: <SolutionOutlined />, label: 'Nöbet Çizelgesi' },
-    { key: '/personel-gorevleri', icon: <SolutionOutlined />, label: 'Personel Görevleri' },
-    { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
-    { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
-    { key: '/odemeler', icon: <WalletOutlined />, label: 'Ödemeler' },
-    { key: '/ayarlar/kurum', icon: <SettingOutlined />, label: 'Kurum Bilgileri' },
-    { key: '/ayarlar/tema', icon: <BgColorsOutlined />, label: 'Tema Ayarları' },
-    { key: '/ayarlar/abonelik', icon: <CrownOutlined />, label: 'Abonelik' },
-    { key: '/ayarlar/kurum-zili', icon: <BellOutlined />, label: 'Kurum Zili' },
-    { key: '/yasal-belgeler', icon: <FileProtectOutlined />, label: 'Yasal Belgeler' },
+    {
+      key: 'grp-kurum',
+      type: 'group',
+      label: groupLabel('Kurum Yönetimi'),
+      children: [
+        { key: '/siniflar', icon: <ReadOutlined />, label: 'Sınıflar' },
+        { key: '/cocuklar', icon: <SmileOutlined />, label: 'Çocuklar' },
+        { key: '/ogretmenler', icon: <TeamOutlined />, label: 'Öğretmenler' },
+        { key: '/veliler', icon: <ContactsOutlined />, label: 'Veliler' },
+      ],
+    },
+    {
+      key: 'grp-iletisim',
+      type: 'group',
+      label: groupLabel('İletişim'),
+      children: [
+        { key: '/duyurular', icon: <NotificationOutlined />, label: 'Duyurular' },
+        { key: '/etkinlikler', icon: <CalendarOutlined />, label: 'Etkinlikler' },
+        { key: '/anketler', icon: <BarsOutlined />, label: 'Anketler' },
+        {
+          key: '/mesajlar',
+          icon: <MessageOutlined />,
+          label: unreadCount > 0 ? <span>Mesajlar <Badge count={unreadCount} size="small" style={{ marginLeft: 4 }} /></span> : 'Mesajlar',
+        },
+      ],
+    },
+    {
+      key: 'grp-operasyon',
+      type: 'group',
+      label: groupLabel('Günlük Operasyon'),
+      children: [
+        { key: '/yemek-listesi', icon: <CoffeeOutlined />, label: 'Yemek Listesi' },
+        { key: '/ders-programi', icon: <ScheduleOutlined />, label: 'Ders Programı' },
+        { key: '/nobet-cizelgesi', icon: <SolutionOutlined />, label: 'Nöbet Çizelgesi' },
+        { key: '/personel-gorevleri', icon: <SolutionOutlined />, label: 'Personel Görevleri' },
+        { key: '/servis', icon: <CarOutlined />, label: 'Servis' },
+        { key: '/dogum-gunleri', icon: <GiftOutlined />, label: 'Doğum Günleri' },
+        { key: '/odemeler', icon: <WalletOutlined />, label: 'Ödemeler' },
+      ],
+    },
+    {
+      key: 'grp-ayarlar',
+      type: 'group',
+      label: groupLabel('Ayarlar'),
+      children: [
+        { key: '/ayarlar/kurum', icon: <SettingOutlined />, label: 'Kurum Bilgileri' },
+        { key: '/ayarlar/tema', icon: <BgColorsOutlined />, label: 'Tema Ayarları' },
+        { key: '/ayarlar/abonelik', icon: <CrownOutlined />, label: 'Abonelik' },
+        { key: '/ayarlar/kurum-zili', icon: <BellOutlined />, label: 'Kurum Zili' },
+        { key: '/yasal-belgeler', icon: <FileProtectOutlined />, label: 'Yasal Belgeler' },
+      ],
+    },
   ];
 }
 
@@ -91,7 +137,12 @@ export default function PanelLayout() {
         onCollapse={setCollapsed}
         theme="light"
         width={236}
-        style={{ background: '#FDFCFF', borderRight: `1px solid ${THEME.border}` }}
+        style={{
+          background: 'linear-gradient(180deg, #FDFCFF 0%, #F7F3FF 100%)',
+          borderRight: `1px solid ${THEME.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         <div
           style={{
@@ -120,7 +171,7 @@ export default function PanelLayout() {
             </Text>
           )}
         </div>
-        <div style={{ padding: '4px 10px' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '4px 10px 12px' }}>
           <Menu
             mode="inline"
             selectedKeys={[location.pathname]}
@@ -128,6 +179,39 @@ export default function PanelLayout() {
             onClick={({ key }) => navigate(key)}
             style={{ background: 'transparent', border: 'none' }}
           />
+        </div>
+        <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}`, flexShrink: 0 }}>
+          <Dropdown menu={userMenu} placement="topLeft">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                cursor: 'pointer',
+                padding: collapsed ? '8px 0' : '8px 10px',
+                borderRadius: 12,
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#F1ECFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <Avatar size={32} icon={<UserOutlined />} style={{ background: THEME.primary, flexShrink: 0 }} />
+              {!collapsed && (
+                <>
+                  <div style={{ lineHeight: 1.2, minWidth: 0, flex: 1 }}>
+                    <Text strong style={{ fontSize: 12.5, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {kullanici?.ad || kullanici?.kullaniciAdi || kullanici?.email || 'Kullanıcı'}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      {kullanici?.rol === 'yonetici' ? 'Yönetici' : (kullanici?.rol || 'Yönetici')}
+                    </Text>
+                  </div>
+                  <LogoutOutlined style={{ color: '#C7C4DA', fontSize: 14, flexShrink: 0 }} />
+                </>
+              )}
+            </div>
+          </Dropdown>
         </div>
       </Sider>
       <Layout>
