@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Typography, Card, Button, Input, Progress, Tag, message, Row, Col, Spin, Alert, Upload, Image as AntImage } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import { ref, onValue, get, set, push, query, orderByChild, equalTo } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { database, storage } from '../config/firebase';
+import { Typography, Card, Button, Input, Progress, Tag, message, Row, Col, Spin, Alert } from 'antd';
+import { ref, onValue, get, set, query, orderByChild, equalTo } from 'firebase/database';
+import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { getSubscriptionStatus, getSubscriptionEndDate } from '../utils/subscriptionStatus';
@@ -18,25 +16,6 @@ const PACKAGE_TIERS = [
 
 // Faz 15'teki 3 aylık demo kaldırıldı, tek standart demo süresi 1 ay.
 const BUILT_IN_PROMOS = { PILOT1AY: { kod: 'PILOT1AY', tip: 'demo', sureAy: 1, aktif: true } };
-
-// Mobildeki subscriptionService.js -> PER_STUDENT_PRICE / computePerStudentPrice
-// ile birebir aynı (kurumsal/özel talepler için öğrenci başına fiyatlama).
-const PER_STUDENT_PRICE = 48; // TL / öğrenci / ay
-function computePerStudentPrice(studentCount, period = 'aylik') {
-  const count = Math.max(0, Number(studentCount) || 0);
-  const monthly = count * PER_STUDENT_PRICE;
-  return period === 'yillik' ? monthly * 10 : monthly;
-}
-function requestStatusLabel(durum) {
-  if (durum === 'onaylandi') return 'Onaylandı';
-  if (durum === 'reddedildi') return 'Reddedildi';
-  return 'Bekliyor';
-}
-function requestStatusColor(durum) {
-  if (durum === 'onaylandi') return THEME.green;
-  if (durum === 'reddedildi') return THEME.red;
-  return THEME.orange;
-}
 
 function formatPrice(value) { return `${Number(value || 0).toLocaleString('tr-TR')} TL`; }
 function getTierById(id) { return PACKAGE_TIERS.find((t) => t.id === id) || PACKAGE_TIERS[0]; }
@@ -65,7 +44,7 @@ function getStatusColor(status) {
 // ve promosyon kodu uygulama var. Ücretli plan satın alma mobil
 // üzerinden yapılmalı.
 export default function SubscriptionPage() {
-  const { kullanici, kres } = useAuth();
+  const { kullanici } = useAuth();
   const kresId = kullanici?.kresId || 'kres001';
 
   const [loading, setLoading] = useState(true);
@@ -73,16 +52,6 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState(null);
   const [children, setChildren] = useState([]);
   const [promoCode, setPromoCode] = useState('');
-
-  // Manuel/IBAN abonelik talebi (öğrenci sayısına göre özel fiyat) —
-  // mobildeki AdminSubscriptionScreen.js'in "Öğrenci Sayısına Göre Özel
-  // Fiyat" bölümüyle birebir aynı mantık, sadece Upload antd bileşeni ile.
-  const [reqPeriod, setReqPeriod] = useState('aylik');
-  const [reqStudentCount, setReqStudentCount] = useState('');
-  const [reqDekontUrl, setReqDekontUrl] = useState('');
-  const [reqUploading, setReqUploading] = useState(false);
-  const [reqSubmitting, setReqSubmitting] = useState(false);
-  const [manualRequests, setManualRequests] = useState([]);
 
   useEffect(() => {
     const subUnsub = onValue(ref(database, `abonelikler/${kresId}`), (snap) => { setSubscription(snap.val() || null); setLoading(false); });
@@ -93,18 +62,6 @@ export default function SubscriptionPage() {
       setChildren(list);
     }, () => setChildren([]));
     return () => { subUnsub(); childUnsub(); };
-  }, [kresId]);
-
-  useEffect(() => {
-    const talepRef = ref(database, `abonelikTalepleri/${kresId}`);
-    const unsub = onValue(talepRef, (snap) => {
-      const data = snap.val() || {};
-      const list = Object.entries(data)
-        .map(([talepId, talep]) => ({ kresId, talepId, ...talep }))
-        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      setManualRequests(list);
-    }, () => setManualRequests([]));
-    return () => unsub();
   }, [kresId]);
 
   const status = useMemo(() => getSubscriptionStatus(subscription), [subscription]);
@@ -172,58 +129,6 @@ export default function SubscriptionPage() {
     }
   };
 
-  // beforeUpload'dan gelen dosyayı Storage'a yükler (mobildeki
-  // pickAndUploadDekont'un web karşılığı — InstitutionSettingsPage.jsx'teki
-  // logo yükleme deseniyle aynı yaklaşım).
-  const handleDekontUpload = async (file) => {
-    setReqUploading(true);
-    try {
-      const fileRef = storageRef(storage, `abonelikDekontlari/${kresId}/${Date.now()}.jpg`);
-      await uploadBytes(fileRef, file, { contentType: file.type || 'image/jpeg' });
-      const downloadUrl = await getDownloadURL(fileRef);
-      setReqDekontUrl(downloadUrl);
-      message.success('Dekont yüklendi');
-    } catch {
-      message.error('Dekont yüklenemedi. Storage ayarlarını kontrol et.');
-    } finally {
-      setReqUploading(false);
-    }
-    return false; // antd Upload'un kendi yüklemesini engelle, biz manuel yapıyoruz
-  };
-
-  const submitManualRequest = async () => {
-    const count = Number(reqStudentCount);
-    if (!count || count <= 0) { message.error('Geçerli bir öğrenci sayısı gir.'); return; }
-    if (!reqDekontUrl) { message.error('Talep göndermeden önce dekont/makbuz yükle.'); return; }
-
-    setReqSubmitting(true);
-    try {
-      const hesaplananTutar = computePerStudentPrice(count, reqPeriod);
-      const newRef = push(ref(database, `abonelikTalepleri/${kresId}`));
-      await set(newRef, {
-        kresId,
-        kresAdi: kres?.ad || '',
-        ogrenciSayisi: count,
-        birimFiyat: PER_STUDENT_PRICE,
-        period: reqPeriod,
-        hesaplananTutar,
-        dekontUrl: reqDekontUrl,
-        durum: 'bekliyor',
-        olusturanUid: kullanici?.uid || kullanici?.id || '',
-        olusturmaTarihi: toDateStr(new Date()),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-      setReqStudentCount('');
-      setReqDekontUrl('');
-      message.success('Abonelik talebiniz iletildi. Onaylandığında abonelik otomatik aktif olur.');
-    } catch (err) {
-      message.error(err?.message || 'Talep gönderilemedi.');
-    } finally {
-      setReqSubmitting(false);
-    }
-  };
-
   if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><Spin size="large" /></div>;
 
   return (
@@ -269,63 +174,6 @@ export default function SubscriptionPage() {
           <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Örn: PILOT1AY" style={{ flex: 1 }} />
           <Button type="primary" loading={saving} onClick={applyPromo}>Uygula</Button>
         </div>
-      </Card>
-
-      <Card style={{ marginBottom: 16, borderColor: THEME.border }} title="Öğrenci Sayısına Göre Özel Fiyat">
-        <Paragraph type="secondary" style={{ marginTop: -4, marginBottom: 14 }}>
-          Sabit paketler yerine öğrenci başına {formatPrice(PER_STUDENT_PRICE)}/ay üzerinden özel fiyat talep edebilirsiniz.
-          Dekont/makbuz yükleyip talebi gönderdiğinizde ekibimiz onaylar, onaylanınca abonelik otomatik aktif olur.
-        </Paragraph>
-
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <Button type={reqPeriod === 'aylik' ? 'primary' : 'default'} onClick={() => setReqPeriod('aylik')} style={{ flex: 1 }}>Aylık</Button>
-          <Button type={reqPeriod === 'yillik' ? 'primary' : 'default'} onClick={() => setReqPeriod('yillik')} style={{ flex: 1 }}>Yıllık <Text type="secondary" style={{ fontSize: 11 }}>(2 ay ücretsiz)</Text></Button>
-        </div>
-
-        <Text strong style={{ fontSize: 13 }}>Öğrenci Sayısı</Text>
-        <Input
-          style={{ marginTop: 6, marginBottom: 10 }}
-          value={reqStudentCount}
-          onChange={(e) => setReqStudentCount(e.target.value.replace(/[^0-9]/g, ''))}
-          placeholder={String(children.length || '')}
-        />
-
-        <Text strong style={{ color: THEME.primary, display: 'block', marginBottom: 14 }}>
-          Hesaplanan tutar: {formatPrice(computePerStudentPrice(reqStudentCount || 0, reqPeriod))} / {reqPeriod === 'yillik' ? 'yıl' : 'ay'}
-        </Text>
-
-        <Upload showUploadList={false} beforeUpload={handleDekontUpload} accept="image/*">
-          <Button icon={<UploadOutlined />} loading={reqUploading} style={{ marginBottom: 10 }}>
-            {reqDekontUrl ? 'Dekont Yüklendi — Değiştirmek İçin Tıkla' : 'Dekont / Makbuz Yükle'}
-          </Button>
-        </Upload>
-        {reqDekontUrl ? (
-          <div style={{ marginBottom: 12 }}>
-            <AntImage src={reqDekontUrl} width={140} style={{ borderRadius: 10 }} />
-          </div>
-        ) : null}
-
-        <Button type="primary" block loading={reqSubmitting} disabled={!reqDekontUrl} onClick={submitManualRequest}>
-          Abonelik Talebi Gönder
-        </Button>
-
-        {manualRequests.length > 0 ? (
-          <div style={{ marginTop: 18 }}>
-            <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>Taleplerim</Text>
-            {manualRequests.map((r) => (
-              <div key={r.talepId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${THEME.border}` }}>
-                <div>
-                  <Text style={{ fontSize: 13, fontWeight: 600 }}>
-                    {r.ogrenciSayisi} öğrenci — {formatPrice(r.hesaplananTutar)} / {r.period === 'yillik' ? 'yıl' : 'ay'}
-                  </Text>
-                  <div><Text type="secondary" style={{ fontSize: 11 }}>{r.olusturmaTarihi}</Text></div>
-                  {r.durum === 'reddedildi' && r.redNotu ? <div><Text type="danger" style={{ fontSize: 11 }}>Not: {r.redNotu}</Text></div> : null}
-                </div>
-                <Tag color={requestStatusColor(r.durum)}>{requestStatusLabel(r.durum)}</Tag>
-              </div>
-            ))}
-          </div>
-        ) : null}
       </Card>
 
       <Title level={5} style={{ marginBottom: 12 }}>Paketler</Title>
