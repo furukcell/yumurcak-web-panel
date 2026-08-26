@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Table, Button, Drawer, Form, Input, Tag, message, Empty, Switch, Space } from 'antd';
-import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, CrownOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Drawer, Form, Input, Tag, message, Empty, Switch, Space, Popconfirm } from 'antd';
+import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, CrownOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database } from '../config/firebase';
@@ -9,6 +9,7 @@ import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
+import { deleteKullaniciHesabi } from '../utils/userDelete';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +28,7 @@ export default function AdministratorsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -191,6 +193,28 @@ export default function AdministratorsPage() {
     }
   };
 
+  const handleDelete = async (record) => {
+    if (record.id === (kullanici?.uid || kullanici?.id)) {
+      message.error('Kendi hesabını silemezsin.');
+      return;
+    }
+    const kalanAktif = yoneticiler.filter((y) => y.id !== record.id && y.aktif).length;
+    if (record.aktif && kalanAktif === 0) {
+      message.error('En az bir aktif yönetici hesabı kalmalı.');
+      return;
+    }
+    setDeletingId(record.id);
+    try {
+      await deleteKullaniciHesabi(record.id);
+      message.success('Yönetici silindi');
+    } catch (error) {
+      console.error(error);
+      message.error(`Yönetici silinemedi. ${error?.message || ''}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const aktifSayisi = yoneticiler.filter((y) => y.aktif).length;
 
   const columns = [
@@ -208,6 +232,33 @@ export default function AdministratorsPage() {
     { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
     { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
     { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 'Aktif' : 'Pasif'}</Tag> },
+    {
+      title: '',
+      key: 'sil',
+      width: 48,
+      render: (_, r) => (
+        <Popconfirm
+          title="Yönetici silinsin mi?"
+          description="Bu işlem geri alınamaz: hesap ve Firebase Auth girişi tamamen silinir."
+          okText="Sil"
+          okButtonProps={{ danger: true }}
+          cancelText="Vazgeç"
+          onConfirm={(e) => {
+            e?.stopPropagation();
+            handleDelete(r);
+          }}
+          onCancel={(e) => e?.stopPropagation()}
+        >
+          <Button
+            danger
+            type="text"
+            icon={<DeleteOutlined />}
+            loading={deletingId === r.id}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
+      ),
+    },
   ];
 
   return (
