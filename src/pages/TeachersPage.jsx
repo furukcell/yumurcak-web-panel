@@ -201,4 +201,148 @@ export default function TeachersPage() {
       if (oldTeacher.kresId && oldTeacher.kresId !== nextKresId) updates[`kresKullanicilari/${oldTeacher.kresId}/ogretmenler/${id}`] = null;
 
       if (cleanNewUsername) updates[`kullaniciAdiIndex/${cleanNewUsername}`] = id;
-      if (cleanOldUsername && cleanOldUsername !== cleanNewUsername)
+      if (cleanOldUsername && cleanOldUsername !== cleanNewUsername) updates[`kullaniciAdiIndex/${cleanOldUsername}`] = null;
+
+      Object.entries(siniflarData).forEach(([classId, classData]) => {
+        const mevcutIds = Array.isArray(classData?.ogretmenIds) ? classData.ogretmenIds.map(String) : [];
+        if (mevcutIds.includes(String(id)) && classId !== nextSinifId) {
+          updates[`siniflar/${classId}/ogretmenIds`] = mevcutIds.filter((teacherItemId) => teacherItemId !== String(id));
+          updates[`siniflar/${classId}/updatedAt`] = now;
+          updates[`ogretmenSiniflari/${id}/${classId}`] = null;
+        }
+      });
+
+      if (nextSinifId) {
+        const targetClass = siniflarData[nextSinifId] || {};
+        const targetIds = Array.isArray(targetClass.ogretmenIds) ? targetClass.ogretmenIds.map(String) : [];
+        const classKresId = targetClass.kresId || nextKresId;
+        updates[`siniflar/${nextSinifId}/ogretmenIds`] = Array.from(new Set([...targetIds, String(id)]));
+        updates[`siniflar/${nextSinifId}/kresId`] = classKresId;
+        updates[`siniflar/${nextSinifId}/updatedAt`] = now;
+        updates[`ogretmenSiniflari/${id}/${nextSinifId}`] = true;
+        updates[`kresSiniflari/${classKresId}/${nextSinifId}`] = true;
+      }
+
+      await update(ref(database), updates);
+      message.success(editingId ? 'Öğretmen güncellendi' : 'Öğretmen kaydedildi');
+      setDrawerOpen(false);
+    } catch (error) {
+      console.error(error);
+      if (error?.code === 'auth/email-already-in-use') {
+        message.error('Bu kullanıcı adı için Firebase Auth hesabı zaten var. Farklı kullanıcı adı dene.');
+      } else {
+        message.error(`Öğretmen kaydedilemedi. ${error?.code || error?.message || ''}`);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Mobil AdministratorsPage.jsx ile aynı desen: functions/index.js ->
+  // deleteKullanici callable'ını çağırır, hem DB kaydını/index'lerini hem
+  // de gerçek Firebase Auth hesabını siler.
+  const handleDelete = async (record) => {
+    setDeletingId(record.id);
+    try {
+      await deleteKullaniciHesabi(record.id);
+      message.success('Öğretmen silindi');
+    } catch (error) {
+      console.error(error);
+      message.error(`Öğretmen silinemedi. ${error?.message || ''}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const aktifSayisi = teachers.filter((t) => t.aktif).length;
+  const atanmisSayisi = teachers.filter((t) => t.sinifAdlari.length > 0).length;
+
+  const columns = [
+    { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
+    { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
+    { title: 'Sınıf', key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">Atanmamış</Text>) },
+    { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
+    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 'Aktif' : 'Pasif'}</Tag> },
+    {
+      title: '',
+      key: 'sil',
+      width: 48,
+      render: (_, r) => (
+        <Popconfirm
+          title="Öğretmen silinsin mi?"
+          description="Bu işlem geri alınamaz: hesap ve Firebase Auth girişi tamamen silinir."
+          okText="Sil"
+          okButtonProps={{ danger: true }}
+          cancelText="Vazgeç"
+          onConfirm={(e) => {
+            e?.stopPropagation();
+            handleDelete(r);
+          }}
+          onCancel={(e) => e?.stopPropagation()}
+        >
+          <Button
+            danger
+            type="text"
+            icon={<DeleteOutlined />}
+            loading={deletingId === r.id}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <Title level={3} style={{ margin: 0 }}>Öğretmenler</Title>
+          <Text type="secondary">{teachers.length} öğretmen · {aktifSayisi} aktif · {atanmisSayisi} sınıfa atanmış</Text>
+        </div>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Öğretmen Ekle</Button>
+      </div>
+
+      <Table
+        rowKey="id"
+        loading={loading}
+        columns={columns}
+        dataSource={teachers}
+        onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
+        locale={{ emptyText: <Empty description="Henüz kayıtlı öğretmen yok" /> }}
+        pagination={{ pageSize: 10 }}
+      />
+
+      <Drawer
+        title={editingId ? 'Öğretmeni Düzenle' : 'Yeni Öğretmen'}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        width={420}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Kullanıcı adı zorunlu' }]}>
+            <Input placeholder="Örn: ogretmen1" autoCapitalize="none" />
+          </Form.Item>
+          <Form.Item name="ad" label="Ad Soyad" rules={[{ required: true, message: 'Ad soyad zorunlu' }]}>
+            <Input placeholder="Örn: Ayşe Yılmaz" />
+          </Form.Item>
+          <Form.Item
+            name="sifre"
+            label="Şifre"
+            extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}
+          >
+            <Input.Password placeholder={editingId ? 'Boş bırakılırsa değişmez' : 'Boş bırakılırsa: 123456'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
+          </Form.Item>
+          <Form.Item name="sinifId" label="Sınıf Ata (opsiyonel)">
+            <Select
+              allowClear
+              placeholder={siniflar.length === 0 ? 'Önce sınıf oluşturun' : 'Sınıf seçin'}
+              disabled={siniflar.length === 0}
+              options={siniflar.map((s) => ({ value: s.id, label: `${s.ad} — ${s.yasGrubu}` }))}
+            />
+          </Form.Item>
+        </Form>
+      </Drawer>
+    </div>
+  );
+}
