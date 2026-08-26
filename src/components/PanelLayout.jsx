@@ -24,6 +24,7 @@ import {
   CrownOutlined,
   BellOutlined,
   FileProtectOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -102,6 +103,7 @@ function buildMenuItems(unreadCount) {
       children: [
         { key: '/duyurular', icon: coloredIcon(NotificationOutlined, THEME.red), label: 'Duyurular' },
         { key: '/etkinlikler', icon: coloredIcon(CalendarOutlined, THEME.teal), label: 'Etkinlikler' },
+        { key: '/galeri', icon: coloredIcon(PictureOutlined, THEME.orange), label: 'Galeri' },
         { key: '/anketler', icon: coloredIcon(BarsOutlined, THEME.purple), label: 'Anketler' },
         {
           key: '/mesajlar',

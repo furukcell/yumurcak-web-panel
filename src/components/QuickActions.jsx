@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Badge } from 'antd';
-import { MessageOutlined, ScheduleOutlined, NotificationOutlined, BellOutlined } from '@ant-design/icons';
+import { MessageOutlined, ScheduleOutlined, NotificationOutlined, BellOutlined, PictureOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { THEME } from '../theme';
@@ -35,6 +35,7 @@ export default function QuickActions({ navigate, kresId, unreadMessages }) {
   const items = [
     { key: '/mesajlar', label: 'Mesajlar', icon: <MessageOutlined />, color: THEME.blue, count: unreadMessages },
     { key: '/ayarlar/kurum-zili', label: 'Kurum Zili', icon: <BellOutlined />, color: THEME.red, count: pendingBell },
+    { key: '/galeri', label: 'Galeri', icon: <PictureOutlined />, color: THEME.orange, count: 0 },
     { key: '/duyurular', label: 'Duyurular', icon: <NotificationOutlined />, color: THEME.purple, count: 0 },
     { key: '/ders-programi', label: 'Ders Programı', icon: <ScheduleOutlined />, color: THEME.teal, count: 0 },
   ];
