@@ -9,9 +9,9 @@ import { getSubscriptionStatus, getSubscriptionEndDate } from '../utils/subscrip
 const { Title, Text, Paragraph } = Typography;
 
 const PACKAGE_TIERS = [
-  { id: 'baslangic', title: 'Başlangıç', range: '0 - 30 öğrenci', minStudent: 0, maxStudent: 30, monthly: 1000, yearly: 10000, desc: 'Küçük kreşler için ideal başlangıç paketi.', badge: 'Ekonomik', color: THEME.green },
-  { id: 'profesyonel', title: 'Profesyonel', range: '31 - 50 öğrenci', minStudent: 31, maxStudent: 50, monthly: 1500, yearly: 15000, desc: 'Büyüyen kurumlar için dengeli paket.', badge: 'Önerilen', color: THEME.primary, featured: true },
-  { id: 'kurum', title: 'Kurum', range: '51 - 100 öğrenci', minStudent: 51, maxStudent: 100, monthly: 3000, yearly: 30000, desc: 'Yoğun kullanımlı büyük kreşler için.', badge: 'Büyük Kreş', color: THEME.gold },
+  { id: 'baslangic', title: 'Başlangıç', range: '0 - 30 öğrenci', minStudent: 0, maxStudent: 30, monthly: 1200, yearly: 12000, desc: 'Küçük kreşler için ideal başlangıç paketi.', badge: 'Ekonomik', color: THEME.green },
+  { id: 'profesyonel', title: 'Profesyonel', range: '31 - 50 öğrenci', minStudent: 31, maxStudent: 50, monthly: 2000, yearly: 20000, desc: 'Büyüyen kurumlar için dengeli paket.', badge: 'Önerilen', color: THEME.primary, featured: true },
+  { id: 'kurum', title: 'Kurum', range: '51 - 100 öğrenci', minStudent: 51, maxStudent: 100, monthly: 4000, yearly: 40000, desc: 'Yoğun kullanımlı büyük kreşler için.', badge: 'Büyük Kreş', color: THEME.gold },
 ];
 
 // Faz 15'teki 3 aylık demo kaldırıldı, tek standart demo süresi 1 ay.
