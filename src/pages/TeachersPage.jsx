@@ -132,8 +132,8 @@ export default function TeachersPage() {
       const id = editingId || generateId();
       const now = Date.now();
       const nextSinifId = values.sinifId || '';
-      const teacherSnap = await get(ref(database, `kullanicilar/${id}`));
-      const oldTeacher = teacherSnap.exists() ? teacherSnap.val() || {} : {};
+      const teacherSnap = editingId ? await get(ref(database, `kullanicilar/${id}`)) : null;
+      const oldTeacher = teacherSnap?.exists() ? teacherSnap.val() || {} : {};
 
       // NOT: Mobil TeacherFormScreen.js'de bu kontrol eksikti (VeliFormScreen.js'de
       // vardı) — mevcut bir Firebase Auth hesabının şifresi bu ekrandan
