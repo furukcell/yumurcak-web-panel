@@ -19,6 +19,7 @@ export default function ChildrenPage() {
   const [loading, setLoading] = useState(true);
   const [siniflar, setSiniflar] = useState([]);
   const [veliler, setVeliler] = useState([]);
+  const [ogrenciLimiti, setOgrenciLimiti] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -154,7 +155,23 @@ export default function ChildrenPage() {
     };
   }, [kresId]);
 
+  // Abonelik öğrenci limiti — mobildeki ChildFormScreen.js'teki aynı kontrol.
+  useEffect(() => {
+    if (!kresId) { setOgrenciLimiti(null); return; }
+    const unsub = onValue(ref(database, `abonelikler/${kresId}`), (snap) => {
+      const abonelik = snap.val();
+      setOgrenciLimiti(abonelik?.ogrenciLimiti ? Number(abonelik.ogrenciLimiti) : null);
+    }, () => setOgrenciLimiti(null));
+    return () => unsub();
+  }, [kresId]);
+
+  const limitDoldu = ogrenciLimiti != null && children.length >= ogrenciLimiti;
+
   const openCreate = () => {
+    if (limitDoldu) {
+      message.error(`Öğrenci limitiniz doldu (${children.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
+      return;
+    }
     setEditingId(null);
     form.resetFields();
     setYeniBaslayan(false);
@@ -193,6 +210,13 @@ export default function ChildrenPage() {
     const uyumBaslangicTarihi = values.uyumBaslangicTarihi || bugunKey();
     if (yeniBaslayan && !/^\d{4}-\d{2}-\d{2}$/.test(uyumBaslangicTarihi)) {
       message.error('Uyum başlangıç tarihini 2026-06-26 formatında gir.');
+      return;
+    }
+
+    // Yeni çocuk eklerken abonelik öğrenci limiti aşılıyorsa engelle
+    // (openCreate'de de kontrol var, burada aynı kontrol race-condition'a karşı ikinci güvence).
+    if (!editingId && limitDoldu) {
+      message.error(`Öğrenci limitiniz doldu (${children.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
       return;
     }
 
@@ -277,6 +301,12 @@ export default function ChildrenPage() {
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Çocuk Ekle</Button>
       </div>
+
+      {limitDoldu && (
+        <div style={{ background: '#FFE8EE', border: '1px solid #FFC2D1', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#B3123A', fontWeight: 600, fontSize: 13 }}>
+          ⚠️ Öğrenci limitiniz doldu ({children.length}/{ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.
+        </div>
+      )}
 
       <Table
         rowKey="id"
