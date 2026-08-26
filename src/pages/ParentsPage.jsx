@@ -167,8 +167,8 @@ export default function ParentsPage() {
     try {
       const id = editingId || generateId();
       const now = Date.now();
-      const veliSnap = await get(ref(database, `kullanicilar/${id}`));
-      const oldVeli = veliSnap.exists() ? veliSnap.val() || {} : {};
+      const veliSnap = editingId ? await get(ref(database, `kullanicilar/${id}`)) : null;
+      const oldVeli = veliSnap?.exists() ? veliSnap.val() || {} : {};
 
       if (editingId && oldVeli.authUid && (values.sifre || '').trim()) {
         message.error('Bu veli Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
