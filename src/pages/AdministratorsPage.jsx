@@ -115,8 +115,8 @@ export default function AdministratorsPage() {
     try {
       const id = editingId || generateId();
       const now = Date.now();
-      const adminSnap = await get(ref(database, `kullanicilar/${id}`));
-      const oldAdmin = adminSnap.exists() ? adminSnap.val() || {} : {};
+      const adminSnap = editingId ? await get(ref(database, `kullanicilar/${id}`)) : null;
+      const oldAdmin = adminSnap?.exists() ? adminSnap.val() || {} : {};
 
       // NOT: TeachersPage.jsx'teki aynı güvenlik kısıtı — mevcut bir
       // Firebase Auth hesabının şifresi bu ekrandan değiştirilemez.
