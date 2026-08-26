@@ -17,6 +17,7 @@ import AdministratorsPage from './pages/AdministratorsPage';
 import ParentsPage from './pages/ParentsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import EventsPage from './pages/EventsPage';
+import GalleryPage from './pages/GalleryPage';
 import PollsPage from './pages/PollsPage';
 import MessagesPage from './pages/MessagesPage';
 import MealsPage from './pages/MealsPage';
@@ -66,6 +67,7 @@ function Gate() {
         <Route path="/veliler" element={b(<ParentsPage />)} />
         <Route path="/duyurular" element={b(<AnnouncementsPage />)} />
         <Route path="/etkinlikler" element={b(<EventsPage />)} />
+        <Route path="/galeri" element={b(<GalleryPage />)} />
         <Route path="/anketler" element={b(<PollsPage />)} />
         <Route path="/mesajlar" element={b(<MessagesPage />)} />
         <Route path="/yemek-listesi" element={b(<MealsPage />)} />
