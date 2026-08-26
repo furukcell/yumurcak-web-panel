@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 // Mobil uygulamayla (yumurcak-app) AYNI Firebase projesi. Değerler
 // zaten public/client-side (mobil app bundle'ında da açık duruyor),
@@ -21,3 +22,4 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app, 'europe-west1');
