@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Typography, Table, Button, Drawer, Form, Input, Select, message, Empty, Tag } from 'antd';
-import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import { Typography, Table, Button, Drawer, Form, Input, Select, message, Empty, Tag, Popconfirm } from 'antd';
+import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database } from '../config/firebase';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { generateId, asArray } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
+import { deleteKullaniciHesabi } from '../utils/userDelete';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +24,7 @@ export default function ParentsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [form] = Form.useForm();
 
   // ── Sınıf filtresi listesi ──────────────────────────────────────
@@ -167,8 +169,8 @@ export default function ParentsPage() {
     try {
       const id = editingId || generateId();
       const now = Date.now();
-      const veliSnap = editingId ? await get(ref(database, `kullanicilar/${id}`)) : null;
-      const oldVeli = veliSnap?.exists() ? veliSnap.val() || {} : {};
+      const veliSnap = await get(ref(database, `kullanicilar/${id}`));
+      const oldVeli = veliSnap.exists() ? veliSnap.val() || {} : {};
 
       if (editingId && oldVeli.authUid && (values.sifre || '').trim()) {
         message.error('Bu veli Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
@@ -239,6 +241,19 @@ export default function ParentsPage() {
     }
   };
 
+  const handleDelete = async (record) => {
+    setDeletingId(record.id);
+    try {
+      await deleteKullaniciHesabi(record.id);
+      message.success('Veli silindi');
+    } catch (error) {
+      console.error(error);
+      message.error(`Veli silinemedi. ${error?.message || ''}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const columns = [
     { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
     { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
@@ -256,6 +271,27 @@ export default function ParentsPage() {
         ) : (
           <Text type="secondary">Bağlı çocuk yok</Text>
         ),
+    },
+    {
+      title: '',
+      key: 'sil',
+      width: 48,
+      render: (_, r) => (
+        <Popconfirm
+          title="Veli silinsin mi?"
+          description="Bu işlem geri alınamaz: hesap, çocuk bağlantıları ve Firebase Auth girişi tamamen silinir."
+          okText="Sil"
+          okButtonProps={{ danger: true }}
+          cancelText="Vazgeç"
+          onConfirm={(e) => {
+            e?.stopPropagation();
+            handleDelete(r);
+          }}
+          onCancel={(e) => e?.stopPropagation()}
+        >
+          <Button danger type="text" icon={<DeleteOutlined />} loading={deletingId === r.id} onClick={(e) => e.stopPropagation()} />
+        </Popconfirm>
+      ),
     },
   ];
 
