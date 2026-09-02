@@ -1,119 +1,72 @@
 // ============================================================
 // YUMURCAK WEB PANEL — BulkOnboardingPage.jsx
 // Giriş yapan yöneticinin kreşi için sınıf + öğretmen + veli +
-// öğrenci yapısını tek metin bloğundan, tek seferde oluşturur.
+// öğrenci yapısını kutucuklu, "+ ekle" ile büyüyen bir formdan
+// tek seferde oluşturur (serbest metin yok).
 //
-// FORMAT:
-// SINIF: Kelebekler | 3-4 Yaş | ogretmen: Ayşe Yılmaz, ayseyilmaz
-// Ali Veli | 2022-03-01 | veli: Fatma Veli, fatmaveli
-// Zeynep Kaya | 2021-11-15 | veli: Mehmet Kaya, mehmetkaya
+// Yapı: her sınıf bir Collapse paneli. Panel içinde sınıf bilgisi
+// (ad, yaş grubu, öğretmen) + öğrenci kartları listesi var. Her
+// öğrenci kartında veli bilgisi de var. Veli kullanıcı adı alanı
+// AutoComplete — formda daha önce girilen velileri önerir, böylece
+// kardeş öğrenci eklerken aynı veliyi seçmen yeterli.
 //
-// SINIF: Arılar | 4-5 Yaş | ogretmen: Elif Demir, elifdemir
-// Can Demir | 2022-07-20 | veli: Ayşe Demir, ayseldemir
-//
-// Kural: "SINIF:" ile başlayan satır yeni sınıf açar. Sonraki her
-// satır (yeni SINIF: gelene kadar) o sınıfın öğrencisidir. Aynı
-// kullanıcı adına sahip öğretmen/veli tekrar geçerse (kardeş
-// öğrenci, aynı öğretmen 2 sınıfta) yeniden hesap açılmaz, mevcut
-// hesap bulunup bağlanır — sayfayı 2 kez çalıştırmak güvenlidir.
-//
-// Mobildeki SuperAdminKresBulkOnboardingScreen.js ile aynı mantık;
-// tek fark kresId burada zaten giriş yapmış yöneticiden geliyor
-// (kres kendisi mobil superadmin akışıyla önceden oluşturulmuş
-// olmalı), ve abonelik öğrenci limiti burada kontrol ediliyor
-// (mobildeki ChildrenPage.jsx / ChildFormScreen.js'teki aynı kural).
+// "Kur"a basınca: aynı kullanıcı adına sahip öğretmen/veli DB'de
+// zaten varsa yeniden hesap açmaz, mevcut hesabı bulup bağlar —
+// sayfayı 2 kez çalıştırmak güvenlidir.
 // ============================================================
-import React, { useEffect, useState } from 'react';
-import { Typography, Card, Input, Button, message, Alert, Space, Tag, Divider } from 'antd';
-import { RocketOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Typography,
+  Card,
+  Input,
+  Select,
+  AutoComplete,
+  Button,
+  message,
+  Alert,
+  Space,
+  Tag,
+  Divider,
+  Collapse,
+  Empty,
+} from 'antd';
+import { PlusOutlined, DeleteOutlined, RocketOutlined, UserAddOutlined } from '@ant-design/icons';
 import { get, onValue, push, ref, update } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
+import { YAS_GRUPLARI } from '../constants';
 import { generateId } from '../utils/crudHelpers';
 import { normalizeUsername, usernameToEmail } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
+import { normalizeChildBirthDate } from '../utils/childDates';
 import { addUserIndexUpdates, addChildIndexUpdates, addClassIndexUpdates } from '../utils/firebaseIndexHelpers';
 
 const { Title, Text, Paragraph } = Typography;
-const { TextArea } = Input;
 
-const ORNEK_METIN =
-  'SINIF: Kelebekler | 3-4 Yaş | ogretmen: Ayşe Yılmaz, ayseyilmaz\n' +
-  'Ali Veli | 2022-03-01 | veli: Fatma Veli, fatmaveli\n' +
-  'Zeynep Kaya | 2021-11-15 | veli: Mehmet Kaya, mehmetkaya\n\n' +
-  'SINIF: Arılar | 4-5 Yaş | ogretmen: Elif Demir, elifdemir\n' +
-  'Can Demir | 2022-07-20 | veli: Ayşe Demir, ayseldemir';
-
-// ------------------------------------------------------------
-// PARSE (mobil ekranla birebir aynı)
-// ------------------------------------------------------------
-function parseKisi(parca) {
-  if (!parca) return null;
-  const [, veri] = parca.split(':');
-  if (!veri) return null;
-  const [ad, kullaniciAdi] = veri.split(',').map((x) => (x || '').trim());
-  if (!ad || !kullaniciAdi) return null;
-  return { ad, kullaniciAdi };
+let localKeyCounter = 0;
+function localKey() {
+  localKeyCounter += 1;
+  return `k${Date.now()}${localKeyCounter}`;
 }
 
-export function parseYapi(metin) {
-  const satirlar = String(metin || '').split('\n');
-  const siniflar = [];
-  let mevcutSinif = null;
-  const hatalar = [];
+function bosOgrenci() {
+  return { key: localKey(), ad: '', dogumTarihi: '', veliAd: '', veliKullaniciAdi: '' };
+}
 
-  satirlar.forEach((ham, index) => {
-    const satir = ham.trim();
-    if (!satir) return;
-
-    if (satir.toUpperCase().startsWith('SINIF:')) {
-      const govde = satir.slice(satir.indexOf(':') + 1).trim();
-      const parcalar = govde.split('|').map((p) => p.trim());
-      const ad = parcalar[0] || '';
-      const yasGrubu = parcalar[1] && !/^ogretmen:|^öğretmen:/i.test(parcalar[1]) ? parcalar[1] : '';
-      const ogretmenParca = parcalar.find((p) => /^ogretmen:|^öğretmen:/i.test(p));
-      const ogretmen = parseKisi(ogretmenParca);
-
-      if (!ad) {
-        hatalar.push(`Satır ${index + 1}: sınıf adı boş.`);
-        return;
-      }
-
-      mevcutSinif = { ad, yasGrubu: yasGrubu || 'Karışık', ogretmen, ogrenciler: [] };
-      siniflar.push(mevcutSinif);
-      return;
-    }
-
-    if (!mevcutSinif) {
-      hatalar.push(`Satır ${index + 1}: önce "SINIF:" satırı gelmeli, bu satır atlandı.`);
-      return;
-    }
-
-    const parcalar = satir.split('|').map((p) => p.trim());
-    const ad = parcalar[0] || '';
-    const dogumTarihi = parcalar[1] && !/^veli:/i.test(parcalar[1]) ? parcalar[1] : '';
-    const veliParca = parcalar.find((p) => /^veli:/i.test(p));
-    const veli = parseKisi(veliParca);
-
-    if (!ad) {
-      hatalar.push(`Satır ${index + 1}: öğrenci adı boş.`);
-      return;
-    }
-    if (!veli) {
-      hatalar.push(`Satır ${index + 1}: "${ad}" için veli bilgisi eksik/hatalı (Ad, kullanici_adi bekleniyor).`);
-      return;
-    }
-
-    mevcutSinif.ogrenciler.push({ ad, dogumTarihi, veli });
-  });
-
-  return { siniflar, hatalar };
+function bosSinif() {
+  return {
+    key: localKey(),
+    ad: '',
+    yasGrubu: undefined,
+    ogretmenAd: '',
+    ogretmenKullaniciAdi: '',
+    ogrenciler: [bosOgrenci()],
+  };
 }
 
 // Kullanıcı adı zaten varsa mevcut id'yi döner (yeni hesap açmaz).
-// Yoksa web'e özel secondary-app deseniyle Auth + kullanicilar kaydı açar.
 async function bulOrOlusturKullanici({ ad, kullaniciAdi, rol, kresId, sifre, updates, index }) {
   const clean = normalizeUsername(kullaniciAdi);
 
@@ -166,15 +119,14 @@ export default function BulkOnboardingPage() {
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
 
-  const [metin, setMetin] = useState('');
+  const [siniflar, setSiniflar] = useState([bosSinif()]);
+  const [aktifPanel, setAktifPanel] = useState([siniflar[0].key]);
   const [sifre, setSifre] = useState('123456');
   const [saving, setSaving] = useState(false);
-  const [onizleme, setOnizleme] = useState(null);
   const [sonuc, setSonuc] = useState(null);
   const [mevcutOgrenciSayisi, setMevcutOgrenciSayisi] = useState(0);
   const [ogrenciLimiti, setOgrenciLimiti] = useState(null);
 
-  // Abonelik öğrenci limiti + mevcut öğrenci sayısı — ChildrenPage.jsx ile aynı kontrol
   useEffect(() => {
     if (!kresId) return;
     const abonelikUnsub = onValue(ref(database, `abonelikler/${kresId}`), (snap) => {
@@ -190,11 +142,93 @@ export default function BulkOnboardingPage() {
     };
   }, [kresId]);
 
-  const onizle = () => {
-    const { siniflar, hatalar } = parseYapi(metin);
-    const toplamOgrenci = siniflar.reduce((t, s) => t + s.ogrenciler.length, 0);
-    setOnizleme({ siniflar, hatalar, toplamOgrenci });
-    setSonuc(null);
+  // Formda şu ana kadar girilmiş tüm veliler (kardeş öğrenci için AutoComplete önerisi)
+  const veliOnerileri = useMemo(() => {
+    const map = new Map();
+    siniflar.forEach((s) => {
+      s.ogrenciler.forEach((o) => {
+        const clean = (o.veliKullaniciAdi || '').trim();
+        if (clean && o.veliAd) map.set(clean, o.veliAd);
+      });
+    });
+    return Array.from(map.entries()).map(([kullaniciAdi, ad]) => ({ value: kullaniciAdi, label: `${ad} (${kullaniciAdi})` }));
+  }, [siniflar]);
+
+  const toplamOgrenci = useMemo(
+    () => siniflar.reduce((t, s) => t + s.ogrenciler.filter((o) => o.ad.trim()).length, 0),
+    [siniflar]
+  );
+
+  // --- sınıf/öğrenci state güncelleme yardımcıları ---
+  const sinifEkle = () => {
+    const yeni = bosSinif();
+    setSiniflar((prev) => [...prev, yeni]);
+    setAktifPanel((prev) => [...prev, yeni.key]);
+  };
+
+  const sinifSil = (sinifKey) => {
+    setSiniflar((prev) => prev.filter((s) => s.key !== sinifKey));
+  };
+
+  const sinifAlanGuncelle = (sinifKey, alan, deger) => {
+    setSiniflar((prev) => prev.map((s) => (s.key === sinifKey ? { ...s, [alan]: deger } : s)));
+  };
+
+  const ogrenciEkle = (sinifKey) => {
+    setSiniflar((prev) =>
+      prev.map((s) => (s.key === sinifKey ? { ...s, ogrenciler: [...s.ogrenciler, bosOgrenci()] } : s))
+    );
+  };
+
+  const ogrenciSil = (sinifKey, ogrenciKey) => {
+    setSiniflar((prev) =>
+      prev.map((s) =>
+        s.key === sinifKey ? { ...s, ogrenciler: s.ogrenciler.filter((o) => o.key !== ogrenciKey) } : s
+      )
+    );
+  };
+
+  const ogrenciAlanGuncelle = (sinifKey, ogrenciKey, alan, deger) => {
+    setSiniflar((prev) =>
+      prev.map((s) =>
+        s.key === sinifKey
+          ? {
+              ...s,
+              ogrenciler: s.ogrenciler.map((o) => (o.key === ogrenciKey ? { ...o, [alan]: deger } : o)),
+            }
+          : s
+      )
+    );
+  };
+
+  // Veli AutoComplete'ten seçilince adı otomatik doldur
+  const veliSecildi = (sinifKey, ogrenciKey, kullaniciAdi) => {
+    const oneri = veliOnerileri.find((v) => v.value === kullaniciAdi);
+    ogrenciAlanGuncelle(sinifKey, ogrenciKey, 'veliKullaniciAdi', kullaniciAdi);
+    if (oneri) {
+      const ad = oneri.label.replace(` (${kullaniciAdi})`, '');
+      ogrenciAlanGuncelle(sinifKey, ogrenciKey, 'veliAd', ad);
+    }
+  };
+
+  const dogrula = () => {
+    const hatalar = [];
+    siniflar.forEach((s, si) => {
+      if (!s.ad.trim()) hatalar.push(`${si + 1}. sınıf: sınıf adı boş.`);
+      if (!s.yasGrubu) hatalar.push(`${s.ad || si + 1}. sınıf: yaş grubu seçilmedi.`);
+      if ((s.ogretmenAd.trim() && !s.ogretmenKullaniciAdi.trim()) || (!s.ogretmenAd.trim() && s.ogretmenKullaniciAdi.trim())) {
+        hatalar.push(`${s.ad || si + 1}. sınıf: öğretmen adı/kullanıcı adı birlikte doldurulmalı.`);
+      }
+      const dolular = s.ogrenciler.filter((o) => o.ad.trim() || o.veliAd.trim() || o.veliKullaniciAdi.trim());
+      if (dolular.length === 0) hatalar.push(`${s.ad || si + 1}. sınıf: en az bir öğrenci girilmeli.`);
+      dolular.forEach((o) => {
+        if (!o.ad.trim()) hatalar.push(`${s.ad}: bir öğrencinin adı boş.`);
+        if (!o.veliAd.trim() || !o.veliKullaniciAdi.trim()) {
+          hatalar.push(`${s.ad} — ${o.ad || 'isimsiz öğrenci'}: veli adı/kullanıcı adı eksik.`);
+        }
+      });
+    });
+    return hatalar;
   };
 
   const olustur = async () => {
@@ -202,41 +236,41 @@ export default function BulkOnboardingPage() {
       message.error('Kreş bilgisi bulunamadı, lütfen tekrar giriş yapın.');
       return;
     }
-    const { siniflar, hatalar } = parseYapi(metin);
-    if (siniflar.length === 0) {
-      message.error('En az bir SINIF bloğu girin.');
-      return;
-    }
     if (sifre.trim().length < 6) {
       message.error('Ortak şifre en az 6 karakter olmalı.');
       return;
     }
-
-    const toplamOgrenci = siniflar.reduce((t, s) => t + s.ogrenciler.length, 0);
+    const hatalar = dogrula();
+    if (hatalar.length > 0) {
+      message.error(hatalar[0]);
+      return;
+    }
     if (ogrenciLimiti != null && mevcutOgrenciSayisi + toplamOgrenci > ogrenciLimiti) {
       message.error(
-        `Öğrenci limitiniz yetersiz: mevcut ${mevcutOgrenciSayisi} + eklenecek ${toplamOgrenci} = ${mevcutOgrenciSayisi + toplamOgrenci}, limit ${ogrenciLimiti}. Abonelik / paket yükseltmeniz gerekiyor.`
+        `Öğrenci limitiniz yetersiz: mevcut ${mevcutOgrenciSayisi} + eklenecek ${toplamOgrenci} = ${mevcutOgrenciSayisi + toplamOgrenci}, limit ${ogrenciLimiti}.`
       );
       return;
     }
 
     setSaving(true);
     const kullaniciIndex = {};
-    const ozet = { siniflar: 0, ogretmenler: [], veliler: [], ogrenciler: 0, hatalar: [...hatalar] };
+    const ozet = { siniflar: 0, ogretmenler: [], veliler: [], ogrenciler: 0, hatalar: [] };
     const now = Date.now();
     const sifreTemiz = sifre.trim();
 
     try {
       for (const sinifData of siniflar) {
+        const gecerliOgrenciler = sinifData.ogrenciler.filter((o) => o.ad.trim());
+        if (gecerliOgrenciler.length === 0) continue;
+
         try {
           const updates = {};
 
-          // 1) Sınıf
           const sinifRef = push(ref(database, 'siniflar'));
           const sinifId = sinifRef.key;
           const sinifRecord = {
             id: sinifId,
-            ad: sinifData.ad,
+            ad: sinifData.ad.trim(),
             yasGrubu: sinifData.yasGrubu,
             ogretmenIds: [],
             kresId,
@@ -244,11 +278,10 @@ export default function BulkOnboardingPage() {
             updatedAt: now,
           };
 
-          // 2) Öğretmen (varsa)
-          if (sinifData.ogretmen) {
+          if (sinifData.ogretmenAd.trim() && sinifData.ogretmenKullaniciAdi.trim()) {
             const { id: ogretmenId, yeniMi } = await bulOrOlusturKullanici({
-              ad: sinifData.ogretmen.ad,
-              kullaniciAdi: sinifData.ogretmen.kullaniciAdi,
+              ad: sinifData.ogretmenAd.trim(),
+              kullaniciAdi: sinifData.ogretmenKullaniciAdi.trim(),
               rol: 'ogretmen',
               kresId,
               sifre: sifreTemiz,
@@ -257,8 +290,8 @@ export default function BulkOnboardingPage() {
             });
             sinifRecord.ogretmenIds = [ogretmenId];
             ozet.ogretmenler.push({
-              ad: sinifData.ogretmen.ad,
-              kullaniciAdi: normalizeUsername(sinifData.ogretmen.kullaniciAdi),
+              ad: sinifData.ogretmenAd.trim(),
+              kullaniciAdi: normalizeUsername(sinifData.ogretmenKullaniciAdi),
               yeniMi,
             });
           }
@@ -266,11 +299,10 @@ export default function BulkOnboardingPage() {
           updates[`siniflar/${sinifId}`] = sinifRecord;
           addClassIndexUpdates(updates, sinifId, sinifRecord);
 
-          // 3) Her öğrenci: veli + çocuk
-          for (const ogrenci of sinifData.ogrenciler) {
+          for (const ogrenci of gecerliOgrenciler) {
             const { id: veliId, yeniMi } = await bulOrOlusturKullanici({
-              ad: ogrenci.veli.ad,
-              kullaniciAdi: ogrenci.veli.kullaniciAdi,
+              ad: ogrenci.veliAd.trim(),
+              kullaniciAdi: ogrenci.veliKullaniciAdi.trim(),
               rol: 'veli',
               kresId,
               sifre: sifreTemiz,
@@ -278,16 +310,16 @@ export default function BulkOnboardingPage() {
               index: kullaniciIndex,
             });
             ozet.veliler.push({
-              ad: ogrenci.veli.ad,
-              kullaniciAdi: normalizeUsername(ogrenci.veli.kullaniciAdi),
+              ad: ogrenci.veliAd.trim(),
+              kullaniciAdi: normalizeUsername(ogrenci.veliKullaniciAdi),
               yeniMi,
             });
 
             const cocukId = generateId();
             const cocukRecord = {
               id: cocukId,
-              ad: ogrenci.ad,
-              dogumTarihi: ogrenci.dogumTarihi || '',
+              ad: ogrenci.ad.trim(),
+              dogumTarihi: ogrenci.dogumTarihi ? normalizeChildBirthDate(ogrenci.dogumTarihi) : '',
               sinifId,
               kresId,
               veliIds: [veliId],
@@ -312,8 +344,12 @@ export default function BulkOnboardingPage() {
         }
       }
 
+      // Dedupe göstergesi için özet listelerini kullanıcı adına göre benzersizleştir
+      ozet.ogretmenler = Array.from(new Map(ozet.ogretmenler.map((o) => [o.kullaniciAdi, o])).values());
+      ozet.veliler = Array.from(new Map(ozet.veliler.map((v) => [v.kullaniciAdi, v])).values());
       setSonuc(ozet);
       message.success(`${ozet.siniflar} sınıf, ${ozet.ogrenciler} öğrenci oluşturuldu.`);
+      setSiniflar([bosSinif()]);
     } finally {
       setSaving(false);
     }
@@ -323,7 +359,7 @@ export default function BulkOnboardingPage() {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>Toplu Kurulum</Title>
-        <Text type="secondary">Sınıf, öğretmen, veli ve öğrencileri tek metinden oluşturun.</Text>
+        <Text type="secondary">Sınıf ekle, içine öğretmen ve öğrenci/veli kartlarını doldur.</Text>
       </div>
 
       {ogrenciLimiti != null && (
@@ -331,93 +367,166 @@ export default function BulkOnboardingPage() {
           style={{ marginBottom: 16 }}
           type={mevcutOgrenciSayisi >= ogrenciLimiti ? 'error' : 'info'}
           showIcon
-          message={`Öğrenci limiti: ${mevcutOgrenciSayisi} / ${ogrenciLimiti}`}
+          message={`Öğrenci limiti: ${mevcutOgrenciSayisi} / ${ogrenciLimiti} (bu formla eklenecek: ${toplamOgrenci})`}
         />
       )}
 
       <Card style={{ marginBottom: 16 }}>
         <Text strong>Ortak Şifre</Text>
-        <Input
-          style={{ marginTop: 8, maxWidth: 280 }}
-          value={sifre}
-          onChange={(e) => setSifre(e.target.value)}
-          placeholder="en az 6 karakter"
-        />
-      </Card>
-
-      <Card style={{ marginBottom: 16 }}>
-        <Text strong>Sınıf / Öğretmen / Öğrenci / Veli Yapısı</Text>
-        <Paragraph type="secondary" style={{ marginTop: 4, fontSize: 13 }}>
-          Her sınıf <Text code>SINIF:</Text> ile başlar, altındaki satırlar o sınıfın öğrencileridir.
+        <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+          Oluşturulacak tüm öğretmen ve veli hesapları bu şifreyle açılır.
         </Paragraph>
-        <TextArea
-          value={metin}
-          onChange={(e) => setMetin(e.target.value)}
-          placeholder={ORNEK_METIN}
-          autoSize={{ minRows: 10, maxRows: 20 }}
-          style={{ fontFamily: 'monospace', fontSize: 13 }}
-        />
-        <Button style={{ marginTop: 10 }} icon={<EyeOutlined />} onClick={onizle}>
-          Önizle
-        </Button>
+        <Input style={{ maxWidth: 280 }} value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder="en az 6 karakter" />
       </Card>
 
-      {onizleme && (
-        <Card style={{ marginBottom: 16 }} title={`Önizleme — ${onizleme.siniflar.length} sınıf, ${onizleme.toplamOgrenci} öğrenci`}>
-          {onizleme.siniflar.map((s, i) => (
-            <div key={i} style={{ marginBottom: 12 }}>
-              <Text strong>
-                {s.ad} ({s.yasGrubu}) {s.ogretmen ? `— Öğretmen: ${s.ogretmen.ad}` : '— öğretmen yok'}
-              </Text>
-              <div style={{ marginLeft: 12 }}>
-                {s.ogrenciler.map((o, j) => (
-                  <div key={j}>
-                    <Text type="secondary">· {o.ad} — Veli: {o.veli.ad}</Text>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-          {onizleme.hatalar.length > 0 && (
-            <Alert
-              type="warning"
-              showIcon
-              message={`${onizleme.hatalar.length} satır atlanacak`}
-              description={<Space direction="vertical">{onizleme.hatalar.map((h, i) => <Text key={i}>{h}</Text>)}</Space>}
+      <Collapse
+        activeKey={aktifPanel}
+        onChange={setAktifPanel}
+        style={{ marginBottom: 16 }}
+        items={siniflar.map((sinifData) => ({
+          key: sinifData.key,
+          label: sinifData.ad ? `${sinifData.ad} — ${sinifData.ogrenciler.filter((o) => o.ad.trim()).length} öğrenci` : 'Yeni Sınıf',
+          extra: (
+            <Button
+              danger
+              type="text"
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                sinifSil(sinifData.key);
+              }}
+              disabled={siniflar.length === 1}
             />
-          )}
-        </Card>
-      )}
+          ),
+          children: (
+            <div>
+              <Space wrap size="middle" style={{ marginBottom: 16 }}>
+                <Input
+                  placeholder="Sınıf Adı (örn: Kelebekler)"
+                  style={{ width: 220 }}
+                  value={sinifData.ad}
+                  onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ad', e.target.value)}
+                />
+                <Select
+                  placeholder="Yaş Grubu"
+                  style={{ width: 200 }}
+                  value={sinifData.yasGrubu}
+                  onChange={(v) => sinifAlanGuncelle(sinifData.key, 'yasGrubu', v)}
+                  options={YAS_GRUPLARI.map((g) => ({ value: g.label, label: g.label }))}
+                />
+                <Input
+                  placeholder="Öğretmen Adı (opsiyonel)"
+                  style={{ width: 200 }}
+                  value={sinifData.ogretmenAd}
+                  onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ogretmenAd', e.target.value)}
+                />
+                <Input
+                  placeholder="Öğretmen Kullanıcı Adı"
+                  style={{ width: 200 }}
+                  value={sinifData.ogretmenKullaniciAdi}
+                  onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ogretmenKullaniciAdi', e.target.value)}
+                />
+              </Space>
+
+              <Divider orientation="left" plain style={{ margin: '8px 0 12px' }}>Öğrenciler</Divider>
+
+              <Space direction="vertical" style={{ width: '100%' }} size="small">
+                {sinifData.ogrenciler.map((ogrenci) => (
+                  <Card key={ogrenci.key} size="small" style={{ background: '#FAFAFA' }}>
+                    <Space wrap size="middle" align="start">
+                      <Input
+                        placeholder="Öğrenci Adı"
+                        style={{ width: 180 }}
+                        value={ogrenci.ad}
+                        onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'ad', e.target.value)}
+                      />
+                      <Input
+                        placeholder="Doğum Tarihi (15.05.2022)"
+                        style={{ width: 170 }}
+                        value={ogrenci.dogumTarihi}
+                        onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'dogumTarihi', e.target.value)}
+                      />
+                      <Input
+                        placeholder="Veli Adı"
+                        style={{ width: 170 }}
+                        value={ogrenci.veliAd}
+                        onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'veliAd', e.target.value)}
+                      />
+                      <AutoComplete
+                        placeholder="Veli Kullanıcı Adı"
+                        style={{ width: 190 }}
+                        value={ogrenci.veliKullaniciAdi}
+                        options={veliOnerileri}
+                        onChange={(v) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'veliKullaniciAdi', v)}
+                        onSelect={(v) => veliSecildi(sinifData.key, ogrenci.key, v)}
+                        filterOption={(input, option) => (option?.label || '').toLowerCase().includes(input.toLowerCase())}
+                      />
+                      <Button
+                        danger
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        onClick={() => ogrenciSil(sinifData.key, ogrenci.key)}
+                        disabled={sinifData.ogrenciler.length === 1}
+                      />
+                    </Space>
+                  </Card>
+                ))}
+              </Space>
+
+              <Button
+                style={{ marginTop: 12 }}
+                icon={<UserAddOutlined />}
+                onClick={() => ogrenciEkle(sinifData.key)}
+              >
+                + Öğrenci Ekle
+              </Button>
+            </div>
+          ),
+        }))}
+      />
+
+      <Button icon={<PlusOutlined />} onClick={sinifEkle} style={{ marginBottom: 24 }}>
+        + Yeni Sınıf
+      </Button>
+
+      <br />
 
       <Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={olustur}>
-        Kur
+        Kur ({toplamOgrenci} öğrenci)
       </Button>
 
       {sonuc && (
         <Card style={{ marginTop: 16 }} title="Sonuç">
-          <Paragraph>
-            ✅ {sonuc.siniflar} sınıf, {sonuc.ogrenciler} öğrenci oluşturuldu.
-          </Paragraph>
+          <Paragraph>✅ {sonuc.siniflar} sınıf, {sonuc.ogrenciler} öğrenci oluşturuldu.</Paragraph>
 
-          <Divider orientation="left" plain>Öğretmenler</Divider>
-          <Space direction="vertical">
-            {sonuc.ogretmenler.map((o, i) => (
-              <Text key={i}>
-                <Tag color={o.yeniMi ? THEME.green : 'default'}>{o.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
-                {o.kullaniciAdi} / {sifre}
-              </Text>
-            ))}
-          </Space>
+          {sonuc.ogretmenler.length > 0 && (
+            <>
+              <Divider orientation="left" plain>Öğretmenler</Divider>
+              <Space direction="vertical">
+                {sonuc.ogretmenler.map((o, i) => (
+                  <Text key={i}>
+                    <Tag color={o.yeniMi ? THEME.green : 'default'}>{o.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
+                    {o.kullaniciAdi} / {sifre}
+                  </Text>
+                ))}
+              </Space>
+            </>
+          )}
 
-          <Divider orientation="left" plain>Veliler</Divider>
-          <Space direction="vertical">
-            {sonuc.veliler.map((v, i) => (
-              <Text key={i}>
-                <Tag color={v.yeniMi ? THEME.green : 'default'}>{v.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
-                {v.kullaniciAdi} / {sifre}
-              </Text>
-            ))}
-          </Space>
+          {sonuc.veliler.length > 0 && (
+            <>
+              <Divider orientation="left" plain>Veliler</Divider>
+              <Space direction="vertical">
+                {sonuc.veliler.map((v, i) => (
+                  <Text key={i}>
+                    <Tag color={v.yeniMi ? THEME.green : 'default'}>{v.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
+                    {v.kullaniciAdi} / {sifre}
+                  </Text>
+                ))}
+              </Space>
+            </>
+          )}
 
           {sonuc.hatalar.length > 0 && (
             <>
@@ -435,6 +544,8 @@ export default function BulkOnboardingPage() {
           </Paragraph>
         </Card>
       )}
+
+      {siniflar.length === 0 && <Empty description="Henüz sınıf eklenmedi" />}
     </div>
   );
 }
