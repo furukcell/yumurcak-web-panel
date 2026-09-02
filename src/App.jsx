@@ -11,6 +11,7 @@ import PanelLayout from './components/PanelLayout';
 import DashboardPage from './pages/DashboardPage';
 import StatisticsPage from './pages/StatisticsPage';
 import ClassesPage from './pages/ClassesPage';
+import BulkOnboardingPage from './pages/BulkOnboardingPage';
 import ChildrenPage from './pages/ChildrenPage';
 import TeachersPage from './pages/TeachersPage';
 import AdministratorsPage from './pages/AdministratorsPage';
@@ -61,6 +62,7 @@ function Gate() {
         <Route path="/" element={b(<DashboardPage />)} />
         <Route path="/istatistik" element={b(<StatisticsPage />)} />
         <Route path="/siniflar" element={b(<ClassesPage />)} />
+        <Route path="/toplu-kurulum" element={b(<BulkOnboardingPage />)} />
         <Route path="/cocuklar" element={b(<ChildrenPage />)} />
         <Route path="/ogretmenler" element={b(<TeachersPage />)} />
         <Route path="/yoneticiler" element={b(<AdministratorsPage />)} />
