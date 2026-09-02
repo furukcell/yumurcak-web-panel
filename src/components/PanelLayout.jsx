@@ -25,6 +25,7 @@ import {
   BellOutlined,
   FileProtectOutlined,
   PictureOutlined,
+  RocketOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -90,6 +91,7 @@ function buildMenuItems(unreadCount) {
       label: groupLabel('Kurum Yönetimi'),
       children: [
         { key: '/siniflar', icon: coloredIcon(ReadOutlined, THEME.blue), label: 'Sınıflar' },
+        { key: '/toplu-kurulum', icon: coloredIcon(RocketOutlined, THEME.green), label: 'Toplu Kurulum' },
         { key: '/cocuklar', icon: coloredIcon(SmileOutlined, THEME.orange), label: 'Çocuklar' },
         { key: '/yoneticiler', icon: coloredIcon(CrownOutlined, THEME.gold), label: 'Yöneticiler' },
         { key: '/ogretmenler', icon: coloredIcon(TeamOutlined, THEME.primary), label: 'Öğretmenler' },
