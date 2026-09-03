@@ -138,23 +138,18 @@ function useTodayEvents(kresId) {
   return state;
 }
 
+// Kartın üstünde ince, kategoriyi belirten bir renkli çizgi — yuvarlak
+// ikon-kutusu yerine. Böylece 3 kart birbirinden ayrışıyor ama sayfa
+// genelinde tekrar eden "renkli daire ikon" motifi burada kullanılmıyor.
 function CardShell({ title, icon, color, loading, empty, emptyText, onSeeAll, children }) {
   return (
     <Card
       size="small"
-      style={{ borderColor: THEME.border, height: '100%' }}
+      style={{ borderColor: THEME.border, height: '100%', borderTop: `3px solid ${color}`, borderTopLeftRadius: THEME.radiusSm, borderTopRightRadius: THEME.radiusSm }}
       styles={{ body: { padding: 16 } }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, cursor: onSeeAll ? 'pointer' : 'default' }} onClick={onSeeAll}>
-        <div
-          style={{
-            width: 30, height: 30, borderRadius: 9,
-            background: `${color}1A`, color,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-          }}
-        >
-          {icon}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: onSeeAll ? 'pointer' : 'default' }} onClick={onSeeAll}>
+        <span style={{ fontSize: 14, color, display: 'flex' }}>{icon}</span>
         <Text strong style={{ fontSize: 13 }}>{title}</Text>
       </div>
       {loading ? (
@@ -180,7 +175,7 @@ function AttendanceCard({ navigate, kresId }) {
 
   return (
     <CardShell
-      title="BUGÜNKÜ YOKLAMA"
+      title="Bugünkü Yoklama"
       icon={<CheckSquareOutlined />}
       color={THEME.green}
       loading={loading}
@@ -231,7 +226,7 @@ function MealCard({ navigate, kresId }) {
   const { loading, summary } = useTodayMeal(kresId);
   return (
     <CardShell
-      title="BUGÜNKÜ MENÜ"
+      title="Bugünkü Menü"
       icon={<CoffeeOutlined />}
       color={THEME.orange}
       loading={loading}
@@ -241,7 +236,7 @@ function MealCard({ navigate, kresId }) {
     >
       {summary && summary.map((part) => (
         <div key={part.label} style={{ marginBottom: 8 }}>
-          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700 }}>{part.label.toUpperCase()}</Text>
+          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700 }}>{part.label}</Text>
           <div><Text style={{ fontSize: 12.5 }}>{part.items.join(', ')}</Text></div>
         </div>
       ))}
@@ -253,7 +248,7 @@ function EventCard({ navigate, kresId }) {
   const { loading, events } = useTodayEvents(kresId);
   return (
     <CardShell
-      title="BUGÜNKÜ ETKİNLİK"
+      title="Bugünkü Etkinlik"
       icon={<CalendarOutlined />}
       color={THEME.teal}
       loading={loading}
