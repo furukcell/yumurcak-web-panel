@@ -14,6 +14,7 @@ import { useUnreadMessagesCount } from '../utils/messageHelpers';
 import { getSubscriptionStatus } from '../utils/subscriptionStatus';
 import QuickActions from '../components/QuickActions';
 import TodayCards from '../components/TodayCards';
+import DailySummary from '../components/DailySummary';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -383,6 +384,8 @@ export default function DashboardPage() {
           ))}
         </Row>
       )}
+
+      <DailySummary navigate={navigate} kresId={kresId} />
 
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24} sm={12} md={6}>
