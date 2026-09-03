@@ -295,95 +295,89 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} />
+      {/* Karşılama kartı: sağ üstte artık dekoratif bir ikon kutusu yok —
+          onun yerine hızlı erişim şeridi geldi, böylece aynı satır hem
+          selamlıyor hem de sık kullanılan sayfalara götürüyor. */}
       <div
         style={{
           background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryDark} 100%)`,
           borderRadius: 20,
-          padding: '20px 24px',
-          marginBottom: 20,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 14px 32px rgba(76, 41, 156, 0.22)',
+          padding: '22px 26px',
+          marginBottom: 16,
+          boxShadow: '0 14px 32px rgba(76, 41, 156, 0.20)',
         }}
       >
-        <div>
-          <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 13 }}>Hoş Geldiniz 👋</Text>
-          <Title level={3} style={{ color: '#fff', margin: '4px 0 0' }}>{adSoyad}</Title>
-          <Text style={{ color: 'rgba(255,255,255,0.78)' }}>{getSubscriptionBannerText(abonelik, subStatus)}</Text>
-          {subUrgent && (
-            <div style={{ marginTop: 8 }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  padding: '3px 10px',
-                  borderRadius: 999,
-                  background: subStatus.key === 'expired' ? 'rgba(255,77,109,0.28)' : 'rgba(255,159,28,0.28)',
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                }}
-                onClick={() => navigate('/ayarlar/abonelik')}
-              >
-                {subStatus.key === 'expired' ? '⚠️ Abonelik yenilenmeli' : `⚠️ ${subStatus.remainingDays} gün kaldı, yenile`}
-              </span>
-            </div>
-          )}
-        </div>
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 16,
-            background: 'rgba(255,255,255,0.16)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 24,
-            color: '#FFD97A',
-          }}
-        >
-          <CrownOutlined />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <Text style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 13 }}>Hoş geldiniz</Text>
+            <Title level={3} style={{ color: '#fff', margin: '2px 0 0' }}>{adSoyad}</Title>
+          </div>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '7px 14px',
+              borderRadius: 999,
+              background: subUrgent ? (subStatus.key === 'expired' ? 'rgba(255,77,109,0.24)' : 'rgba(255,159,28,0.24)') : 'rgba(255,255,255,0.14)',
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/ayarlar/abonelik')}
+          >
+            <CrownOutlined style={{ color: '#FFD97A', fontSize: 14 }} />
+            <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: 700 }}>
+              {subUrgent
+                ? (subStatus.key === 'expired' ? 'Abonelik yenilenmeli' : `${subStatus.remainingDays} gün kaldı, yenile`)
+                : getSubscriptionBannerText(abonelik, subStatus)}
+            </Text>
+          </div>
         </div>
       </div>
 
-      <TodayCards navigate={navigate} kresId={kresId} />
+      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} />
 
-      <Title level={5} style={{ marginBottom: 12 }}>Genel Özet</Title>
+      {/* Genel Özet: dört sayı artık dört ayrı kart değil, tek bir panelin
+          içinde ince dikey çizgilerle bölünmüş sütunlar — sayfadaki tekrar
+          eden "renkli daire ikon" kartlarının sayısını azaltıp asıl
+          rakamlara daha fazla ağırlık veriyor. */}
       {yukleniyor ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <Spin size="large" />
         </div>
       ) : (
-        <Row gutter={[12, 12]} style={{ marginBottom: 8 }}>
-          {OZET_ITEMS.map((item) => (
-            <Col xs={12} md={6} key={item.key}>
-              <Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: `${item.color}1A`,
-                    color: item.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 20,
-                    margin: '0 auto 10px',
-                  }}
-                >
-                  {item.icon}
-                </div>
-                <Statistic value={istatistik[item.key]} valueStyle={{ color: item.color, fontWeight: 900, fontSize: 22 }} />
-                <Text type="secondary" style={{ fontWeight: 700, fontSize: 12 }}>{item.label}</Text>
-              </Card>
-            </Col>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            border: `1px solid ${THEME.border}`,
+            borderRadius: THEME.radius,
+            background: THEME.card,
+            marginBottom: 16,
+            boxShadow: THEME.shadow,
+          }}
+        >
+          {OZET_ITEMS.map((item, idx) => (
+            <div
+              key={item.key}
+              style={{
+                flex: '1 1 140px',
+                padding: '18px 22px',
+                borderRight: idx < OZET_ITEMS.length - 1 ? `1px solid ${THEME.border}` : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                <span style={{ fontSize: 13, color: item.color }}>{item.icon}</span>
+                <Text type="secondary" style={{ fontSize: 12.5, fontWeight: 600 }}>{item.label}</Text>
+              </div>
+              <Text style={{ fontSize: 26, fontWeight: 800, color: THEME.text, lineHeight: 1 }}>
+                {istatistik[item.key]}
+              </Text>
+            </div>
           ))}
-        </Row>
+        </div>
       )}
+
+      <TodayCards navigate={navigate} kresId={kresId} />
 
       <DailySummary navigate={navigate} kresId={kresId} />
 
