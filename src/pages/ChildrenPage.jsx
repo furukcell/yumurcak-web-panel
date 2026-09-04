@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Table, Button, Drawer, Form, Input, Select, Radio, Tag, message, Empty, Space } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, Select, Radio, Segmented, Tag, message, Empty, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
 import { database } from '../config/firebase';
@@ -25,6 +25,8 @@ export default function ChildrenPage() {
   const [saving, setSaving] = useState(false);
   const [yeniBaslayan, setYeniBaslayan] = useState(false);
   const [uyumDurumu, setUyumDurumu] = useState('pasif');
+  const [durum, setDurum] = useState('aktif');
+  const [durumFilter, setDurumFilter] = useState('aktif');
   const [form] = Form.useForm();
 
   // ── Çocuk listesi (mobildeki ChildListScreen.js mantığı) ──────────
@@ -105,6 +107,9 @@ export default function ChildrenPage() {
               yeniBaslayan: c.yeniBaslayan === true || c.uyumTakibiAktif === true || c.uyumDurumu === 'aktif',
               uyumDurumu: c.uyumDurumu || (c.uyumTakibiAktif ? 'aktif' : 'pasif'),
               uyumBaslangicTarihi: c.uyumBaslangicTarihi || '',
+              durum: c.durum === 'ayrildi' ? 'ayrildi' : 'aktif',
+              ayrilmaTarihi: c.ayrilmaTarihi || '',
+              createdAt: c.createdAt || null,
             };
           })
           .sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
@@ -165,17 +170,25 @@ export default function ChildrenPage() {
     return () => unsub();
   }, [kresId]);
 
-  const limitDoldu = ogrenciLimiti != null && children.length >= ogrenciLimiti;
+  const aktifCocuklar = children.filter((c) => c.durum !== 'ayrildi');
+  const limitDoldu = ogrenciLimiti != null && aktifCocuklar.length >= ogrenciLimiti;
+
+  const gorunenCocuklar = children.filter((c) => {
+    if (durumFilter === 'tumu') return true;
+    if (durumFilter === 'ayrildi') return c.durum === 'ayrildi';
+    return c.durum !== 'ayrildi';
+  });
 
   const openCreate = () => {
     if (limitDoldu) {
-      message.error(`Öğrenci limitiniz doldu (${children.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
+      message.error(`Öğrenci limitiniz doldu (${aktifCocuklar.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
       return;
     }
     setEditingId(null);
     form.resetFields();
     setYeniBaslayan(false);
     setUyumDurumu('pasif');
+    setDurum('aktif');
     setDrawerOpen(true);
   };
 
@@ -188,9 +201,11 @@ export default function ChildrenPage() {
       adres: record.adres,
       veliIds: record.veliIds,
       uyumBaslangicTarihi: record.uyumBaslangicTarihi || bugunKey(),
+      ayrilmaTarihi: record.ayrilmaTarihi || bugunKey(),
     });
     setYeniBaslayan(record.yeniBaslayan);
     setUyumDurumu(record.uyumDurumu);
+    setDurum(record.durum || 'aktif');
     setDrawerOpen(true);
   };
 
@@ -212,11 +227,16 @@ export default function ChildrenPage() {
       message.error('Uyum başlangıç tarihini 2026-06-26 formatında gir.');
       return;
     }
+    const ayrilmaTarihi = values.ayrilmaTarihi || bugunKey();
+    if (durum === 'ayrildi' && !/^\d{4}-\d{2}-\d{2}$/.test(ayrilmaTarihi)) {
+      message.error('Ayrılma tarihini 2026-06-26 formatında gir.');
+      return;
+    }
 
     // Yeni çocuk eklerken abonelik öğrenci limiti aşılıyorsa engelle
     // (openCreate'de de kontrol var, burada aynı kontrol race-condition'a karşı ikinci güvence).
     if (!editingId && limitDoldu) {
-      message.error(`Öğrenci limitiniz doldu (${children.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
+      message.error(`Öğrenci limitiniz doldu (${aktifCocuklar.length}/${ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.`);
       return;
     }
 
@@ -243,6 +263,8 @@ export default function ChildrenPage() {
         uyumBaslangicTarihi: yeniBaslayan ? uyumBaslangicTarihi : existing?.uyumBaslangicTarihi || '',
         uyumSureGun: 30,
         uyumDurumu: yeniBaslayan ? (uyumDurumu === 'tamamlandi' ? 'tamamlandi' : 'aktif') : 'pasif',
+        durum,
+        ayrilmaTarihi: durum === 'ayrildi' ? ayrilmaTarihi : '',
         createdAt: existing?.createdAt || Date.now(),
         updatedAt: Date.now(),
       };
@@ -290,6 +312,13 @@ export default function ChildrenPage() {
       key: 'uyum',
       render: (_, r) => (r.yeniBaslayan ? <Tag color={r.uyumDurumu === 'tamamlandi' ? 'purple' : 'green'}>{r.uyumDurumu === 'tamamlandi' ? 'Tamamlandı' : 'Aktif'}</Tag> : null),
     },
+    {
+      title: 'Durum',
+      key: 'durum',
+      render: (_, r) => (r.durum === 'ayrildi'
+        ? <Tag color="red">Ayrıldı{r.ayrilmaTarihi ? ` · ${formatChildBirthDate(r.ayrilmaTarihi)}` : ''}</Tag>
+        : <Tag color="green">Aktif</Tag>),
+    },
   ];
 
   return (
@@ -297,22 +326,33 @@ export default function ChildrenPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <Title level={3} style={{ margin: 0 }}>Çocuklar</Title>
-          <Text type="secondary">{children.length} kayıtlı çocuk</Text>
+          <Text type="secondary">{aktifCocuklar.length} aktif çocuk{children.length !== aktifCocuklar.length ? ` · ${children.length - aktifCocuklar.length} ayrıldı` : ''}</Text>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Çocuk Ekle</Button>
       </div>
 
       {limitDoldu && (
         <div style={{ background: '#FFE8EE', border: '1px solid #FFC2D1', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#B3123A', fontWeight: 600, fontSize: 13 }}>
-          ⚠️ Öğrenci limitiniz doldu ({children.length}/{ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.
+          ⚠️ Öğrenci limitiniz doldu ({aktifCocuklar.length}/{ogrenciLimiti}). Yeni öğrenci eklemek için abonelik / paket yükseltme talebi göndermeniz gerekiyor.
         </div>
       )}
+
+      <Segmented
+        value={durumFilter}
+        onChange={setDurumFilter}
+        options={[
+          { label: 'Aktif', value: 'aktif' },
+          { label: 'Ayrılan', value: 'ayrildi' },
+          { label: 'Tümü', value: 'tumu' },
+        ]}
+        style={{ marginBottom: 12 }}
+      />
 
       <Table
         rowKey="id"
         loading={loading}
         columns={columns}
-        dataSource={children}
+        dataSource={gorunenCocuklar}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
         locale={{ emptyText: <Empty description="Henüz çocuk eklenmemiş" /> }}
         pagination={{ pageSize: 10 }}
@@ -390,6 +430,25 @@ export default function ChildrenPage() {
               options={veliler.map((v) => ({ value: v.id, label: `${v.ad || ''} (${v.kullaniciAdi || '-'})` }))}
             />
           </Form.Item>
+
+          {editingId && (
+            <div style={{ background: '#FFF5F5', border: '1px solid #FFDCE0', borderRadius: 14, padding: 14 }}>
+              <Text strong>🚪 Kayıt Durumu</Text>
+              <div style={{ color: THEME.muted, fontWeight: 600, fontSize: 13, marginTop: 4, marginBottom: 10 }}>
+                Çocuk kreşten ayrıldıysa kaydı silme — geçmiş yoklama/rapor verileri kalsın diye burada "Ayrıldı" olarak işaretle.
+              </div>
+              <Radio.Group value={durum} onChange={(e) => setDurum(e.target.value)} optionType="button" buttonStyle="solid">
+                <Radio.Button value="aktif">Aktif</Radio.Button>
+                <Radio.Button value="ayrildi">Ayrıldı</Radio.Button>
+              </Radio.Group>
+
+              {durum === 'ayrildi' && (
+                <Form.Item name="ayrilmaTarihi" label="Ayrılma tarihi" style={{ marginTop: 12, marginBottom: 0 }}>
+                  <Input placeholder="2026-06-26" />
+                </Form.Item>
+              )}
+            </div>
+          )}
         </Form>
       </Drawer>
     </div>
