@@ -3,7 +3,7 @@ import { Typography, Card, Button, Tag, Row, Col, Empty, message, Spin } from 'a
 import { ref, onValue, update, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 
 const { Title, Text } = Typography;
 
@@ -100,9 +100,9 @@ export default function BellPage() {
       <Text type="secondary">Veliler "Geliyorum" veya "Kapıdayım" dediğinde burada görünür</Text>
 
       <Row gutter={[12, 12]} style={{ margin: '16px 0' }}>
-        <Col span={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.orange }}>{stats.aktif}</Text><br /><Text type="secondary">Aktif</Text></Card></Col>
-        <Col span={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.red }}>{stats.okunmamis}</Text><br /><Text type="secondary">Okunmamış</Text></Card></Col>
-        <Col span={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{stats.tamamlanan}</Text><br /><Text type="secondary">Tamamlanan</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.orange), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.orange }}>{stats.aktif}</Text><br /><Text type="secondary">Aktif</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.red), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.red }}>{stats.okunmamis}</Text><br /><Text type="secondary">Okunmamış</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{stats.tamamlanan}</Text><br /><Text type="secondary">Tamamlanan</Text></Card></Col>
       </Row>
 
       {loading ? (
@@ -118,7 +118,7 @@ export default function BellPage() {
           const durum = item.durum || item.status;
 
           return (
-            <Card key={item.id} style={{ marginBottom: 12, borderColor: !okundu && !tamamlandi ? '#FFD1DA' : THEME.border, background: !okundu && !tamamlandi ? '#FFF8FA' : '#fff' }}>
+            <Card key={item.id} style={{ ...cardStyle(tamamlandi ? THEME.green : !okundu ? THEME.red : THEME.orange), marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <div>
                   <Text strong>{item.cocukAdi || item.cocukAd || item.childName || item.cocukId || 'Çocuk'}</Text>
