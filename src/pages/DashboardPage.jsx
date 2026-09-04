@@ -457,11 +457,19 @@ export default function DashboardPage() {
 
 // Dashboard'daki mini özet panelleri (duyurular / etkinlikler / doğum
 // günleri / bekleyen ödemeler) için tekrar kullanılan kart bileşeni.
-function SummaryPanel({ title, icon, color, items, loading, emptyText, onSeeAll }) {
+function SummaryPanel({ title, icon, items, loading, emptyText, onSeeAll }) {
   return (
     <Card
       size="small"
-      style={{ borderColor: THEME.border, height: '100%' }}
+      style={{
+        borderColor: THEME.border,
+        height: '100%',
+        borderTop: `3px solid ${THEME.primary}`,
+        borderTopLeftRadius: THEME.radiusSm,
+        borderTopRightRadius: THEME.radiusSm,
+        background: `${THEME.primary}0D`,
+        boxShadow: THEME.shadow,
+      }}
       styles={{ body: { padding: 16 } }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -469,7 +477,7 @@ function SummaryPanel({ title, icon, color, items, loading, emptyText, onSeeAll 
           <div
             style={{
               width: 30, height: 30, borderRadius: 9,
-              background: `${color}1A`, color,
+              background: `${THEME.primary}1A`, color: THEME.primary,
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
             }}
           >
