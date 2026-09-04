@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Typography, Tabs, Row, Col, Card, Progress, Tag, Spin, Empty, Statistic } from 'antd';
+import { Typography, Tabs, Row, Col, Card, Progress, Tag, Spin, Empty, Statistic, Button, Space } from 'antd';
+import { FileExcelOutlined, PrinterOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo, limitToLast } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -12,13 +13,14 @@ import {
   formatTL,
   formatDateTimeTr,
 } from '../utils/statisticsHelpers';
+import { exportStatisticsToExcel } from '../utils/statisticsExport';
 
 const { Title, Text, Paragraph } = Typography;
 
 // Mobildeki AdminStatisticsScreen.js'in web karşılığı — aynı veri mantığı
 // (bkz. src/utils/statisticsHelpers.js), UI antd bileşenleriyle kuruldu.
 export default function StatisticsPage() {
-  const { kullanici } = useAuth();
+  const { kullanici, kres } = useAuth();
   const kresId = kullanici?.kresId || null;
   const [raw, setRaw] = useState({});
   const [loading, setLoading] = useState(true);
@@ -70,17 +72,40 @@ export default function StatisticsPage() {
   return (
     <div>
       <div
+        className="no-print"
         style={{
           background: THEME.primary,
           borderRadius: 20,
           padding: '20px 24px',
           marginBottom: 20,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 16,
         }}
       >
-        <Title level={3} style={{ color: '#fff', margin: 0 }}>📊 Kurum İstatistikleri</Title>
-        <Text style={{ color: 'rgba(255,255,255,0.82)' }}>
-          Genel gidişat, öğretmen kullanımı ve çocuk bazlı risk analizi
-        </Text>
+        <div>
+          <Title level={3} style={{ color: '#fff', margin: 0 }}>📊 Kurum İstatistikleri</Title>
+          <Text style={{ color: 'rgba(255,255,255,0.82)' }}>
+            Genel gidişat, öğretmen kullanımı ve çocuk bazlı risk analizi
+          </Text>
+        </div>
+        {!loading && (
+          <Space>
+            <Button icon={<FileExcelOutlined />} onClick={() => exportStatisticsToExcel(stats, kres?.ad || 'Kurum')}>
+              Excel'e Aktar
+            </Button>
+            <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
+              Yazdır / PDF
+            </Button>
+          </Space>
+        )}
+      </div>
+
+      <div className="print-only" style={{ display: 'none', marginBottom: 16 }}>
+        <Title level={3} style={{ margin: 0 }}>📊 {kres?.ad || 'Kurum'} — İstatistik Raporu</Title>
+        <Text type="secondary">{new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })} itibarıyla</Text>
       </div>
 
       {loading ? (
@@ -122,6 +147,16 @@ function ProgressLine({ label, percent: value, color }) {
   );
 }
 
+function ChangeTag({ value, suffix = ' puan geçen aya göre' }) {
+  if (value === null || value === undefined || Number.isNaN(value)) return null;
+  const positive = value >= 0;
+  return (
+    <Tag color={positive ? 'green' : 'red'} style={{ marginLeft: 8 }}>
+      {positive ? '▲' : '▼'} {Math.abs(value)}{suffix}
+    </Tag>
+  );
+}
+
 function GeneralTab({ stats }) {
   return (
     <>
@@ -136,10 +171,20 @@ function GeneralTab({ stats }) {
       <Card style={{ ...cardStyle(THEME.green), marginBottom: 14 }} title="📅 Bugünkü Yoklama">
         <ProgressLine label={`${stats.todayPresent} gelen / ${stats.todayAttendanceTotal} kayıt`} percent={stats.todayAttendanceRate} color={THEME.green} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Bugün gelmeyen çocuk: {stats.todayAbsent}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 8 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
+        <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Text style={{ fontWeight: 700, fontSize: 13 }}>Aylık devam oranı</Text>
+            <ChangeTag value={stats.monthlyAttendanceRateChange} />
+          </div>
+          <ProgressLine label={`Bu ay: %${stats.monthlyAttendanceRate}`} percent={stats.monthlyAttendanceRate} color={THEME.green} />
+        </div>
       </Card>
 
-      <Card style={{ ...cardStyle(THEME.teal), marginBottom: 14 }} title="📈 Kayıt Hareketleri (Son 6 Ay)">
+      <Card
+        style={{ ...cardStyle(THEME.teal), marginBottom: 14 }}
+        title={<span>📈 Kayıt Hareketleri (Son 6 Ay)</span>}
+      >
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 110, marginBottom: 8 }}>
           {stats.enrollmentTrend.map((m, idx) => {
             const maxVal = Math.max(1, ...stats.enrollmentTrend.map((x) => Math.max(x.yeni, x.ayrilan)));
@@ -189,7 +234,7 @@ function GeneralTab({ stats }) {
         )}
       </Card>
 
-      <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title="💰 Bu Ay Ödeme Durumu">
+      <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title={<span>💰 Bu Ay Ödeme Durumu<ChangeTag value={stats.paymentCollectionRateChange} /></span>}>
         <ProgressLine label={`Tahsilat oranı: %${stats.paymentCollectionRate}`} percent={stats.paymentCollectionRate} color={THEME.gold} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Ödenen: {formatTL(stats.paidAmount)}</Paragraph>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen / geciken: {formatTL(stats.pendingAmount)}</Paragraph>
