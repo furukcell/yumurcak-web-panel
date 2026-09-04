@@ -5,7 +5,7 @@ import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { todayDateKey } from '../services/monthlyDocuments';
 import { toList, filterByKres, getChildId, isAbsentStatus, isSameDay, extractDate, getName, findClassName } from '../utils/statisticsHelpers';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 
 const { Text, Title } = Typography;
 
@@ -145,15 +145,7 @@ function CardShell({ title, icon, loading, empty, emptyText, onSeeAll, children 
   return (
     <Card
       size="small"
-      style={{
-        borderColor: THEME.border,
-        height: '100%',
-        borderTop: `3px solid ${THEME.primary}`,
-        borderTopLeftRadius: THEME.radiusSm,
-        borderTopRightRadius: THEME.radiusSm,
-        background: `${THEME.primary}0D`,
-        boxShadow: THEME.shadow,
-      }}
+      style={{ ...cardStyle(), height: '100%' }}
       styles={{ body: { padding: 16 } }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: onSeeAll ? 'pointer' : 'default' }} onClick={onSeeAll}>
