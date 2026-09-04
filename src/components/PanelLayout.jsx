@@ -26,6 +26,7 @@ import {
   FileProtectOutlined,
   PictureOutlined,
   RocketOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -138,6 +139,7 @@ function buildMenuItems(unreadCount) {
         { key: '/ayarlar/abonelik', icon: coloredIcon(CrownOutlined, THEME.gold), label: 'Abonelik' },
         { key: '/ayarlar/kurum-zili', icon: coloredIcon(BellOutlined, THEME.red), label: 'Kurum Zili' },
         { key: '/yasal-belgeler', icon: coloredIcon(FileProtectOutlined, THEME.blue), label: 'Yasal Belgeler' },
+        { key: '/denetim-kaydi', icon: coloredIcon(HistoryOutlined, THEME.muted), label: 'Denetim Kaydı' },
       ],
     },
   ];
