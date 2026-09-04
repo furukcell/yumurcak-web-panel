@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { ref, onValue, set, push, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 import { asArray } from '../utils/crudHelpers';
 import { createUserNotification } from '../utils/notificationCenter';
 
@@ -211,10 +211,10 @@ export default function PaymentsPage() {
       </div>
 
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={12} md={6}><Card size="small" style={{ borderColor: THEME.border }}><Text type="secondary" style={{ fontSize: 12 }}>Açık Tutar</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={{ borderColor: THEME.border }}><Text type="secondary" style={{ fontSize: 12 }}>Bu Ay</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={{ borderColor: THEME.border }}><Text type="secondary" style={{ fontSize: 12 }}>Ödendi</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={{ borderColor: THEME.border }}><Text type="secondary" style={{ fontSize: 12 }}>Geciken</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>Açık Tutar</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.primary)}><Text type="secondary" style={{ fontSize: 12 }}>Bu Ay</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.green)}><Text type="secondary" style={{ fontSize: 12 }}>Ödendi</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>Geciken</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
       </Row>
 
       <Space wrap style={{ marginBottom: 14 }}>
