@@ -207,6 +207,7 @@ export function buildStatistics(raw, kresId) {
   const teacherStats = buildTeacherStats(users, classes, children, reports, monthAttendance, events);
   const riskGroups = buildRiskGroups(childStats);
   const activityLog = buildActivityLog(raw, users, children, kresId);
+  const classOccupancy = buildClassOccupancy(classes, children);
 
   return {
     totalChildren: children.length,
@@ -230,7 +231,29 @@ export function buildStatistics(raw, kresId) {
     teacherStats,
     riskGroups,
     activityLog,
+    classOccupancy,
   };
+}
+
+// Sınıf Bazlı Doluluk — her sınıfın kapasite alanına karşı o sınıfa
+// atanmış (sinifId/classId eşleşen) çocuk sayısı. Kapasite girilmemiş
+// sınıflarda rate=null döner, UI bunu "kapasite girilmemiş" olarak
+// gösterir (dashboard'daki genel doluluk kartıyla aynı mantık, bkz.
+// DashboardPage.jsx `doluluk` state'i — orası toplam, burası kırılım).
+function buildClassOccupancy(classes, children) {
+  return classes
+    .map((cls) => {
+      const childCount = children.filter((child) => (child.sinifId || child.classId) === cls.id).length;
+      const kapasite = Number(cls.kapasite) || 0;
+      return {
+        id: cls.id,
+        name: cls.ad || cls.sinifAdi || cls.name || 'İsimsiz sınıf',
+        childCount,
+        kapasite,
+        rate: kapasite > 0 ? percent(childCount, kapasite) : null,
+      };
+    })
+    .sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));
 }
 
 function buildActivityLog(raw, users, children, kresId) {
