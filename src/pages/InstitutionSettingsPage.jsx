@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Input, Button, Upload, message, Spin, Card } from 'antd';
-import { CameraOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CameraOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
 import { ref, get, update } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { database, storage } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { useNavigate } from 'react-router-dom';
+import { kurumVerisiniDisaAktar } from '../utils/institutionDataExport';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -24,6 +25,7 @@ export default function InstitutionSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const [form, setForm] = useState({ ad: '', adres: '', telefon: '', email: '', yoneticiAd: '', yoneticiTelefon: '', whatsapp: '', website: '', calismaSaatleri: '', not: '' });
 
@@ -97,6 +99,21 @@ export default function InstitutionSettingsPage() {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const sonuc = await kurumVerisiniDisaAktar(kresId, form.ad || 'Kurum');
+      message.success(
+        `Excel indirildi: ${sonuc.cocukSayisi} çocuk, ${sonuc.veliSayisi} veli, ${sonuc.ogretmenSayisi} öğretmen, ${sonuc.odemeSayisi} ödeme kaydı.`
+      );
+    } catch (error) {
+      console.error(error);
+      message.error('Veri dışa aktarılamadı. Tekrar dene.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><Spin size="large" /></div>;
 
   return (
@@ -123,6 +140,16 @@ export default function InstitutionSettingsPage() {
           <Button block onClick={() => navigate('/yasal-belgeler?doc=privacy')}>🔐 Gizlilik Politikası</Button>
           <Button block onClick={() => navigate('/yasal-belgeler?doc=kvkk')}>🛡️ KVKK Metni</Button>
         </div>
+      </Card>
+
+      <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
+        <Text strong>📦 Veri Yedekleme</Text>
+        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>
+          Kurumun tüm verisini (sınıflar, çocuklar, veliler, öğretmenler, yöneticiler, ödemeler) tek bir Excel dosyası olarak indir. Yedek almak, denetim ya da kurum ayrılırken kullanışlıdır.
+        </Paragraph>
+        <Button block icon={<DownloadOutlined />} loading={exporting} onClick={handleExport}>
+          Tüm Kurum Verilerini Dışa Aktar (Excel)
+        </Button>
       </Card>
 
       <FormField label="Kurum Adı" value={form.ad} onChange={(v) => setValue('ad', v)} placeholder="Yumurcak Kreş" />
