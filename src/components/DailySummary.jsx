@@ -138,18 +138,26 @@ function useTodayEvents(kresId) {
   return state;
 }
 
-// Kartın üstünde ince, kategoriyi belirten bir renkli çizgi — yuvarlak
-// ikon-kutusu yerine. Böylece 3 kart birbirinden ayrışıyor ama sayfa
-// genelinde tekrar eden "renkli daire ikon" motifi burada kullanılmıyor.
-function CardShell({ title, icon, color, loading, empty, emptyText, onSeeAll, children }) {
+// Kartın üstünde marka rengiyle (THEME.primary) ince bir çizgi + gövdede
+// aynı rengin çok soluk (%5 alfa) tonu ve hafif gölge — tüm kartlarda
+// (Günlük Özet + alttaki özet panelleri) tutarlı tek stil.
+function CardShell({ title, icon, loading, empty, emptyText, onSeeAll, children }) {
   return (
     <Card
       size="small"
-      style={{ borderColor: THEME.border, height: '100%', borderTop: `3px solid ${color}`, borderTopLeftRadius: THEME.radiusSm, borderTopRightRadius: THEME.radiusSm }}
+      style={{
+        borderColor: THEME.border,
+        height: '100%',
+        borderTop: `3px solid ${THEME.primary}`,
+        borderTopLeftRadius: THEME.radiusSm,
+        borderTopRightRadius: THEME.radiusSm,
+        background: `${THEME.primary}0D`,
+        boxShadow: THEME.shadow,
+      }}
       styles={{ body: { padding: 16 } }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: onSeeAll ? 'pointer' : 'default' }} onClick={onSeeAll}>
-        <span style={{ fontSize: 14, color, display: 'flex' }}>{icon}</span>
+        <span style={{ fontSize: 14, color: THEME.primary, display: 'flex' }}>{icon}</span>
         <Text strong style={{ fontSize: 13 }}>{title}</Text>
       </div>
       {loading ? (
