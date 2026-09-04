@@ -58,3 +58,27 @@ body {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* İstatistik sayfası "Yazdır / PDF" — sidebar/header/aksiyon butonları
+   çıktıda gizlenir, sadece rapor içeriği (aktif tab) kalır. Tarayıcının
+   kendi "PDF olarak kaydet" seçeneği kullanılıyor, ayrı bir PDF
+   kütüphanesi eklemedik (bkz. statisticsExport.js). */
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header,
+  .no-print,
+  .ant-tabs-nav {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .ant-layout-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}
