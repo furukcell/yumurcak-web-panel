@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Typography, Table, Button, Drawer, Form, Input, Tag, message, Empty, Spin, Space } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, InputNumber, Tag, message, Empty, Spin, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
 import { database } from '../config/firebase';
@@ -112,7 +112,7 @@ export default function ClassesPage() {
 
   const openEdit = (record) => {
     setEditingId(record.id);
-    form.setFieldsValue({ ad: record.ad, yasGrubu: record.yasGrubu });
+    form.setFieldsValue({ ad: record.ad, yasGrubu: record.yasGrubu, kapasite: record.kapasite || undefined });
     setDrawerOpen(true);
     loadClassChildren(record.id);
   };
@@ -139,6 +139,7 @@ export default function ClassesPage() {
         ...existingData,
         ad: values.ad.trim(),
         yasGrubu: values.yasGrubu,
+        kapasite: values.kapasite || null,
         ogretmenIds: existingTeacherIds,
         kresId: nextKresId,
         createdAt: existingData.createdAt || now,
@@ -173,6 +174,13 @@ export default function ClassesPage() {
     { title: 'Yaş Grubu', dataIndex: 'yasGrubu', key: 'yasGrubu', render: (v) => v || <Text type="secondary">Belirtilmemiş</Text> },
     { title: '👩‍🏫 Öğretmen', key: 'teacherCount', render: (_, r) => r.ogretmenIds?.length || 0 },
     { title: '👶 Çocuk', key: 'childCount', render: (_, r) => r.childCount || 0 },
+    {
+      title: 'Kapasite',
+      key: 'kapasite',
+      render: (_, r) => (r.kapasite
+        ? <Text type={(r.childCount || 0) > r.kapasite ? 'danger' : 'secondary'}>{r.childCount || 0}/{r.kapasite}</Text>
+        : <Text type="secondary">Girilmemiş</Text>),
+    },
   ];
 
   return (
@@ -217,6 +225,9 @@ export default function ClassesPage() {
                 <YasChip key={item.key} item={item} form={form} />
               ))}
             </Space>
+          </Form.Item>
+          <Form.Item name="kapasite" label="Kapasite (opsiyonel)" tooltip="Dashboard'daki doluluk oranı için kullanılır">
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Örn: 15" />
           </Form.Item>
         </Form>
 
