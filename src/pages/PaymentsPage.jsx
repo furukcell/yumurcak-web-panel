@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME, cardStyle } from '../theme';
 import { asArray } from '../utils/crudHelpers';
 import { createUserNotification } from '../utils/notificationCenter';
+import { denetimKaydiYaz } from '../utils/auditLog';
 
 const { Title, Text } = Typography;
 
@@ -129,6 +130,14 @@ export default function PaymentsPage() {
     try {
       await set(ref(database, `odemeler/${item.id}`), { ...item, durum: 'odendi', status: 'odendi', odemeTarihi: item.odemeTarihi || todayKey(), updatedAt: Date.now() });
       message.success('Ödeme durumu güncellendi');
+      denetimKaydiYaz({
+        kresId,
+        kullanici,
+        islem: 'guncelle',
+        modul: 'Ödemeler',
+        hedef: getChildName(children.find((c) => c.id === item.cocukId) || {}, item),
+        detay: `${item.donem || getDonem(item)} · ${formatMoney(item.tutarNumber ?? item.tutar)} · Ödendi olarak işaretlendi`,
+      });
     } catch {
       message.error('Ödeme durumu güncellenemedi.');
     }
@@ -193,6 +202,15 @@ export default function PaymentsPage() {
       }
       message.success(editingId ? 'Ödeme güncellendi' : 'Ödeme kaydı oluşturuldu');
       setDrawerOpen(false);
+
+      denetimKaydiYaz({
+        kresId,
+        kullanici,
+        islem: editingId ? 'guncelle' : 'ekle',
+        modul: 'Ödemeler',
+        hedef: getChildName(cocuk, veri),
+        detay: `${veri.donem} · ${formatMoney(finalTutar)} · Durum: ${DURUM_META[selectedDurum]?.label || selectedDurum}`,
+      });
     } catch (error) {
       message.error('Kayıt sırasında bir sorun oluştu.');
     } finally {
