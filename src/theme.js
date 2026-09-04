@@ -31,6 +31,20 @@ export const THEME = {
   shadowLg: '0 12px 32px rgba(76, 41, 156, 0.10)',
 };
 
+// Kartlarda kullanılan ortak stil: üstte marka rengiyle ince çizgi,
+// gövdede aynı rengin çok soluk (%5 alfa) tonu ve hafif gölge.
+// Tüm sayfalarda <Card style={cardStyle()}> şeklinde kullanılır.
+export function cardStyle(color = THEME.primary) {
+  return {
+    borderColor: THEME.border,
+    borderTop: `3px solid ${color}`,
+    borderTopLeftRadius: THEME.radiusSm,
+    borderTopRightRadius: THEME.radiusSm,
+    background: `${color}0D`,
+    boxShadow: THEME.shadow,
+  };
+}
+
 // Kres'in Tema Ayarları'nda (ThemePage.jsx) seçtiği pastel paketi THEME
 // objesinin üzerine yazar — referans aynı kaldığı için import eden ~25
 // dosyanın hiçbiri değişmeden günceli okur, tek şart o bileşenin AuthContext
