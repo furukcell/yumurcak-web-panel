@@ -10,6 +10,7 @@ import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 import { deleteKullaniciHesabi } from '../utils/userDelete';
+import { denetimKaydiYaz } from '../utils/auditLog';
 
 const { Title, Text } = Typography;
 
@@ -25,6 +26,7 @@ export default function TeachersPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [aramaMetni, setAramaMetni] = useState('');
   const [form] = Form.useForm();
 
   // ── Öğretmen listesi (mobildeki TeacherListScreen.js mantığı) ─────
@@ -226,6 +228,14 @@ export default function TeachersPage() {
       await update(ref(database), updates);
       message.success(editingId ? 'Öğretmen güncellendi' : 'Öğretmen kaydedildi');
       setDrawerOpen(false);
+
+      denetimKaydiYaz({
+        kresId: nextKresId,
+        kullanici,
+        islem: editingId ? 'guncelle' : 'ekle',
+        modul: 'Öğretmenler',
+        hedef: values.ad.trim(),
+      });
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
@@ -246,6 +256,7 @@ export default function TeachersPage() {
     try {
       await deleteKullaniciHesabi(record.id);
       message.success('Öğretmen silindi');
+      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 'Öğretmenler', hedef: record.ad });
     } catch (error) {
       console.error(error);
       message.error(`Öğretmen silinemedi. ${error?.message || ''}`);
@@ -256,6 +267,12 @@ export default function TeachersPage() {
 
   const aktifSayisi = teachers.filter((t) => t.aktif).length;
   const atanmisSayisi = teachers.filter((t) => t.sinifAdlari.length > 0).length;
+
+  const gorunenOgretmenler = teachers.filter((t) => {
+    if (!aramaMetni.trim()) return true;
+    const q = aramaMetni.trim().toLocaleLowerCase('tr');
+    return `${t.ad} ${t.kullaniciAdi} ${t.telefon} ${t.sinifAdlari.join(' ')}`.toLocaleLowerCase('tr').includes(q);
+  });
 
   const columns = [
     { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
@@ -302,11 +319,19 @@ export default function TeachersPage() {
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Öğretmen Ekle</Button>
       </div>
 
+      <Input.Search
+        placeholder="Öğretmen, kullanıcı adı, telefon veya sınıfa göre ara"
+        allowClear
+        style={{ width: 300, marginBottom: 12 }}
+        value={aramaMetni}
+        onChange={(e) => setAramaMetni(e.target.value)}
+      />
+
       <Table
         rowKey="id"
         loading={loading}
         columns={columns}
-        dataSource={teachers}
+        dataSource={gorunenOgretmenler}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
         locale={{ emptyText: <Empty description="Henüz kayıtlı öğretmen yok" /> }}
         pagination={{ pageSize: 10 }}
