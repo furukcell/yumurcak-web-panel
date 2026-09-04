@@ -8,7 +8,7 @@ import { ref, onValue, get, query, orderByChild, equalTo } from 'firebase/databa
 import { useNavigate } from 'react-router-dom';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 import { parseChildBirthDate } from '../utils/childDates';
 import { useUnreadMessagesCount } from '../utils/messageHelpers';
 import { getSubscriptionStatus } from '../utils/subscriptionStatus';
@@ -461,15 +461,7 @@ function SummaryPanel({ title, icon, items, loading, emptyText, onSeeAll }) {
   return (
     <Card
       size="small"
-      style={{
-        borderColor: THEME.border,
-        height: '100%',
-        borderTop: `3px solid ${THEME.primary}`,
-        borderTopLeftRadius: THEME.radiusSm,
-        borderTopRightRadius: THEME.radiusSm,
-        background: `${THEME.primary}0D`,
-        boxShadow: THEME.shadow,
-      }}
+      style={{ ...cardStyle(), height: '100%' }}
       styles={{ body: { padding: 16 } }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
