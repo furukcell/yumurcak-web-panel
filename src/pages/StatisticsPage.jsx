@@ -139,6 +139,33 @@ function GeneralTab({ stats }) {
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
       </Card>
 
+      <Card style={{ ...cardStyle(THEME.teal), marginBottom: 14 }} title="📈 Kayıt Hareketleri (Son 6 Ay)">
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 110, marginBottom: 8 }}>
+          {stats.enrollmentTrend.map((m, idx) => {
+            const maxVal = Math.max(1, ...stats.enrollmentTrend.map((x) => Math.max(x.yeni, x.ayrilan)));
+            return (
+              <div key={m.ay + idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 74 }}>
+                  <div title={`${m.yeni} yeni kayıt`} style={{ width: 12, borderRadius: 4, background: THEME.green, height: Math.max(3, (m.yeni / maxVal) * 74) }} />
+                  <div title={`${m.ayrilan} ayrılan`} style={{ width: 12, borderRadius: 4, background: THEME.red, height: Math.max(3, (m.ayrilan / maxVal) * 74) }} />
+                </div>
+                <Text style={{ fontSize: 11, color: THEME.muted }}>{m.ay}</Text>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 14, marginBottom: 8 }}>
+          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.green, marginRight: 5 }} />Yeni kayıt</Text>
+          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.red, marginRight: 5 }} />Ayrılan</Text>
+        </div>
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+          Bu ay net değişim: {stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net >= 0 ? '+' : ''}{stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net ?? 0} çocuk
+        </Paragraph>
+        {stats.ayrilanChildrenCount > 0 && (
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>Toplam ayrılan (tüm zamanlar): {stats.ayrilanChildrenCount}</Paragraph>
+        )}
+      </Card>
+
       <Card style={{ ...cardStyle(THEME.blue), marginBottom: 14 }} title="🏫 Sınıf Bazlı Doluluk">
         {stats.classOccupancy.length ? (
           stats.classOccupancy.map((cls, index) => (
