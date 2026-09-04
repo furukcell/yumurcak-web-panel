@@ -203,14 +203,19 @@ export function buildStatistics(raw, kresId) {
   const paidAmount = paidPayments.reduce((sum, item) => sum + getAmount(item), 0);
   const pendingAmount = pendingPayments.reduce((sum, item) => sum + getAmount(item), 0);
 
-  const childStats = children.map((child) => buildChildStats(child, { classes, reports, attendance: monthAttendance, events, monthKey }));
-  const teacherStats = buildTeacherStats(users, classes, children, reports, monthAttendance, events);
+  const aktifChildren = children.filter((c) => c.durum !== 'ayrildi');
+  const ayrilanChildren = children.filter((c) => c.durum === 'ayrildi');
+
+  const childStats = aktifChildren.map((child) => buildChildStats(child, { classes, reports, attendance: monthAttendance, events, monthKey }));
+  const teacherStats = buildTeacherStats(users, classes, aktifChildren, reports, monthAttendance, events);
   const riskGroups = buildRiskGroups(childStats);
   const activityLog = buildActivityLog(raw, users, children, kresId);
-  const classOccupancy = buildClassOccupancy(classes, children);
+  const classOccupancy = buildClassOccupancy(classes, aktifChildren);
+  const enrollmentTrend = buildEnrollmentTrend(children);
 
   return {
-    totalChildren: children.length,
+    totalChildren: aktifChildren.length,
+    ayrilanChildrenCount: ayrilanChildren.length,
     totalTeachers: users.filter((u) => getRole(u) === 'ogretmen').length,
     totalParents: users.filter((u) => getRole(u) === 'veli').length,
     totalClasses: classes.length,
@@ -232,7 +237,27 @@ export function buildStatistics(raw, kresId) {
     riskGroups,
     activityLog,
     classOccupancy,
+    enrollmentTrend,
   };
+}
+
+// Kayıt Hareketleri — son 6 ayda yeni kayıt (child.createdAt) ile ayrılan
+// (child.durum==='ayrildi' + ayrilmaTarihi) sayısını ay ay karşılaştırır.
+// ChildrenPage.jsx'teki "Ayrıldı" işaretlemesi kaydı silmediği için (geçmiş
+// yoklama/rapor verisi korunuyor) ayrılan çocuklar burada hâlâ görünür.
+function buildEnrollmentTrend(children) {
+  const ayEtiketleri = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+  const now = new Date();
+  const aylar = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: ayEtiketleri[d.getMonth()] };
+  });
+
+  return aylar.map(({ key, label }) => {
+    const yeni = children.filter((c) => c.createdAt && getMonthKey(c.createdAt) === key).length;
+    const ayrilan = children.filter((c) => c.durum === 'ayrildi' && String(c.ayrilmaTarihi || '').startsWith(key)).length;
+    return { ay: label, yeni, ayrilan, net: yeni - ayrilan };
+  });
 }
 
 // Sınıf Bazlı Doluluk — her sınıfın kapasite alanına karşı o sınıfa
