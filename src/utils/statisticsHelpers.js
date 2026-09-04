@@ -192,16 +192,30 @@ export function buildStatistics(raw, kresId) {
 
   const todayKey = getDateKey(new Date());
   const monthKey = getMonthKey(new Date());
+  const prevMonthKey = getMonthKey(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1));
   const monthAttendance = attendance.filter((item) => isInMonth(item, monthKey));
+  const prevMonthAttendance = attendance.filter((item) => isInMonth(item, prevMonthKey));
   const todayAttendance = attendance.filter((item) => isSameDay(item, todayKey));
   const todayPresent = todayAttendance.filter((item) => !isAbsentStatus(item.durum || item.status)).length;
   const todayAbsent = todayAttendance.filter((item) => isAbsentStatus(item.durum || item.status)).length;
+
+  const monthPresent = monthAttendance.filter((item) => !isAbsentStatus(item.durum || item.status)).length;
+  const monthlyAttendanceRate = percent(monthPresent, monthAttendance.length);
+  const prevMonthPresent = prevMonthAttendance.filter((item) => !isAbsentStatus(item.durum || item.status)).length;
+  const prevMonthlyAttendanceRate = percent(prevMonthPresent, prevMonthAttendance.length);
 
   const monthPayments = payments.filter((item) => isInMonth(item, monthKey));
   const paidPayments = monthPayments.filter((item) => isPaidStatus(item.durum || item.status));
   const pendingPayments = monthPayments.filter((item) => !isPaidStatus(item.durum || item.status));
   const paidAmount = paidPayments.reduce((sum, item) => sum + getAmount(item), 0);
   const pendingAmount = pendingPayments.reduce((sum, item) => sum + getAmount(item), 0);
+  const paymentCollectionRate = percent(paidAmount, paidAmount + pendingAmount);
+
+  const prevMonthPayments = payments.filter((item) => isInMonth(item, prevMonthKey));
+  const prevPaidPayments = prevMonthPayments.filter((item) => isPaidStatus(item.durum || item.status));
+  const prevPaidAmount = prevPaidPayments.reduce((sum, item) => sum + getAmount(item), 0);
+  const prevPendingAmount = prevMonthPayments.filter((item) => !isPaidStatus(item.durum || item.status)).reduce((sum, item) => sum + getAmount(item), 0);
+  const prevPaymentCollectionRate = percent(prevPaidAmount, prevPaidAmount + prevPendingAmount);
 
   const aktifChildren = children.filter((c) => c.durum !== 'ayrildi');
   const ayrilanChildren = children.filter((c) => c.durum === 'ayrildi');
@@ -212,9 +226,11 @@ export function buildStatistics(raw, kresId) {
   const activityLog = buildActivityLog(raw, users, children, kresId);
   const classOccupancy = buildClassOccupancy(classes, aktifChildren);
   const enrollmentTrend = buildEnrollmentTrend(children);
+  const thisMonthNet = enrollmentTrend[enrollmentTrend.length - 1]?.net ?? 0;
 
   return {
     totalChildren: aktifChildren.length,
+    totalChildrenChange: thisMonthNet,
     ayrilanChildrenCount: ayrilanChildren.length,
     totalTeachers: users.filter((u) => getRole(u) === 'ogretmen').length,
     totalParents: users.filter((u) => getRole(u) === 'veli').length,
@@ -224,10 +240,13 @@ export function buildStatistics(raw, kresId) {
     todayAttendanceTotal: todayAttendance.length,
     todayAttendanceRate: percent(todayPresent, todayAttendance.length),
     todayReportCount: reports.filter((item) => isSameDay(item, todayKey)).length,
+    monthlyAttendanceRate,
+    monthlyAttendanceRateChange: monthlyAttendanceRate - prevMonthlyAttendanceRate,
     paidAmount,
     pendingAmount,
     pendingPaymentCount: pendingPayments.length,
-    paymentCollectionRate: percent(paidAmount, paidAmount + pendingAmount),
+    paymentCollectionRate,
+    paymentCollectionRateChange: paymentCollectionRate - prevPaymentCollectionRate,
     activePollCount: polls.filter((item) => item.aktif !== false).length,
     pollAnswerCount: polls.reduce((sum, item) => sum + countAnswers(item), 0),
     bellCount: bells.filter((item) => isInMonth(item, monthKey)).length,
