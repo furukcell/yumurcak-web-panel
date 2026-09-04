@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Row, Col, Card, Statistic, Spin, List, Empty, Tag } from 'antd';
+import { Typography, Row, Col, Card, Statistic, Spin, List, Empty, Tag, Progress } from 'antd';
 import {
   ReadOutlined, SmileOutlined, TeamOutlined, ContactsOutlined, CrownOutlined,
   NotificationOutlined, CalendarOutlined, GiftOutlined, RightOutlined, WalletOutlined,
@@ -119,6 +119,8 @@ export default function DashboardPage() {
   const [dogumGunleri, setDogumGunleri] = useState([]);
   const [bekleyenOdemeler, setBekleyenOdemeler] = useState([]);
   const [ozetYukleniyor, setOzetYukleniyor] = useState(true);
+  const [doluluk, setDoluluk] = useState({ toplamKapasite: 0, kapasiteGirilenSinif: 0 });
+  const [gelirTrendi, setGelirTrendi] = useState([]);
 
   useEffect(() => {
     const subUnsub = onValue(ref(database, `abonelikler/${kresId}`), (snap) => {
@@ -273,6 +275,23 @@ export default function DashboardPage() {
         .filter((o) => o.durum !== 'odendi')
         .sort((a, b) => (a.monthKey || '9999').localeCompare(b.monthKey || '9999'));
       setBekleyenOdemeler(liste.slice(0, 3));
+
+      // Aylık gelir trendi: son 6 ay, sadece durum='odendi' olan ödemelerin
+      // toplamı (ay = ödemenin ait olduğu dönem, `tarih`/`ay`+`yil` alanı).
+      const now = new Date();
+      const ayEtiketleri = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      const aylar = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+        return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: ayEtiketleri[d.getMonth()] };
+      });
+      const odenenler = Object.values(odemelerData)
+        .map((o) => safeObject(o))
+        .filter((o) => (!o.kresId || o.kresId === kresId || o.kurumId === kresId) && normalizeDurum(o) === 'odendi');
+      const trend = aylar.map(({ key, label }) => ({
+        ay: label,
+        tutar: odenenler.filter((o) => getMonthKey(o) === key).reduce((sum, o) => sum + toNumber(o.tutar || o.amount), 0),
+      }));
+      setGelirTrendi(trend);
     }
 
     const odemelerUnsub = onValue(
@@ -287,6 +306,26 @@ export default function DashboardPage() {
     );
 
     return () => { odemelerUnsub(); childrenUnsub(); };
+  }, [kresId]);
+
+  // Doluluk oranı: sınıflardaki `kapasite` alanlarının toplamı (bkz.
+  // ClassesPage.jsx). Kapasite girilmemiş sınıflar toplamı etkilemez —
+  // hiçbirinde girilmemişse kart "kapasite girilmemiş" durumunu gösterir.
+  useEffect(() => {
+    if (!kresId) return;
+    const unsub = onValue(
+      query(ref(database, 'siniflar'), orderByChild('kresId'), equalTo(kresId)),
+      (snap) => {
+        const list = Object.values(safeObject(snap.val()));
+        const kapasiteliler = list.filter((s) => Number(s.kapasite) > 0);
+        setDoluluk({
+          toplamKapasite: kapasiteliler.reduce((sum, s) => sum + Number(s.kapasite), 0),
+          kapasiteGirilenSinif: kapasiteliler.length,
+        });
+      },
+      () => setDoluluk({ toplamKapasite: 0, kapasiteGirilenSinif: 0 })
+    );
+    return () => unsub();
   }, [kresId]);
 
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
@@ -334,7 +373,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} />
+      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} doluluk={doluluk} toplamCocuk={istatistik.cocukSayisi} />
 
       {/* Genel Özet: dört sayı artık dört ayrı kart değil, tek bir panelin
           içinde ince dikey çizgilerle bölünmüş sütunlar — sayfadaki tekrar
@@ -384,6 +423,12 @@ export default function DashboardPage() {
           ))}
         </div>
       )}
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24}>
+          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} />
+        </Col>
+      </Row>
 
       <TodayCards navigate={navigate} kresId={kresId} />
 
@@ -465,6 +510,46 @@ export default function DashboardPage() {
 
 // Dashboard'daki mini özet panelleri (duyurular / etkinlikler / doğum
 // günleri / bekleyen ödemeler) için tekrar kullanılan kart bileşeni.
+// Aylık gelir trendi: son 6 ayda tahsil edilmiş (durum='odendi') ödeme
+// tutarlarının toplamı, basit dikey çubuk grafik — ekstra kütüphane
+// gerekmesin diye salt div/CSS ile çizildi.
+function RevenueTrendCard({ trend, onClick }) {
+  const maxTutar = Math.max(1, ...trend.map((t) => t.tutar));
+  const buAy = trend[trend.length - 1]?.tutar || 0;
+  const oncekiAy = trend[trend.length - 2]?.tutar || 0;
+  const fark = oncekiAy > 0 ? Math.round(((buAy - oncekiAy) / oncekiAy) * 100) : null;
+
+  return (
+    <Card style={{ ...cardStyle(THEME.gold), height: '100%', cursor: 'pointer' }} onClick={onClick}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <Text strong style={{ fontSize: 13 }}>💰 Aylık Gelir Trendi</Text>
+        {fark !== null && (
+          <Tag color={fark >= 0 ? 'green' : 'red'}>{fark >= 0 ? '▲' : '▼'} %{Math.abs(fark)} geçen aya göre</Tag>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 90 }}>
+        {trend.map((t, idx) => (
+          <div key={t.ay + idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 10.5, color: THEME.muted, whiteSpace: 'nowrap' }}>
+              {t.tutar > 0 ? `${Math.round(t.tutar / 1000)}b` : ''}
+            </Text>
+            <div
+              style={{
+                width: '100%',
+                maxWidth: 34,
+                height: Math.max(4, (t.tutar / maxTutar) * 64),
+                borderRadius: 6,
+                background: idx === trend.length - 1 ? THEME.gold : `${THEME.gold}55`,
+              }}
+            />
+            <Text style={{ fontSize: 11, color: THEME.muted }}>{t.ay}</Text>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function SummaryPanel({ title, icon, items, loading, emptyText, onSeeAll }) {
   return (
     <Card
