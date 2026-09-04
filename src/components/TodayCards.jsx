@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Spin } from 'antd';
+import { Card, Typography, Spin, Progress } from 'antd';
 import { SolutionOutlined, BellOutlined } from '@ant-design/icons';
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
@@ -97,9 +97,51 @@ function TodayCard({ icon, color, title, loading, children, onClick }) {
   );
 }
 
+// Kurum doluluk oranı: mevcut çocuk sayısı / sınıflara girilmiş toplam
+// kapasite. Diğer TodayCard'lar gibi tıklanabilir (sınıflar sayfasına
+// götürür) ama içerik dikdörtgen metin yerine dairesel Progress —
+// ilk bakışta doluluk seviyesini renkle de anlatmak için.
+function DolulukCard({ doluluk, toplamCocuk, navigate }) {
+  const toplamKapasite = doluluk?.toplamKapasite || 0;
+  const kapasiteGirilmemis = toplamKapasite <= 0;
+  const oran = kapasiteGirilmemis ? 0 : Math.round((toplamCocuk / toplamKapasite) * 100);
+  const renk = oran >= 100 ? THEME.red : oran >= 80 ? THEME.orange : THEME.green;
+
+  return (
+    <Card
+      size="small"
+      hoverable
+      onClick={() => navigate('/siniflar')}
+      style={{ borderColor: THEME.border, height: '100%', cursor: 'pointer' }}
+      styles={{ body: { padding: 14 } }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Progress
+          type="circle"
+          percent={kapasiteGirilmemis ? 0 : Math.min(oran, 100)}
+          size={36}
+          strokeColor={renk}
+          strokeWidth={10}
+          format={() => (
+            <span style={{ fontSize: 10, fontWeight: 800, color: kapasiteGirilmemis ? THEME.muted : renk }}>
+              {kapasiteGirilmemis ? '-' : `%${oran}`}
+            </span>
+          )}
+        />
+        <div style={{ minWidth: 0 }}>
+          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>KURUM DOLULUK ORANI</Text>
+          <Text strong style={{ fontSize: 14 }}>
+            {kapasiteGirilmemis ? 'Kapasite girilmemiş' : `${toplamCocuk} / ${toplamKapasite} çocuk`}
+          </Text>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 // Dashboard'daki "Genel Özet" (toplam sayılar) ile karşılama kartı
-// arasına giren, o günün operasyonel durumunu gösteren 2 kartlık şerit.
-export default function TodayCards({ navigate, kresId }) {
+// arasına giren, o günün operasyonel durumunu gösteren kart şeridi.
+export default function TodayCards({ navigate, kresId, doluluk, toplamCocuk }) {
   const { personel, loading: dutyLoading } = useTodayDuty(kresId);
   const { toplam, tamamlanan, loading: bellLoading } = useTodayBell(kresId);
 
@@ -125,6 +167,7 @@ export default function TodayCards({ navigate, kresId }) {
           {toplam === 0 ? 'Henüz bildirim yok' : `${toplam} bildirim · ${tamamlanan} tamamlandı`}
         </Text>
       </TodayCard>
+      <DolulukCard doluluk={doluluk} toplamCocuk={toplamCocuk} navigate={navigate} />
     </div>
   );
 }
