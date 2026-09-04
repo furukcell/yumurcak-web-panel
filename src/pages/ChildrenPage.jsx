@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { generateId, asArray, bugunKey } from '../utils/crudHelpers';
 import { calculateChildAge, formatChildBirthDate, getChildBirthDate, normalizeChildBirthDate, parseChildBirthDate } from '../utils/childDates';
+import { denetimKaydiYaz } from '../utils/auditLog';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +28,7 @@ export default function ChildrenPage() {
   const [uyumDurumu, setUyumDurumu] = useState('pasif');
   const [durum, setDurum] = useState('aktif');
   const [durumFilter, setDurumFilter] = useState('aktif');
+  const [aramaMetni, setAramaMetni] = useState('');
   const [form] = Form.useForm();
 
   // ── Çocuk listesi (mobildeki ChildListScreen.js mantığı) ──────────
@@ -174,9 +176,14 @@ export default function ChildrenPage() {
   const limitDoldu = ogrenciLimiti != null && aktifCocuklar.length >= ogrenciLimiti;
 
   const gorunenCocuklar = children.filter((c) => {
-    if (durumFilter === 'tumu') return true;
-    if (durumFilter === 'ayrildi') return c.durum === 'ayrildi';
-    return c.durum !== 'ayrildi';
+    if (durumFilter === 'tumu') { /* devam */ }
+    else if (durumFilter === 'ayrildi' && c.durum !== 'ayrildi') return false;
+    else if (durumFilter !== 'ayrildi' && c.durum === 'ayrildi') return false;
+
+    if (!aramaMetni.trim()) return true;
+    const q = aramaMetni.trim().toLocaleLowerCase('tr');
+    const veliAdlari = (c.veliler || []).map((v) => v.ad || '').join(' ');
+    return `${c.ad || ''} ${c.sinifAd || ''} ${c.ogretmenAd || ''} ${veliAdlari}`.toLocaleLowerCase('tr').includes(q);
   });
 
   const openCreate = () => {
@@ -289,6 +296,15 @@ export default function ChildrenPage() {
       await update(ref(database), updates);
       message.success(editingId ? 'Çocuk bilgileri güncellendi' : 'Çocuk kaydedildi');
       setDrawerOpen(false);
+
+      denetimKaydiYaz({
+        kresId: finalKresId,
+        kullanici,
+        islem: editingId ? 'guncelle' : 'ekle',
+        modul: 'Çocuklar',
+        hedef: childPayload.ad,
+        detay: durum === 'ayrildi' ? 'Durum: Ayrıldı olarak işaretlendi' : '',
+      });
     } catch (error) {
       console.error(error);
       message.error('Çocuk kaydedilemedi');
@@ -337,16 +353,24 @@ export default function ChildrenPage() {
         </div>
       )}
 
-      <Segmented
-        value={durumFilter}
-        onChange={setDurumFilter}
-        options={[
-          { label: 'Aktif', value: 'aktif' },
-          { label: 'Ayrılan', value: 'ayrildi' },
-          { label: 'Tümü', value: 'tumu' },
-        ]}
-        style={{ marginBottom: 12 }}
-      />
+      <Space wrap style={{ marginBottom: 12 }}>
+        <Segmented
+          value={durumFilter}
+          onChange={setDurumFilter}
+          options={[
+            { label: 'Aktif', value: 'aktif' },
+            { label: 'Ayrılan', value: 'ayrildi' },
+            { label: 'Tümü', value: 'tumu' },
+          ]}
+        />
+        <Input.Search
+          placeholder="Çocuk, sınıf, öğretmen veya veli adına göre ara"
+          allowClear
+          style={{ width: 280 }}
+          value={aramaMetni}
+          onChange={(e) => setAramaMetni(e.target.value)}
+        />
+      </Space>
 
       <Table
         rowKey="id"
