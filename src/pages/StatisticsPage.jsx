@@ -3,7 +3,7 @@ import { Typography, Tabs, Row, Col, Card, Progress, Tag, Spin, Empty, Statistic
 import { ref, onValue, query, orderByChild, equalTo, limitToLast } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 import {
   NODE_KEYS,
   STATISTICS_RECORD_LIMIT,
@@ -101,7 +101,7 @@ function SectionTitle({ children }) {
 
 function StatBlock({ icon, value, label, color }) {
   return (
-    <Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}>
+    <Card size="small" style={{ ...cardStyle(color), textAlign: 'center' }}>
       <div style={{ fontSize: 26 }}>{icon}</div>
       <Statistic value={value} valueStyle={{ color, fontWeight: 900, fontSize: 22 }} />
       <Text type="secondary" style={{ fontWeight: 700, fontSize: 12 }}>{label}</Text>
@@ -133,20 +133,20 @@ function GeneralTab({ stats }) {
         <Col xs={12} md={6}><StatBlock icon="🏫" value={stats.totalClasses} label="Sınıf" color={THEME.blue} /></Col>
       </Row>
 
-      <Card style={{ marginBottom: 14, borderColor: THEME.border }} title="📅 Bugünkü Yoklama">
+      <Card style={{ ...cardStyle(THEME.green), marginBottom: 14 }} title="📅 Bugünkü Yoklama">
         <ProgressLine label={`${stats.todayPresent} gelen / ${stats.todayAttendanceTotal} kayıt`} percent={stats.todayAttendanceRate} color={THEME.green} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Bugün gelmeyen çocuk: {stats.todayAbsent}</Paragraph>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
       </Card>
 
-      <Card style={{ marginBottom: 14, borderColor: THEME.border }} title="💰 Bu Ay Ödeme Durumu">
+      <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title="💰 Bu Ay Ödeme Durumu">
         <ProgressLine label={`Tahsilat oranı: %${stats.paymentCollectionRate}`} percent={stats.paymentCollectionRate} color={THEME.gold} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Ödenen: {formatTL(stats.paidAmount)}</Paragraph>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen / geciken: {formatTL(stats.pendingAmount)}</Paragraph>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen ödeme kaydı: {stats.pendingPaymentCount}</Paragraph>
       </Card>
 
-      <Card style={{ borderColor: THEME.border }} title="🔔 Veli Etkileşimi">
+      <Card style={cardStyle(THEME.purple)} title="🔔 Veli Etkileşimi">
         <ProgressLine label={`Anket cevabı: ${stats.pollAnswerCount}`} percent={Math.min(100, stats.pollAnswerCount * 10)} color={THEME.purple} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Aktif anket: {stats.activePollCount}</Paragraph>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Kurum zili bildirimi: {stats.bellCount}</Paragraph>
@@ -165,7 +165,7 @@ function TeacherTab({ teachers }) {
     <>
       <SectionTitle>Öğretmen / Sınıf Kullanımı</SectionTitle>
       {teachers.map((teacher) => (
-        <Card key={teacher.id} style={{ marginBottom: 14, borderColor: THEME.border }}>
+        <Card key={teacher.id} style={{ ...cardStyle(), marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <Text strong>{teacher.name}</Text>
@@ -194,7 +194,7 @@ function ChildrenTab({ childList }) {
     <>
       <SectionTitle>Çocuk Bazlı Gelişim ve Risk</SectionTitle>
       {childList.map((child) => (
-        <Card key={child.id} style={{ marginBottom: 14, borderColor: THEME.border }}>
+        <Card key={child.id} style={{ ...cardStyle(), marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <Text strong>{child.name}</Text>
@@ -235,7 +235,7 @@ function RiskTab({ riskGroups }) {
     <>
       <SectionTitle>Risk Listesi</SectionTitle>
       {groupList.map((group) => (
-        <Card key={group.key} style={{ marginBottom: 14, borderColor: THEME.border }} title={group.title}>
+        <Card key={group.key} style={{ ...cardStyle(), marginBottom: 14 }} title={group.title}>
           {riskGroups[group.key].length ? (
             riskGroups[group.key].map((item, index) => (
               <div
@@ -269,7 +269,7 @@ function ActivityTab({ entries }) {
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
         Hangi öğretmenin hangi bilgiyi hangi saatte girdiğini gösterir (son {entries.length} kayıt).
       </Paragraph>
-      <Card style={{ borderColor: THEME.border }}>
+      <Card style={cardStyle()}>
         {entries.map((entry, index) => (
           <div
             key={entry.id}
