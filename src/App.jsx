@@ -33,6 +33,7 @@ import ThemePage from './pages/ThemePage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import BellPage from './pages/BellPage';
 import LegalDocumentsPage from './pages/LegalDocumentsPage';
+import AuditLogPage from './pages/AuditLogPage';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -89,6 +90,7 @@ function Gate() {
         <Route path="/ayarlar/abonelik" element={b(<SubscriptionPage />)} />
         <Route path="/ayarlar/kurum-zili" element={b(<BellPage />)} />
         <Route path="/yasal-belgeler" element={b(<LegalDocumentsPage />)} />
+        <Route path="/denetim-kaydi" element={b(<AuditLogPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
