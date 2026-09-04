@@ -424,13 +424,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24}>
-          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} />
-        </Col>
-      </Row>
-
-      <TodayCards navigate={navigate} kresId={kresId} />
+      <TodayCards navigate={navigate} kresId={kresId} doluluk={doluluk} toplamCocuk={istatistik.cocukSayisi} />
 
       <DailySummary navigate={navigate} kresId={kresId} />
 
@@ -497,6 +491,12 @@ export default function DashboardPage() {
                 : { text: 'Bekliyor', color: THEME.orange },
             }))}
           />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+        <Col xs={24}>
+          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} />
         </Col>
       </Row>
 
