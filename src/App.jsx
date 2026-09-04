@@ -38,6 +38,11 @@ function Gate() {
   const { kullanici, yukleniyor } = useAuth();
   const location = useLocation();
 
+  // Sayfa/rota değiştiğinde scroll pozisyonunu en üste al.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   if (yukleniyor) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
