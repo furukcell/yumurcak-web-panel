@@ -139,6 +139,29 @@ function GeneralTab({ stats }) {
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
       </Card>
 
+      <Card style={{ ...cardStyle(THEME.blue), marginBottom: 14 }} title="🏫 Sınıf Bazlı Doluluk">
+        {stats.classOccupancy.length ? (
+          stats.classOccupancy.map((cls, index) => (
+            <div key={cls.id} style={{ paddingTop: index === 0 ? 0 : 10, borderTop: index === 0 ? 'none' : `1px solid ${THEME.border}`, marginTop: index === 0 ? 0 : 10 }}>
+              {cls.rate === null ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontWeight: 700, fontSize: 13 }}>{cls.name}</Text>
+                  <Tag>{cls.childCount} çocuk · kapasite girilmemiş</Tag>
+                </div>
+              ) : (
+                <ProgressLine
+                  label={`${cls.name} · ${cls.childCount}/${cls.kapasite} çocuk`}
+                  percent={Math.min(cls.rate, 100)}
+                  color={cls.rate >= 100 ? THEME.red : cls.rate >= 80 ? THEME.orange : THEME.blue}
+                />
+              )}
+            </div>
+          ))
+        ) : (
+          <Text type="secondary">Henüz sınıf kaydı yok.</Text>
+        )}
+      </Card>
+
       <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title="💰 Bu Ay Ödeme Durumu">
         <ProgressLine label={`Tahsilat oranı: %${stats.paymentCollectionRate}`} percent={stats.paymentCollectionRate} color={THEME.gold} />
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Ödenen: {formatTL(stats.paidAmount)}</Paragraph>
