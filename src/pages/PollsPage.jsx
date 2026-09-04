@@ -4,7 +4,7 @@ import { PlusOutlined, MinusCircleOutlined, DeleteOutlined } from '@ant-design/i
 import { ref, onValue, push, update, remove, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../theme';
+import { THEME, cardStyle } from '../theme';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -167,12 +167,12 @@ export default function PollsPage() {
       <Text type="secondary">Velilerden görüş toplamak için hızlı anketler oluştur.</Text>
 
       <Row gutter={[12, 12]} style={{ margin: '16px 0 20px' }}>
-        <Col xs={12} md={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.primary }}>{polls.length}</Text><br /><Text type="secondary">Toplam Anket</Text></Card></Col>
-        <Col xs={12} md={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{toplamAktif}</Text><br /><Text type="secondary">Aktif Anket</Text></Card></Col>
-        <Col xs={24} md={8}><Card size="small" style={{ textAlign: 'center', borderColor: THEME.border }}><Text strong style={{ fontSize: 22, color: THEME.purple }}>{toplamCevap}</Text><br /><Text type="secondary">Toplam Cevap</Text></Card></Col>
+        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.primary), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.primary }}>{polls.length}</Text><br /><Text type="secondary">Toplam Anket</Text></Card></Col>
+        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{toplamAktif}</Text><br /><Text type="secondary">Aktif Anket</Text></Card></Col>
+        <Col xs={24} md={8}><Card size="small" style={{ ...cardStyle(THEME.purple), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.purple }}>{toplamCevap}</Text><br /><Text type="secondary">Toplam Cevap</Text></Card></Col>
       </Row>
 
-      <Card style={{ marginBottom: 24, borderColor: THEME.border }} title="Yeni Anket Oluştur">
+      <Card style={{ ...cardStyle(), marginBottom: 24 }} title="Yeni Anket Oluştur">
         <Text strong>Başlık</Text>
         <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder="Örn: Yaz kampı ilgi anketi" style={{ marginTop: 6, marginBottom: 14 }} />
 
@@ -205,7 +205,7 @@ export default function PollsPage() {
           const busy = busyId === item.id;
 
           return (
-            <Card key={item.id} style={{ marginBottom: 14, borderColor: THEME.border }}>
+            <Card key={item.id} style={{ ...cardStyle(active ? THEME.green : THEME.muted), marginBottom: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <Text strong style={{ fontSize: 16 }}>{item.baslik}</Text>
