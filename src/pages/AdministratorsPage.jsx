@@ -10,6 +10,7 @@ import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 import { deleteKullaniciHesabi } from '../utils/userDelete';
+import { denetimKaydiYaz } from '../utils/auditLog';
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,7 @@ export default function AdministratorsPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [aramaMetni, setAramaMetni] = useState('');
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -181,6 +183,14 @@ export default function AdministratorsPage() {
       await update(ref(database), updates);
       message.success(editingId ? 'Yönetici güncellendi' : 'Yönetici oluşturuldu');
       setDrawerOpen(false);
+
+      denetimKaydiYaz({
+        kresId: nextKresId,
+        kullanici,
+        islem: editingId ? 'guncelle' : 'ekle',
+        modul: 'Yöneticiler',
+        hedef: `${values.ad.trim()} ${values.soyad.trim()}`.trim(),
+      });
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
@@ -207,6 +217,7 @@ export default function AdministratorsPage() {
     try {
       await deleteKullaniciHesabi(record.id);
       message.success('Yönetici silindi');
+      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 'Yöneticiler', hedef: record.adSoyad });
     } catch (error) {
       console.error(error);
       message.error(`Yönetici silinemedi. ${error?.message || ''}`);
@@ -216,6 +227,12 @@ export default function AdministratorsPage() {
   };
 
   const aktifSayisi = yoneticiler.filter((y) => y.aktif).length;
+
+  const gorunenYoneticiler = yoneticiler.filter((y) => {
+    if (!aramaMetni.trim()) return true;
+    const q = aramaMetni.trim().toLocaleLowerCase('tr');
+    return `${y.adSoyad} ${y.kullaniciAdi} ${y.telefon}`.toLocaleLowerCase('tr').includes(q);
+  });
 
   const columns = [
     {
@@ -282,11 +299,19 @@ export default function AdministratorsPage() {
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Yönetici Ekle</Button>
       </div>
 
+      <Input.Search
+        placeholder="Yönetici, kullanıcı adı veya telefona göre ara"
+        allowClear
+        style={{ width: 300, marginBottom: 12 }}
+        value={aramaMetni}
+        onChange={(e) => setAramaMetni(e.target.value)}
+      />
+
       <Table
         rowKey="id"
         loading={loading}
         columns={columns}
-        dataSource={yoneticiler}
+        dataSource={gorunenYoneticiler}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
         locale={{ emptyText: <Empty description="Henüz kayıtlı yönetici yok" /> }}
         pagination={{ pageSize: 10 }}
