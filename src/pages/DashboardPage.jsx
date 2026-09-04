@@ -49,10 +49,10 @@ function getMonthKey(o = {}) {
 }
 
 const OZET_ITEMS = [
-  { key: 'sinifSayisi', label: 'Sınıf', icon: <ReadOutlined />, color: THEME.blue },
-  { key: 'cocukSayisi', label: 'Çocuk', icon: <SmileOutlined />, color: THEME.orange },
-  { key: 'ogretmenSayisi', label: 'Öğretmen', icon: <TeamOutlined />, color: THEME.primary },
-  { key: 'veliSayisi', label: 'Veli', icon: <ContactsOutlined />, color: THEME.green },
+  { key: 'sinifSayisi', label: 'Sınıf', icon: <ReadOutlined />, color: THEME.blue, route: '/siniflar' },
+  { key: 'cocukSayisi', label: 'Çocuk', icon: <SmileOutlined />, color: THEME.orange, route: '/cocuklar' },
+  { key: 'ogretmenSayisi', label: 'Öğretmen', icon: <TeamOutlined />, color: THEME.primary, route: '/ogretmenler' },
+  { key: 'veliSayisi', label: 'Veli', icon: <ContactsOutlined />, color: THEME.green, route: '/veliler' },
 ];
 
 const EMPTY_STATS = {
@@ -359,11 +359,19 @@ export default function DashboardPage() {
           {OZET_ITEMS.map((item, idx) => (
             <div
               key={item.key}
+              onClick={() => navigate(item.route)}
               style={{
                 flex: '1 1 140px',
                 padding: '18px 22px',
                 borderRight: idx < OZET_ITEMS.length - 1 ? `1px solid ${THEME.border}` : 'none',
+                borderBottom: `3px solid ${item.color}`,
+                borderBottomLeftRadius: idx === 0 ? THEME.radius : 0,
+                borderBottomRightRadius: idx === OZET_ITEMS.length - 1 ? THEME.radius : 0,
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${item.color}0D`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                 <span style={{ fontSize: 13, color: item.color }}>{item.icon}</span>
