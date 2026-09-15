@@ -30,19 +30,16 @@ export async function getPlatformSnapshot() {
     acc[user.kresId] = (acc[user.kresId] || 0) + 1;
     return acc;
   }, {});
-
   const childrenByKres = children.reduce((acc, child) => {
     if (!child.kresId) return acc;
     acc[child.kresId] = (acc[child.kresId] || 0) + 1;
     return acc;
   }, {});
-
   const classesByKres = classes.reduce((acc, item) => {
     if (!item.kresId) return acc;
     acc[item.kresId] = (acc[item.kresId] || 0) + 1;
     return acc;
   }, {});
-
   const subscriptionsByKres = subscriptions.reduce((acc, item) => {
     const kresId = item.kresId || item.kres;
     if (!kresId) return acc;
@@ -51,15 +48,8 @@ export async function getPlatformSnapshot() {
   }, {});
 
   return {
-    institutions,
-    users,
-    children,
-    classes,
-    subscriptions,
-    usersByKres,
-    childrenByKres,
-    classesByKres,
-    subscriptionsByKres,
+    institutions, users, children, classes, subscriptions,
+    usersByKres, childrenByKres, classesByKres, subscriptionsByKres,
     fetchedAt: Date.now(),
   };
 }
@@ -69,11 +59,9 @@ export async function getUsageLogs() {
 }
 
 export function normalizeUsageLogs(raw) {
-  const rows = [];
-  asEntries(raw).forEach(([key, value]) => {
-    if (value && typeof value === 'object') rows.push({ id: key, ...value });
-  });
-  return rows
+  return asEntries(raw)
+    .filter(([, value]) => value && typeof value === 'object')
+    .map(([key, value]) => ({ id: key, ...value }))
     .filter((row) => row.tip === 'kullanim' || row.kullaniciId || row.timestamp)
     .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 }
@@ -81,23 +69,26 @@ export function normalizeUsageLogs(raw) {
 export function usageSummary(logs) {
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const today = todayStart.getTime();
-  const last7 = now - 7 * day;
-  const last30 = now - 30 * day;
+  const todayStartDate = new Date();
+  todayStartDate.setHours(0, 0, 0, 0);
+  const todayStart = todayStartDate.getTime();
+  const last7Start = now - 7 * day;
+  const last30Start = now - 30 * day;
   const valid = logs.filter((log) => Number(log.timestamp) > 0);
-
-  const userIds = (from) => new Set(valid.filter((x) => x.timestamp >= from).map((x) => x.kullaniciId).filter(Boolean));
-  const institutions = (from) => new Set(valid.filter((x) => x.timestamp >= from).map((x) => x.kresId).filter(Boolean));
+  const userIds = (from) => new Set(valid.filter((x) => Number(x.timestamp) >= from).map((x) => x.kullaniciId).filter(Boolean));
+  const institutions = (from) => new Set(valid.filter((x) => Number(x.timestamp) >= from).map((x) => x.kresId).filter(Boolean));
 
   return {
+    now,
+    todayStart,
+    last7Start,
+    last30Start,
     totalEvents: valid.length,
-    todayEvents: valid.filter((x) => x.timestamp >= today).length,
-    activeUsersToday: userIds(today).size,
-    activeUsers7d: userIds(last7).size,
-    activeUsers30d: userIds(last30).size,
-    activeInstitutionsToday: institutions(today).size,
-    activeInstitutions7d: institutions(last7).size,
+    todayEvents: valid.filter((x) => Number(x.timestamp) >= todayStart).length,
+    activeUsersToday: userIds(todayStart).size,
+    activeUsers7d: userIds(last7Start).size,
+    activeUsers30d: userIds(last30Start).size,
+    activeInstitutionsToday: institutions(todayStart).size,
+    activeInstitutions7d: institutions(last7Start).size,
   };
 }
