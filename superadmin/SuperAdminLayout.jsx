@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu, Typography, Dropdown, Avatar } from 'antd';
-import { DashboardOutlined, ApartmentOutlined, BarChartOutlined, CrownOutlined, LogoutOutlined, UsergroupAddOutlined } from '@ant-design/icons';
+import { DashboardOutlined, ApartmentOutlined, BarChartOutlined, CrownOutlined, LogoutOutlined, UsergroupAddOutlined, CustomerServiceOutlined } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
 
@@ -12,6 +12,7 @@ const items = [
   { key: '/superadmin/kresler', icon: <ApartmentOutlined />, label: 'Kreşler' },
   { key: '/superadmin/analytics', icon: <BarChartOutlined />, label: 'Kullanım Analitiği' },
   { key: '/superadmin/toplu-kurulum', icon: <UsergroupAddOutlined />, label: 'Toplu Kurulum' },
+  { key: '/superadmin/destek', icon: <CustomerServiceOutlined />, label: 'Destek Merkezi' },
   { key: '/superadmin/abonelikler', icon: <CrownOutlined />, label: 'Abonelikler' },
 ];
 
