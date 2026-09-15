@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Card, Col, Row, Skeleton, Statistic, Table, Tag, Typography } from 'antd';
-import { ApartmentOutlined, TeamOutlined, SmileOutlined, CrownOutlined, ActivityOutlined } from '@ant-design/icons';
+import { ApartmentOutlined, TeamOutlined, SmileOutlined, CrownOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs, usageSummary } from './superadminService';
 
 const { Title, Text } = Typography;
@@ -47,7 +47,7 @@ export default function SuperAdminDashboard() {
       </Row>
 
       <Card style={{ ...card, marginTop: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}><ActivityOutlined /><Title level={4} style={{ margin: 0 }}>Kullanım Özeti</Title></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}><ThunderboltOutlined /><Title level={4} style={{ margin: 0 }}>Kullanım Özeti</Title></div>
         <Row gutter={[24, 20]}>
           <Col xs={12} md={6}><Statistic title="Bugünkü aktivite" value={usage.todayEvents} /></Col>
           <Col xs={12} md={6}><Statistic title="Bugün aktif kullanıcı" value={usage.activeUsersToday} /></Col>
