@@ -10,8 +10,6 @@ export function AuthProvider({ children }) {
   const [kullanici, setKullanici] = useState(null);
   const [kres, setKres] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  // Girişi olan ama admin OLMAYAN biri denerse: onAuthStateChanged içinde
-  // bunu tespit edip mesaj gösterip hemen signOut yapıyoruz.
   const [erisimHatasi, setErisimHatasi] = useState('');
   const isSigningOutRef = useRef(false);
 
@@ -31,11 +29,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
-        if (isSigningOutRef.current) {
-          setYukleniyor(false);
-          return;
-        }
-
+        if (isSigningOutRef.current) { setYukleniyor(false); return; }
         if (!firebaseUser) {
           setKullanici(null);
           setKres(null);
@@ -67,20 +61,14 @@ export function AuthProvider({ children }) {
           ...userSnap.val(),
         };
 
-        // Web paneli SADECE admin (yönetici) rolüne açık — bkz. docs/web-panel-plan.md
-        // NOT: veritabanındaki gerçek rol değeri 'admin' değil 'yonetici'
-        // (bkz. mobil src/constants.js -> ROLLER.YONETICI ve database.rules.json).
-        if (userData.rol !== 'yonetici') {
-          setErisimHatasi('Bu panel sadece kreş yöneticileri içindir.');
+        // Web paneli yöneticilere ve platform SuperAdmin hesabına açıktır.
+        if (userData.rol !== 'yonetici' && userData.rol !== 'superadmin') {
+          setErisimHatasi('Bu panel için yetkiniz bulunmuyor.');
           await signOut(auth);
           setYukleniyor(false);
           return;
         }
 
-        // NOT: kres artık burada tek seferlik get() ile değil, aşağıdaki
-        // ayrı useEffect'te canlı (onValue) dinleniyor — Tema Ayarları'ndan
-        // yeni bir pastel tema kaydedilince panel sayfa yenilemeden
-        // güncellensin diye (bkz. App.jsx -> ThemedApp, theme.js).
         setKullanici(userData);
         setYukleniyor(false);
       } catch (error) {
@@ -89,12 +77,11 @@ export function AuthProvider({ children }) {
         setYukleniyor(false);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const kresId = kullanici?.kresId;
+    const kresId = kullanici?.rol === 'yonetici' ? kullanici?.kresId : null;
     if (!kresId) { setKres(null); return undefined; }
     const unsub = onValue(
       ref(database, `kresler/${kresId}`),
@@ -102,7 +89,7 @@ export function AuthProvider({ children }) {
       () => setKres(null)
     );
     return () => unsub();
-  }, [kullanici?.kresId]);
+  }, [kullanici?.kresId, kullanici?.rol]);
 
   return (
     <AuthContext.Provider value={{ kullanici, kres, yukleniyor, erisimHatasi, girisYap, cikisYap }}>
