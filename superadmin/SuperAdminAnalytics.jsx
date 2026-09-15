@@ -1,13 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Card, Col, Row, Select, Table, Tag, Typography, Statistic, Progress } from 'antd';
-import { ThunderboltOutlined, ApartmentOutlined, TeamOutlined, LoginOutlined } from '@ant-design/icons';
+import { Alert, Card, Col, Row, Select, Table, Tag, Typography, Statistic, Progress, Empty } from 'antd';
+import { ThunderboltOutlined, ApartmentOutlined, TeamOutlined, LoginOutlined, RiseOutlined } from '@ant-design/icons';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs, usageSummary } from './superadminService';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
+const DAY = 24 * 60 * 60 * 1000;
 
 function dateText(ts) { return ts ? new Date(Number(ts)).toLocaleString('tr-TR') : '—'; }
 function getInstitutionName(institution, id) { return institution?.ad || institution?.adSoyad || institution?.isim || institution?.kresAdi || id; }
+function dayKey(ts) { const d = new Date(Number(ts)); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function health(score) {
+  if (score >= 75) return { label: 'Çok aktif', color: 'green' };
+  if (score >= 50) return { label: 'Aktif', color: 'blue' };
+  if (score >= 20) return { label: 'Düşük kullanım', color: 'orange' };
+  return { label: 'Pasif', color: 'red' };
+}
 
 export default function SuperAdminAnalytics() {
   const [snapshot, setSnapshot] = useState(null);
@@ -24,6 +32,19 @@ export default function SuperAdminAnalytics() {
   const filtered = useMemo(() => kresId === 'all' ? logs : logs.filter((x) => x.kresId === kresId), [logs, kresId]);
   const summary = useMemo(() => usageSummary(filtered), [filtered]);
 
+  const trend = useMemo(() => {
+    const rows = [];
+    const now = Date.now();
+    for (let i = 29; i >= 0; i -= 1) {
+      const start = new Date(now - i * DAY); start.setHours(0, 0, 0, 0);
+      const end = start.getTime() + DAY;
+      const events = filtered.filter((x) => Number(x.timestamp) >= start.getTime() && Number(x.timestamp) < end);
+      rows.push({ key: dayKey(start.getTime()), label: start.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }), events: events.length, users: new Set(events.map((x) => x.kullaniciId).filter(Boolean)).size, institutions: new Set(events.map((x) => x.kresId).filter(Boolean)).size });
+    }
+    return rows;
+  }, [filtered]);
+
+  const trendMax = Math.max(1, ...trend.map((x) => x.events));
   const users = useMemo(() => {
     const map = {};
     filtered.forEach((x) => {
@@ -46,25 +67,33 @@ export default function SuperAdminAnalytics() {
   }, [filtered]);
 
   const institutionRows = useMemo(() => {
-    const institutionMap = {};
+    const map = {};
     const userSets = {};
+    const lastByInstitution = {};
     filtered.forEach((x) => {
       const id = x.kresId;
       if (!id) return;
-      institutionMap[id] = (institutionMap[id] || 0) + 1;
+      map[id] = (map[id] || 0) + 1;
       if (!userSets[id]) userSets[id] = new Set();
       if (x.kullaniciId) userSets[id].add(x.kullaniciId);
+      lastByInstitution[id] = Math.max(lastByInstitution[id] || 0, Number(x.timestamp || 0));
     });
 
     return (snapshot?.institutions || []).map((institution) => {
       const id = institution.id;
-      const events = institutionMap[id] || 0;
+      const events = map[id] || 0;
       const activeUsers = userSets[id]?.size || 0;
       const totalUsers = snapshot?.usersByKres?.[id] || 0;
       const usage = totalUsers ? Math.min(100, Math.round((activeUsers / totalUsers) * 100)) : (events ? 100 : 0);
-      return { id, name: getInstitutionName(institution, id), events, activeUsers, totalUsers, usage };
-    }).filter((row) => kresId === 'all' || row.id === kresId).sort((a, b) => b.usage - a.usage || b.events - a.events);
+      const score = Math.min(100, Math.round((usage * 0.55) + (Math.min(events, 100) * 0.25) + (lastByInstitution[id] && Date.now() - lastByInstitution[id] < 7 * DAY ? 20 : 0)));
+      return { id, name: getInstitutionName(institution, id), events, activeUsers, totalUsers, usage, score, last: lastByInstitution[id] || 0 };
+    }).filter((row) => kresId === 'all' || row.id === kresId).sort((a, b) => b.score - a.score || b.events - a.events);
   }, [filtered, snapshot, kresId]);
+
+  const overallHealth = useMemo(() => {
+    if (!institutionRows.length) return 0;
+    return Math.round(institutionRows.reduce((sum, x) => sum + x.score, 0) / institutionRows.length);
+  }, [institutionRows]);
 
   const kresOptions = snapshot?.institutions.map((r) => ({ value: r.id, label: getInstitutionName(r, r.id) })) || [];
   if (error) return <Alert type="error" showIcon message="Analitik yüklenemedi" description={error} />;
@@ -84,17 +113,42 @@ export default function SuperAdminAnalytics() {
     </Row>
 
     <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-      <Col xs={24} lg={14}>
+      <Col xs={24} lg={17}>
+        <Card style={card} title={<span><RiseOutlined /> 30 Günlük Kullanım Trendi</span>} extra={<Text type="secondary">Olay / gün</Text>}>
+          {trend.some((x) => x.events) ? <div style={{ height: 230, display: 'flex', alignItems: 'flex-end', gap: 4, padding: '18px 4px 8px', overflowX: 'auto' }}>
+            {trend.map((x) => <div key={x.key} title={`${x.label}: ${x.events} aktivite, ${x.users} kullanıcı, ${x.institutions} kurum`} style={{ minWidth: 25, flex: 1, maxWidth: 42, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <Text style={{ fontSize: 10, marginBottom: 4 }}>{x.events || ''}</Text>
+              <div style={{ width: '70%', minHeight: x.events ? 4 : 2, height: `${Math.max(1, (x.events / trendMax) * 100)}%`, background: 'linear-gradient(180deg,#1677ff,#69b1ff)', borderRadius: '6px 6px 2px 2px' }} />
+              <Text type="secondary" style={{ fontSize: 9, marginTop: 5, whiteSpace: 'nowrap' }}>{x.label}</Text>
+            </div>)}
+          </div> : <Empty description="Henüz trend verisi oluşmadı" />}
+        </Card>
+      </Col>
+      <Col xs={24} lg={7}>
+        <Card style={card} title="Platform Kullanım Sağlığı">
+          <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
+            <Progress type="circle" percent={overallHealth} size={150} />
+            <div style={{ marginTop: 12 }}><Tag color={health(overallHealth).color}>{health(overallHealth).label}</Tag></div>
+            <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>Kurumların ortalama kullanım skoru</Text>
+          </div>
+        </Card>
+      </Col>
+    </Row>
+
+    <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      <Col xs={24} lg={15}>
         <Card style={card} title="Kurum Kullanım Sağlığı">
           <Table rowKey="id" size="small" pagination={{ pageSize: 12 }} columns={[
             { title: 'Kurum', dataIndex: 'name', ellipsis: true },
+            { title: 'Durum', dataIndex: 'score', render: (v) => { const h = health(v); return <Tag color={h.color}>{h.label}</Tag>; } },
             { title: 'Aktif kullanıcı', render: (_, r) => `${r.activeUsers} / ${r.totalUsers}` },
             { title: 'Aktivite', dataIndex: 'events' },
-            { title: 'Kullanım %', dataIndex: 'usage', render: (v) => <Progress percent={v} size="small" /> },
+            { title: 'Sağlık', dataIndex: 'score', render: (v) => <Progress percent={v} size="small" /> },
+            { title: 'Son aktivite', dataIndex: 'last', render: dateText },
           ]} dataSource={institutionRows} locale={{ emptyText: 'Henüz kullanım verisi yok' }} />
         </Card>
       </Col>
-      <Col xs={24} lg={10}>
+      <Col xs={24} lg={9}>
         <Card style={card} title="Modül Kullanımı">
           <Table rowKey="modul" size="small" pagination={false} columns={[{ title: 'Modül', dataIndex: 'modul' }, { title: 'Olay', dataIndex: 'events', align: 'right' }]} dataSource={moduleRows} locale={{ emptyText: 'Kayıt yok' }} />
         </Card>
