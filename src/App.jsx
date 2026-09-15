@@ -39,6 +39,7 @@ import SuperAdminDashboard from '../superadmin/SuperAdminDashboard';
 import SuperAdminKresler from '../superadmin/SuperAdminKresler';
 import SuperAdminKresDetail from '../superadmin/SuperAdminKresDetail';
 import SuperAdminAnalytics from '../superadmin/SuperAdminAnalytics';
+import SuperAdminSubscriptions from '../superadmin/SuperAdminSubscriptions';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -57,7 +58,7 @@ function Gate() {
         <Route path="kresler" element={b(<SuperAdminKresler />)} />
         <Route path="kresler/:id" element={b(<SuperAdminKresDetail />)} />
         <Route path="analytics" element={b(<SuperAdminAnalytics />)} />
-        <Route path="abonelikler" element={<div style={{ padding: 24 }}>Abonelik yönetimi bir sonraki adımda eklenecek.</div>} />
+        <Route path="abonelikler" element={b(<SuperAdminSubscriptions />)} />
         <Route path="*" element={<Navigate to="/superadmin" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/superadmin" replace />} />
