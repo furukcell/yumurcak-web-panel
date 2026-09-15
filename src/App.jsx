@@ -34,33 +34,41 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import BellPage from './pages/BellPage';
 import LegalDocumentsPage from './pages/LegalDocumentsPage';
 import AuditLogPage from './pages/AuditLogPage';
+import SuperAdminLayout from '../superadmin/SuperAdminLayout';
+import SuperAdminDashboard from '../superadmin/SuperAdminDashboard';
+import SuperAdminKresler from '../superadmin/SuperAdminKresler';
+import SuperAdminAnalytics from '../superadmin/SuperAdminAnalytics';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
   const location = useLocation();
 
-  // Sayfa/rota değiştiğinde scroll pozisyonunu en üste al.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
 
   if (yukleniyor) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Spin size="large" />
-      </div>
-    );
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin size="large" /></div>;
   }
 
   if (!kullanici) {
-    return (
-      <Routes>
-        <Route path="*" element={<LoginPage />} />
-      </Routes>
-    );
+    return <Routes><Route path="*" element={<LoginPage />} /></Routes>;
   }
 
   const b = (element) => <ErrorBoundary resetKey={location.pathname}>{element}</ErrorBoundary>;
+
+  if (kullanici.rol === 'superadmin') {
+    return (
+      <Routes>
+        <Route path="/superadmin" element={<SuperAdminLayout />}>
+          <Route index element={b(<SuperAdminDashboard />)} />
+          <Route path="kresler" element={b(<SuperAdminKresler />)} />
+          <Route path="analytics" element={b(<SuperAdminAnalytics />)} />
+          <Route path="abonelikler" element={<div style={{ padding: 24 }}>Abonelik yönetimi bir sonraki adımda eklenecek.</div>} />
+          <Route path="*" element={<Navigate to="/superadmin" replace />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/superadmin" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <Routes>
@@ -97,80 +105,35 @@ function Gate() {
   );
 }
 
-// kres.temaId'ye göre hem antd token'larını (Button/Menu/Input renkleri)
-// hem de global THEME sabitini (bkz. theme.js) günceller — AuthContext'teki
-// canlı kres dinleyicisi sayesinde Tema Ayarları'ndan yeni bir pastel tema
-// kaydedilince panel sayfa yenilemeden anında yeni renklere geçer.
 function ThemedApp() {
   const { kres } = useAuth();
   const activeTheme = useMemo(() => getThemeById(kres?.temaId), [kres?.temaId]);
-
-  useEffect(() => {
-    applyKresTheme(kres?.temaId);
-  }, [kres?.temaId]);
+  useEffect(() => { applyKresTheme(kres?.temaId); }, [kres?.temaId]);
 
   return (
-    <ConfigProvider
-      locale={trTR}
-      theme={{
-        token: {
-          colorPrimary: activeTheme.primary,
-          colorLink: activeTheme.primary,
-          colorBgLayout: activeTheme.bg,
-          borderRadius: THEME.radiusSm,
-          borderRadiusLG: THEME.radius,
-          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-        },
-        components: {
-          Card: {
-            borderRadiusLG: THEME.radius,
-            boxShadowTertiary: THEME.shadow,
-          },
-          Button: {
-            borderRadius: 10,
-            controlHeight: 38,
-            fontWeight: 600,
-          },
-          Menu: {
-            itemBorderRadius: 12,
-            itemSelectedBg: activeTheme.primarySoft,
-            itemSelectedColor: activeTheme.primaryDark,
-            itemHoverBg: '#F5F2FF',
-            itemHeight: 42,
-            iconSize: 17,
-          },
-          Table: {
-            borderRadiusLG: THEME.radius,
-            headerBg: '#FAF9FF',
-          },
-          Input: {
-            borderRadius: THEME.radiusSm,
-            controlHeight: 38,
-          },
-          Select: {
-            borderRadius: THEME.radiusSm,
-            controlHeight: 38,
-          },
-          Tag: {
-            borderRadiusSM: 999,
-          },
-          Drawer: {
-            borderRadiusLG: THEME.radius,
-          },
-        },
-      }}
-    >
-      <Gate />
-    </ConfigProvider>
+    <ConfigProvider locale={trTR} theme={{
+      token: {
+        colorPrimary: activeTheme.primary,
+        colorLink: activeTheme.primary,
+        colorBgLayout: activeTheme.bg,
+        borderRadius: THEME.radiusSm,
+        borderRadiusLG: THEME.radius,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      },
+      components: {
+        Card: { borderRadiusLG: THEME.radius, boxShadowTertiary: THEME.shadow },
+        Button: { borderRadius: 10, controlHeight: 38, fontWeight: 600 },
+        Menu: { itemBorderRadius: 12, itemSelectedBg: activeTheme.primarySoft, itemSelectedColor: activeTheme.primaryDark, itemHoverBg: '#F5F2FF', itemHeight: 42, iconSize: 17 },
+        Table: { borderRadiusLG: THEME.radius, headerBg: '#FAF9FF' },
+        Input: { borderRadius: THEME.radiusSm, controlHeight: 38 },
+        Select: { borderRadius: THEME.radiusSm, controlHeight: 38 },
+        Tag: { borderRadiusSM: 999 },
+        Drawer: { borderRadiusLG: THEME.radius },
+      },
+    }}><Gate /></ConfigProvider>
   );
 }
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ThemedApp />
-      </AuthProvider>
-    </BrowserRouter>
-  );
+  return <BrowserRouter><AuthProvider><ThemedApp /></AuthProvider></BrowserRouter>;
 }
