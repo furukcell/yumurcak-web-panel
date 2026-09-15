@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Card, Col, Row, Select, Space, Statistic, Table, Tag, Typography } from 'antd';
-import { ActivityOutlined, ApartmentOutlined, TeamOutlined } from '@ant-design/icons';
+import { Alert, Card, Col, Row, Select, Table, Tag, Typography, Statistic } from 'antd';
+import { ThunderboltOutlined, ApartmentOutlined, TeamOutlined } from '@ant-design/icons';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs } from './superadminService';
 
 const { Title, Text } = Typography;
@@ -49,7 +49,7 @@ export default function SuperAdminAnalytics() {
     </div>
 
     <Row gutter={[16, 16]}>
-      <Col xs={24} sm={8}><Card style={card}><Statistic title="Toplam aktivite" value={filtered.length} prefix={<ActivityOutlined />} /></Card></Col>
+      <Col xs={24} sm={8}><Card style={card}><Statistic title="Toplam aktivite" value={filtered.length} prefix={<ThunderboltOutlined />} /></Card></Col>
       <Col xs={24} sm={8}><Card style={card}><Statistic title="Aktif kullanıcı" value={users.length} prefix={<TeamOutlined />} /></Card></Col>
       <Col xs={24} sm={8}><Card style={card}><Statistic title="Aktif kurum" value={new Set(filtered.map((x) => x.kresId).filter(Boolean)).size} prefix={<ApartmentOutlined />} /></Card></Col>
     </Row>
