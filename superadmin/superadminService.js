@@ -12,83 +12,57 @@ function asEntries(value) {
 
 export async function getPlatformSnapshot() {
   const [kresler, kullanicilar, cocuklar, siniflar, abonelikler] = await Promise.all([
-    read('kresler'),
-    read('kullanicilar'),
-    read('cocuklar'),
-    read('siniflar'),
-    read('abonelikler'),
+    read('kresler'), read('kullanicilar'), read('cocuklar'), read('siniflar'), read('abonelikler'),
   ]);
-
   const institutions = asEntries(kresler).map(([id, item]) => ({ id, ...(item || {}) }));
   const users = asEntries(kullanicilar).map(([id, item]) => ({ id, ...(item || {}) }));
   const children = asEntries(cocuklar).map(([id, item]) => ({ id, ...(item || {}) }));
   const classes = asEntries(siniflar).map(([id, item]) => ({ id, ...(item || {}) }));
   const subscriptions = asEntries(abonelikler).map(([id, item]) => ({ id, ...(item || {}) }));
-
-  const usersByKres = users.reduce((acc, user) => {
-    if (!user.kresId) return acc;
-    acc[user.kresId] = (acc[user.kresId] || 0) + 1;
-    return acc;
-  }, {});
-  const childrenByKres = children.reduce((acc, child) => {
-    if (!child.kresId) return acc;
-    acc[child.kresId] = (acc[child.kresId] || 0) + 1;
-    return acc;
-  }, {});
-  const classesByKres = classes.reduce((acc, item) => {
-    if (!item.kresId) return acc;
-    acc[item.kresId] = (acc[item.kresId] || 0) + 1;
-    return acc;
-  }, {});
-  const subscriptionsByKres = subscriptions.reduce((acc, item) => {
-    const kresId = item.kresId || item.kres;
-    if (!kresId) return acc;
-    acc[kresId] = item;
-    return acc;
-  }, {});
-
-  return {
-    institutions, users, children, classes, subscriptions,
-    usersByKres, childrenByKres, classesByKres, subscriptionsByKres,
-    fetchedAt: Date.now(),
-  };
+  const usersByKres = users.reduce((acc, user) => { if (user.kresId) acc[user.kresId] = (acc[user.kresId] || 0) + 1; return acc; }, {});
+  const childrenByKres = children.reduce((acc, child) => { if (child.kresId) acc[child.kresId] = (acc[child.kresId] || 0) + 1; return acc; }, {});
+  const classesByKres = classes.reduce((acc, item) => { if (item.kresId) acc[item.kresId] = (acc[item.kresId] || 0) + 1; return acc; }, {});
+  const subscriptionsByKres = subscriptions.reduce((acc, item) => { const id = item.kresId || item.kres; if (id) acc[id] = item; return acc; }, {});
+  return { institutions, users, children, classes, subscriptions, usersByKres, childrenByKres, classesByKres, subscriptionsByKres, fetchedAt: Date.now() };
 }
 
-export async function getUsageLogs() {
-  return read('hataLoglari/kullanimLoglari');
-}
+export async function getUsageLogs() { return read('hataLoglari/kullanimLoglari'); }
 
 export function normalizeUsageLogs(raw) {
-  return asEntries(raw)
-    .filter(([, value]) => value && typeof value === 'object')
-    .map(([key, value]) => ({ id: key, ...value }))
-    .filter((row) => row.tip === 'kullanim' || row.kullaniciId || row.timestamp)
-    .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+  return asEntries(raw).filter(([, value]) => value && typeof value === 'object').map(([key, value]) => ({ id: key, ...value })).filter((row) => row.tip === 'kullanim' || row.kullaniciId || row.timestamp).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 }
 
 export function usageSummary(logs) {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  const todayStartDate = new Date();
-  todayStartDate.setHours(0, 0, 0, 0);
-  const todayStart = todayStartDate.getTime();
-  const last7Start = now - 7 * day;
-  const last30Start = now - 30 * day;
+  const now = Date.now(); const day = 86400000;
+  const d = new Date(); d.setHours(0, 0, 0, 0); const todayStart = d.getTime();
+  const last7Start = now - 7 * day; const last30Start = now - 30 * day;
   const valid = logs.filter((log) => Number(log.timestamp) > 0);
   const userIds = (from) => new Set(valid.filter((x) => Number(x.timestamp) >= from).map((x) => x.kullaniciId).filter(Boolean));
   const institutions = (from) => new Set(valid.filter((x) => Number(x.timestamp) >= from).map((x) => x.kresId).filter(Boolean));
+  return { now, todayStart, last7Start, last30Start, totalEvents: valid.length, todayEvents: valid.filter((x) => Number(x.timestamp) >= todayStart).length, activeUsersToday: userIds(todayStart).size, activeUsers7d: userIds(last7Start).size, activeUsers30d: userIds(last30Start).size, activeInstitutionsToday: institutions(todayStart).size, activeInstitutions7d: institutions(last7Start).size };
+}
 
-  return {
-    now,
-    todayStart,
-    last7Start,
-    last30Start,
-    totalEvents: valid.length,
-    todayEvents: valid.filter((x) => Number(x.timestamp) >= todayStart).length,
-    activeUsersToday: userIds(todayStart).size,
-    activeUsers7d: userIds(last7Start).size,
-    activeUsers30d: userIds(last30Start).size,
-    activeInstitutionsToday: institutions(todayStart).size,
-    activeInstitutions7d: institutions(last7Start).size,
-  };
+export function dailyUsageSeries(logs, days = 30) {
+  const result = []; const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - (days - 1));
+  for (let i = 0; i < days; i += 1) {
+    const date = new Date(start); date.setDate(start.getDate() + i); const from = date.getTime(); const to = from + 86400000;
+    const dayLogs = logs.filter((x) => Number(x.timestamp) >= from && Number(x.timestamp) < to);
+    result.push({ key: date.toISOString().slice(0, 10), label: date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }), events: dayLogs.length, users: new Set(dayLogs.map((x) => x.kullaniciId).filter(Boolean)).size, institutions: new Set(dayLogs.map((x) => x.kresId).filter(Boolean)).size });
+  }
+  return result;
+}
+
+export function getUsageHealth({ activeUsers, totalUsers, events7d, modules7d }) {
+  if (!totalUsers) return events7d ? 55 : 0;
+  const userScore = Math.min(100, (activeUsers / totalUsers) * 100);
+  const activityScore = Math.min(100, events7d * 4);
+  const moduleScore = Math.min(100, modules7d * 12.5);
+  return Math.round(userScore * 0.55 + activityScore * 0.3 + moduleScore * 0.15);
+}
+
+export function healthLabel(score) {
+  if (score >= 75) return { label: 'Çok aktif', color: 'green' };
+  if (score >= 45) return { label: 'Aktif', color: 'blue' };
+  if (score >= 20) return { label: 'Düşük kullanım', color: 'orange' };
+  return { label: 'Pasif', color: 'red' };
 }
