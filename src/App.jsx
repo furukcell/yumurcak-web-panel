@@ -41,6 +41,7 @@ import SuperAdminKresDetail from '../superadmin/SuperAdminKresDetail';
 import SuperAdminAnalytics from '../superadmin/SuperAdminAnalytics';
 import SuperAdminSubscriptions from '../superadmin/SuperAdminSubscriptions';
 import SuperAdminKurumKurulum from '../superadmin/SuperAdminKurumKurulum';
+import SuperAdminDestek from '../superadmin/SuperAdminDestek';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -60,6 +61,7 @@ function Gate() {
         <Route path="kresler/:id" element={b(<SuperAdminKresDetail />)} />
         <Route path="analytics" element={b(<SuperAdminAnalytics />)} />
         <Route path="toplu-kurulum" element={b(<SuperAdminKurumKurulum />)} />
+        <Route path="destek" element={b(<SuperAdminDestek />)} />
         <Route path="abonelikler" element={b(<SuperAdminSubscriptions />)} />
         <Route path="*" element={<Navigate to="/superadmin" replace />} />
       </Route>
@@ -119,6 +121,4 @@ function ThemedApp() {
   }}><Gate /></ConfigProvider>;
 }
 
-export default function App() {
-  return <BrowserRouter><AuthProvider><ThemedApp /></AuthProvider></BrowserRouter>;
-}
+export default function App() { return <BrowserRouter><AuthProvider><ThemedApp /></AuthProvider></BrowserRouter>; }
