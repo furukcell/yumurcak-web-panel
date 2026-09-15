@@ -26,7 +26,7 @@ export default function SuperAdminKresDetail() {
   const institution = useMemo(() => data?.institutions.find((x) => x.id === id), [data, id]);
   if (error) return <Alert type="error" showIcon message="Kurum detayı yüklenemedi" description={error} />;
   if (!data) return <Card loading style={card} />;
-  if (!institution) return <Alert type="warning" showIcon message="Kurum bulunamadı" action={<Button onClick={() => navigate('/superadmin/kresler')}>Kreşlere dön</Button>} />;
+  if (!institution) return <Alert type="warning" showIcon message="Kurum bulunamadı" action={<Button onClick={() => navigate('/superadmin/analytics')}>Analitiğe dön</Button>} />;
 
   const name = institution.ad || institution.adSoyad || institution.isim || institution.kresAdi || 'İsimsiz kurum';
   const users = data.users.filter((x) => x.kresId === id);
@@ -68,7 +68,7 @@ export default function SuperAdminKresDetail() {
   const dailyMax = Math.max(1, ...daily.map((x) => x.events));
 
   return <div style={{ maxWidth: 1500, margin: '0 auto' }}>
-    <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/superadmin/kresler')} style={{ marginBottom: 10 }}>Kreşlere dön</Button>
+    <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/superadmin/analytics')} style={{ marginBottom: 10 }}>Analitiğe dön</Button>
     <div style={{ marginBottom: 22 }}><Title level={2} style={{ margin: 0 }}>{name}</Title><Text type="secondary">Kurum ID: {id}</Text></div>
 
     <Row gutter={[16, 16]}>
