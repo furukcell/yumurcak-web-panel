@@ -65,21 +65,17 @@ export async function getPlatformSnapshot() {
 }
 
 export async function getUsageLogs() {
-  return read('kullanimLoglari');
+  return read('hataLoglari/kullanimLoglari');
 }
 
 export function normalizeUsageLogs(raw) {
   const rows = [];
   asEntries(raw).forEach(([key, value]) => {
-    if (value && typeof value === 'object' && !value.kullaniciId && !value.timestamp) {
-      asEntries(value).forEach(([childKey, child]) => {
-        if (child && typeof child === 'object') rows.push({ id: `${key}:${childKey}`, ...child });
-      });
-      return;
-    }
     if (value && typeof value === 'object') rows.push({ id: key, ...value });
   });
-  return rows.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+  return rows
+    .filter((row) => row.tip === 'kullanim' || row.kullaniciId || row.timestamp)
+    .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 }
 
 export function usageSummary(logs) {
