@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, Col, Descriptions, Empty, Progress, Row, Statistic, Table, Tag, Typography } from 'antd';
-import { ArrowLeftOutlined, ApartmentOutlined, TeamOutlined, SmileOutlined, ReadOutlined, ThunderboltOutlined, LoginOutlined, RiseOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, ApartmentOutlined, TeamOutlined, SmileOutlined, ReadOutlined, ThunderboltOutlined, LoginOutlined, RiseOutlined, UsergroupAddOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs } from './superadminService';
 
@@ -68,7 +68,10 @@ export default function SuperAdminKresDetail() {
   const dailyMax = Math.max(1, ...daily.map((x) => x.events));
 
   return <div style={{ maxWidth: 1500, margin: '0 auto' }}>
-    <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/superadmin/analytics')} style={{ marginBottom: 10 }}>Analitiğe dön</Button>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+      <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/superadmin/analytics')}>Analitiğe dön</Button>
+      <Button type="primary" icon={<UsergroupAddOutlined />} onClick={() => navigate(`/superadmin/toplu-kurulum?kresId=${encodeURIComponent(id)}`)}>Toplu Kurulum</Button>
+    </div>
     <div style={{ marginBottom: 22 }}><Title level={2} style={{ margin: 0 }}>{name}</Title><Text type="secondary">Kurum ID: {id}</Text></div>
 
     <Row gutter={[16, 16]}>
