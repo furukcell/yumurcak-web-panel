@@ -7,10 +7,7 @@ const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
 
 function dateText(ts) { return ts ? new Date(Number(ts)).toLocaleString('tr-TR') : '—'; }
-
-function getInstitutionName(institution, id) {
-  return institution?.ad || institution?.adSoyad || institution?.isim || institution?.kresAdi || id;
-}
+function getInstitutionName(institution, id) { return institution?.ad || institution?.adSoyad || institution?.isim || institution?.kresAdi || id; }
 
 export default function SuperAdminAnalytics() {
   const [snapshot, setSnapshot] = useState(null);
@@ -39,9 +36,7 @@ export default function SuperAdminAnalytics() {
       if (Number(x.timestamp || 0) >= summary.last7Start) map[id].last7 += 1;
       if (x.modul || x.module) map[id].modules.add(x.modul || x.module);
     });
-    return Object.values(map)
-      .map((x) => ({ ...x, modules: [...x.modules].join(', ') || '—' }))
-      .sort((a, b) => b.events - a.events);
+    return Object.values(map).map((x) => ({ ...x, modules: [...x.modules].join(', ') || '—' })).sort((a, b) => b.events - a.events);
   }, [filtered, summary]);
 
   const moduleRows = useMemo(() => {
@@ -61,7 +56,8 @@ export default function SuperAdminAnalytics() {
       if (x.kullaniciId) userSets[id].add(x.kullaniciId);
     });
 
-    return Object.entries(snapshot?.institutions || []).map(([id, institution]) => {
+    return (snapshot?.institutions || []).map((institution) => {
+      const id = institution.id;
       const events = institutionMap[id] || 0;
       const activeUsers = userSets[id]?.size || 0;
       const totalUsers = snapshot?.usersByKres?.[id] || 0;
