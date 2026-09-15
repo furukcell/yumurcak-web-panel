@@ -40,7 +40,7 @@ import SuperAdminKresler from '../superadmin/SuperAdminKresler';
 import SuperAdminKresDetail from '../superadmin/SuperAdminKresDetail';
 import SuperAdminAnalytics from '../superadmin/SuperAdminAnalytics';
 import SuperAdminSubscriptions from '../superadmin/SuperAdminSubscriptions';
-import SuperAdminBulkOnboarding from '../superadmin/SuperAdminBulkOnboarding';
+import SuperAdminKurumKurulum from '../superadmin/SuperAdminKurumKurulum';
 
 function Gate() {
   const { kullanici, yukleniyor } = useAuth();
@@ -59,7 +59,7 @@ function Gate() {
         <Route path="kresler" element={b(<SuperAdminKresler />)} />
         <Route path="kresler/:id" element={b(<SuperAdminKresDetail />)} />
         <Route path="analytics" element={b(<SuperAdminAnalytics />)} />
-        <Route path="toplu-kurulum" element={b(<SuperAdminBulkOnboarding />)} />
+        <Route path="toplu-kurulum" element={b(<SuperAdminKurumKurulum />)} />
         <Route path="abonelikler" element={b(<SuperAdminSubscriptions />)} />
         <Route path="*" element={<Navigate to="/superadmin" replace />} />
       </Route>
