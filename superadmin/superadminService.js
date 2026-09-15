@@ -39,6 +39,21 @@ export function dailyUsageSeries(logs, days = 30) {
   for (let i = 0; i < days; i += 1) { const date = new Date(start); date.setDate(start.getDate() + i); const from = date.getTime(); const dayLogs = logs.filter((x) => Number(x.timestamp) >= from && Number(x.timestamp) < from + 86400000); result.push({ key: date.toISOString().slice(0, 10), label: date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }), events: dayLogs.length, users: new Set(dayLogs.map((x) => x.kullaniciId).filter(Boolean)).size, institutions: new Set(dayLogs.map((x) => x.kresId).filter(Boolean)).size }); }
   return result;
 }
+export function monthlyUsageSeries(logs, year = new Date().getFullYear()) {
+  const result = [];
+  for (let month = 0; month < 12; month += 1) {
+    const from = new Date(year, month, 1).getTime();
+    const to = new Date(year, month + 1, 1).getTime();
+    const rows = logs.filter((x) => Number(x.timestamp) >= from && Number(x.timestamp) < to);
+    result.push({ key: `${year}-${String(month + 1).padStart(2, '0')}`, label: new Date(year, month, 1).toLocaleDateString('tr-TR', { month: 'long' }), events: rows.length, users: new Set(rows.map((x) => x.kullaniciId).filter(Boolean)).size, institutions: new Set(rows.map((x) => x.kresId).filter(Boolean)).size, modules: new Set(rows.map((x) => x.modul || x.module).filter(Boolean)).size });
+  }
+  return result;
+}
+export function getAvailableUsageYears(logs) {
+  const years = new Set(logs.map((x) => { const ts = Number(x.timestamp); return ts > 0 ? new Date(ts).getFullYear() : null; }).filter(Boolean));
+  years.add(new Date().getFullYear());
+  return [...years].sort((a, b) => b - a);
+}
 export function getUsageHealth({ activeUsers, totalUsers, events7d, modules7d }) {
   if (!totalUsers) return events7d ? 55 : 0;
   const userScore = Math.min(100, (activeUsers / totalUsers) * 100); const activityScore = Math.min(100, events7d * 4); const moduleScore = Math.min(100, modules7d * 12.5);
@@ -54,9 +69,10 @@ export function getTrialInfo(subscription, logs = []) {
   const start = startRaw ? new Date(startRaw) : new Date(end.getTime() - 15 * 86400000);
   const startMs = start.getTime(); const endMs = end.getTime(); const now = Date.now();
   const elapsedDay = Math.max(1, Math.min(15, Math.floor((now - startMs) / 86400000) + 1));
-  const totalEvents = logs.filter((x) => Number(x.timestamp) >= startMs && Number(x.timestamp) <= Math.min(now, endMs)).length;
-  const activeUsers = new Set(logs.filter((x) => Number(x.timestamp) >= startMs && Number(x.timestamp) <= Math.min(now, endMs)).map((x) => x.kullaniciId).filter(Boolean)).size;
-  const modules = new Set(logs.filter((x) => Number(x.timestamp) >= startMs && Number(x.timestamp) <= Math.min(now, endMs)).map((x) => x.modul || x.module).filter(Boolean)).size;
+  const trialLogs = logs.filter((x) => Number(x.timestamp) >= startMs && Number(x.timestamp) <= Math.min(now, endMs));
+  const totalEvents = trialLogs.length;
+  const activeUsers = new Set(trialLogs.map((x) => x.kullaniciId).filter(Boolean)).size;
+  const modules = new Set(trialLogs.map((x) => x.modul || x.module).filter(Boolean)).size;
   const remainingDays = Math.max(0, Math.ceil((endMs - now) / 86400000));
   return { start, end, elapsedDay, remainingDays, totalEvents, activeUsers, modules, ended: now > endMs };
 }
