@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Card, Col, Row, Select, Table, Tag, Typography, Statistic, Progress, Empty } from 'antd';
-import { ThunderboltOutlined, ApartmentOutlined, TeamOutlined, LoginOutlined, RiseOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Alert, Card, Col, Row, Select, Table, Tag, Typography, Statistic, Progress, Empty, Button } from 'antd';
+import { ThunderboltOutlined, ApartmentOutlined, TeamOutlined, LoginOutlined, RiseOutlined, ClockCircleOutlined, CalendarOutlined, EyeOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs, usageSummary, monthlyUsageSeries, getAvailableUsageYears, getTrialInfo } from './superadminService';
 
 const { Title, Text } = Typography;
@@ -11,6 +12,7 @@ function getInstitutionName(institution, id) { return institution?.ad || institu
 function health(score) { if (score >= 75) return { label: 'Çok aktif', color: 'green' }; if (score >= 50) return { label: 'Aktif', color: 'blue' }; if (score >= 20) return { label: 'Düşük kullanım', color: 'orange' }; return { label: 'Pasif', color: 'red' }; }
 
 export default function SuperAdminAnalytics() {
+  const navigate = useNavigate();
   const [snapshot, setSnapshot] = useState(null);
   const [logs, setLogs] = useState([]);
   const [kresId, setKresId] = useState('all');
@@ -113,34 +115,23 @@ export default function SuperAdminAnalytics() {
     </Row>
 
     <Card style={{ ...card, marginTop: 16 }} title={<span><CalendarOutlined /> Yıllık Kullanım — Ay Ay</span>} extra={<Select size="small" value={year} onChange={setYear} options={availableYears.map((y) => ({ value: y, label: `${y}` }))} />}>
-      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
-        <Col xs={24} sm={8}><Statistic title={`${year} toplam aktivite`} value={selectedYearTotal} /></Col>
-        <Col xs={24} sm={8}><Statistic title={`${year} aktif kullanıcı`} value={selectedYearUsers} /></Col>
-        <Col xs={24} sm={8}><Statistic title={`${year} aktif kurum`} value={selectedYearInstitutions} /></Col>
-      </Row>
+      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}><Col xs={24} sm={8}><Statistic title={`${year} toplam aktivite`} value={selectedYearTotal} /></Col><Col xs={24} sm={8}><Statistic title={`${year} aktif kullanıcı`} value={selectedYearUsers} /></Col><Col xs={24} sm={8}><Statistic title={`${year} aktif kurum`} value={selectedYearInstitutions} /></Col></Row>
       {yearlyMonthly.some((x) => x.events) ? <div style={{ height: 250, display: 'flex', alignItems: 'flex-end', gap: 10, padding: '18px 8px 8px', overflowX: 'auto' }}>{yearlyMonthly.map((x) => <div key={x.key} title={`${x.label}: ${x.events} aktivite, ${x.users} kullanıcı, ${x.institutions} kurum, ${x.modules} modül`} style={{ minWidth: 52, flex: 1, maxWidth: 100, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center' }}><Text style={{ fontSize: 11, marginBottom: 4 }}>{x.events || ''}</Text><div style={{ width: '65%', minHeight: x.events ? 5 : 2, height: `${Math.max(1, x.events / monthlyMax * 100)}%`, background: 'linear-gradient(180deg,#722ed1,#b37feb)', borderRadius: '7px 7px 2px 2px' }} /><Text type="secondary" style={{ fontSize: 11, marginTop: 7, whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{x.label}</Text></div>)}</div> : <Empty description={`${year} yılı için henüz kullanım verisi yok`} />}
       <Table style={{ marginTop: 12 }} size="small" pagination={false} rowKey="key" dataSource={yearlyMonthly} columns={[{ title: 'Ay', dataIndex: 'label', render: (v) => <Text style={{ textTransform: 'capitalize' }}>{v}</Text> }, { title: 'Aktivite', dataIndex: 'events', align: 'right' }, { title: 'Aktif kullanıcı', dataIndex: 'users', align: 'right' }, { title: 'Aktif kurum', dataIndex: 'institutions', align: 'right' }, { title: 'Modül', dataIndex: 'modules', align: 'right' }]} />
     </Card>
 
     <Card style={{ ...card, marginTop: 16 }} title={<span><ClockCircleOutlined /> 15 Günlük Deneme Takibi</span>} extra={<Text type="secondary">Gerçek kullanım üzerinden satış takibi</Text>}>
-      <Table rowKey="id" size="small" pagination={{ pageSize: 10 }} dataSource={trialRows} locale={{ emptyText: 'Aktif veya kayıtlı demo dönemi bulunamadı' }} columns={[
-        { title: 'Kurum', dataIndex: 'name', ellipsis: true },
-        { title: 'Dönem', render: (_, r) => `${r.start.toLocaleDateString('tr-TR')} → ${r.end.toLocaleDateString('tr-TR')}` },
-        { title: 'Gün', render: (_, r) => r.ended ? <Tag color="red">Tamamlandı</Tag> : <Tag color="blue">{r.elapsedDay}/15</Tag> },
-        { title: 'Kalan', render: (_, r) => r.ended ? <Tag color="red">Süre doldu</Tag> : <Tag color={r.remainingDays <= 3 ? 'orange' : 'green'}>{r.remainingDays} gün</Tag> },
-        { title: 'Aktif kullanıcı', dataIndex: 'activeUsers' }, { title: 'Aktivite', dataIndex: 'totalEvents' }, { title: 'Modül', dataIndex: 'modules' },
-        { title: 'Satış sinyali', render: (_, r) => r.activeUsers >= 3 && r.totalEvents >= 20 ? <Tag color="green">Satışa hazır</Tag> : r.totalEvents > 0 ? <Tag color="orange">Takip gerekli</Tag> : <Tag color="red">Kullanım yok</Tag> },
-      ]} />
+      <Table rowKey="id" size="small" pagination={{ pageSize: 10 }} dataSource={trialRows} locale={{ emptyText: 'Aktif veya kayıtlı demo dönemi bulunamadı' }} columns={[{ title: 'Kurum', dataIndex: 'name', ellipsis: true }, { title: 'Dönem', render: (_, r) => `${r.start.toLocaleDateString('tr-TR')} → ${r.end.toLocaleDateString('tr-TR')}` }, { title: 'Gün', render: (_, r) => r.ended ? <Tag color="red">Tamamlandı</Tag> : <Tag color="blue">{r.elapsedDay}/15</Tag> }, { title: 'Kalan', render: (_, r) => r.ended ? <Tag color="red">Süre doldu</Tag> : <Tag color={r.remainingDays <= 3 ? 'orange' : 'green'}>{r.remainingDays} gün</Tag> }, { title: 'Aktif kullanıcı', dataIndex: 'activeUsers' }, { title: 'Aktivite', dataIndex: 'totalEvents' }, { title: 'Modül', dataIndex: 'modules' }, { title: 'Satış sinyali', render: (_, r) => r.activeUsers >= 3 && r.totalEvents >= 20 ? <Tag color="green">Satışa hazır</Tag> : r.totalEvents > 0 ? <Tag color="orange">Takip gerekli</Tag> : <Tag color="red">Kullanım yok</Tag> }]} />
     </Card>
 
-    <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-      <Col xs={24} lg={15}><Card style={card} title="Kurum Kullanım Sağlığı"><Table rowKey="id" size="small" pagination={{ pageSize: 12 }} columns={[{ title: 'Kurum', dataIndex: 'name', ellipsis: true }, { title: 'Durum', dataIndex: 'score', render: (v) => { const h = health(v); return <Tag color={h.color}>{h.label}</Tag>; } }, { title: 'Aktif kullanıcı', render: (_, r) => `${r.activeUsers} / ${r.totalUsers}` }, { title: 'Aktivite', dataIndex: 'events' }, { title: 'Sağlık', dataIndex: 'score', render: (v) => <Progress percent={v} size="small" /> }, { title: 'Son aktivite', dataIndex: 'last', render: dateText }]} dataSource={institutionRows} locale={{ emptyText: 'Henüz kullanım verisi yok' }} /></Card></Col>
-      <Col xs={24} lg={9}><Card style={card} title="Modül Kullanımı"><Table rowKey="modul" size="small" pagination={false} columns={[{ title: 'Modül', dataIndex: 'modul' }, { title: 'Olay', dataIndex: 'events', align: 'right' }]} dataSource={moduleRows} locale={{ emptyText: 'Kayıt yok' }} /></Card></Col>
-    </Row>
+    <Card style={{ ...card, marginTop: 16 }} title="Kurum Bazlı Kullanım" extra={<Text type="secondary">Kurum adına veya Detay'a tıklayarak ayrıntılı analizi aç</Text>}>
+      <Table rowKey="id" size="small" pagination={{ pageSize: 12 }} onRow={(record) => ({ onClick: () => navigate(`/superadmin/kresler/${record.id}`), style: { cursor: 'pointer' } })} columns={[{ title: 'Kurum', dataIndex: 'name', ellipsis: true, render: (name, r) => <Button type="link" style={{ padding: 0, fontWeight: 600 }} onClick={(e) => { e.stopPropagation(); navigate(`/superadmin/kresler/${r.id}`); }}>{name}</Button> }, { title: 'Durum', dataIndex: 'score', render: (v) => { const h = health(v); return <Tag color={h.color}>{h.label}</Tag>; } }, { title: 'Aktif kullanıcı', render: (_, r) => `${r.activeUsers} / ${r.totalUsers}` }, { title: 'Aktivite', dataIndex: 'events' }, { title: 'Modül', dataIndex: 'modules' }, { title: 'Kullanım', dataIndex: 'usage', render: (v) => <Progress percent={v} size="small" /> }, { title: 'Son aktivite', dataIndex: 'last', render: dateText }, { title: '', align: 'right', render: (_, r) => <Button icon={<EyeOutlined />} onClick={(e) => { e.stopPropagation(); navigate(`/superadmin/kresler/${r.id}`); }}>Detay</Button> }]} dataSource={institutionRows} locale={{ emptyText: 'Henüz kullanım verisi yok' }} />
+    </Card>
 
     {!logs.length && <Alert style={{ marginTop: 16 }} type="warning" showIcon message="Henüz kullanım olayı kaydedilmemiş." description="Takip altyapısı artık aktif. Kullanıcılar uygulamayı açıp ekranlar arasında gezdikçe veriler burada oluşacak." />}
 
     <Card style={{ ...card, marginTop: 16 }} title="Kullanıcı Aktivitesi"><Table rowKey="id" size="small" pagination={{ pageSize: 15 }} columns={[{ title: 'Kullanıcı', dataIndex: 'name', render: (v, r) => <div><Text strong>{v}</Text><br /><Text type="secondary" style={{ fontSize: 11 }}>{r.role}</Text></div> }, { title: 'Bugün', dataIndex: 'today' }, { title: 'Son 7 gün', dataIndex: 'last7' }, { title: 'Toplam aktivite', dataIndex: 'events', sorter: (a, b) => a.events - b.events }, { title: 'Kullanılan modüller', dataIndex: 'modules', render: (v) => <Tag>{v}</Tag> }, { title: 'Son aktivite', dataIndex: 'last', render: dateText }]} dataSource={users} /></Card>
+    <Card style={{ ...card, marginTop: 16 }} title="Modül Kullanımı"><Table rowKey="modul" size="small" pagination={false} columns={[{ title: 'Modül', dataIndex: 'modul' }, { title: 'Olay', dataIndex: 'events', align: 'right' }]} dataSource={moduleRows} locale={{ emptyText: 'Kayıt yok' }} /></Card>
     <Card style={{ ...card, marginTop: 16 }} title="Son Kullanım Olayları"><Table rowKey="id" size="small" pagination={{ pageSize: 20 }} dataSource={filtered.slice(0, 300)} columns={[{ title: 'Zaman', dataIndex: 'timestamp', render: dateText }, { title: 'Kullanıcı', dataIndex: 'kullaniciAdi', render: (v, r) => v || r.userName || r.kullaniciId || r.userId || '—' }, { title: 'Kurum', dataIndex: 'kresId', render: (v) => getInstitutionName(snapshot.institutions.find((i) => i.id === v), v) }, { title: 'Modül', dataIndex: 'modul', render: (v, r) => v || r.module || '—' }, { title: 'İşlem', dataIndex: 'islem', render: (v, r) => v || r.action || '—' }, { title: 'Ekran', dataIndex: 'screen', render: (v) => v || '—' }]} /></Card>
   </div>;
 }
