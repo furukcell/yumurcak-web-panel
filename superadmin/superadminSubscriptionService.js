@@ -36,13 +36,15 @@ export function subscribeManualRequests(callback) {
   });
 }
 
-export async function activateManualSubscription({ kresId, tierId, period, customEndDate, price, manuelNot, odemeReferansi, tanimlayanUid, existingSubscription }) {
+export async function activateManualSubscription({ kresId, tierId, period, customEndDate, price, ogrenciLimiti, manuelNot, odemeReferansi, tanimlayanUid, existingSubscription }) {
   const tier = getTierById(tierId);
+  const customLimit = Number(ogrenciLimiti);
+  const finalLimit = Number.isFinite(customLimit) && customLimit > 0 ? Math.floor(customLimit) : tier.maxStudent;
   const finalPrice = price === '' || price == null ? (period === 'yillik' ? tier.yearly : tier.monthly) : Number(price);
   const endDate = period === 'ozel' && customEndDate ? customEndDate : toDateStr(addMonths(new Date(), period === 'yillik' ? 12 : 1));
-  const record = { kresId, plan:`${tier.id}_${period}`, planTier:tier.id, planPeriod:period, ogrenciLimiti:tier.maxStudent, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
+  const record = { kresId, plan: tierId === 'custom' ? `ozel_${period}` : `${tier.id}_${period}`, planTier:tierId === 'custom' ? 'custom' : tier.id, planPeriod:period, ogrenciLimiti:finalLimit, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
   await set(ref(database, `abonelikler/${kresId}`), record);
-  if (finalPrice > 0) await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:tier.id, tierTitle:tier.title, period, fiyat:finalPrice, paraBirimi:'TRY', odemeReferansi:odemeReferansi || '', manuelNot:manuelNot || '', tanimlayanUid:tanimlayanUid || '', tarih:toDateStr(new Date()), createdAt:Date.now() });
+  if (finalPrice > 0) await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:record.planTier, tierTitle:tierId === 'custom' ? `${finalLimit} Öğrenci Özel Limit` : tier.title, period, ogrenciLimiti:finalLimit, fiyat:finalPrice, paraBirimi:'TRY', odemeReferansi:odemeReferansi || '', manuelNot:manuelNot || '', tanimlayanUid:tanimlayanUid || '', tarih:toDateStr(new Date()), createdAt:Date.now() });
 }
 
 export async function setManualAccessRestriction({ kresId, restricted, tanimlayanUid='' }) {
