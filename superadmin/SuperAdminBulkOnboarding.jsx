@@ -254,7 +254,7 @@ export default function SuperAdminBulkOnboarding() {
       </Space>
       {sonuc && <Card style={{ marginTop: 16 }} title="Sonuç"><Paragraph>✅ {sonuc.siniflar} sınıf, {sonuc.ogrenciler} öğrenci oluşturuldu.</Paragraph>
         {sonuc.ogretmenler.length > 0 && <><Divider orientation="left" plain>Öğretmenler</Divider><Space direction="vertical">{sonuc.ogretmenler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text>)}</Space></>}
-        {sonuc.veliler.length > 0 && <><Divider orientation="left" plain>Veliler</Divider><Space direction="vertical">{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text></Space></>}
+        {sonuc.veliler.length > 0 && <><Divider orientation="left" plain>Veliler</Divider><Space direction="vertical">{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text>)}</Space></>}
         {sonuc.hatalar.length > 0 && <><Divider orientation="left" plain>Hatalar</Divider><Space direction="vertical">{sonuc.hatalar.map((x, i) => <Text key={i} type="danger">❌ {x}</Text>)}</Space></>}
       </Card>}
     </>}
