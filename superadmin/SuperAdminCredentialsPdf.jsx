@@ -17,6 +17,10 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
+function getTelefon(user) {
+  return user?.telefon || user?.telefonNo || user?.telefonNumarasi || user?.phone || user?.phoneNumber || user?.gsm || '—';
+}
+
 function collectDomCredentials() {
   const lines = document.body.innerText.split(/\n+/).map((x) => x.trim()).filter(Boolean);
   const rows = [];
@@ -26,7 +30,7 @@ function collectDomCredentials() {
     if (lines[i] === 'Veliler') role = 'Veli';
     if ((lines[i] === 'Yeni' || lines[i] === 'Mevcut') && lines[i + 1]?.includes(' / ')) {
       const [kullaniciAdi, sifre] = lines[i + 1].split(' / ').map((x) => x.trim());
-      if (kullaniciAdi && sifre && role) rows.push({ role, kullaniciAdi, sifre });
+      if (kullaniciAdi && sifre && role) rows.push({ role, kullaniciAdi, sifre, telefon: '—' });
     }
   }
   return rows;
@@ -88,6 +92,7 @@ export default function SuperAdminCredentialsPdf() {
       key: u.id || u.uid || u.kullaniciAdi,
       role: u.rol === 'ogretmen' ? 'Öğretmen' : 'Veli',
       ad: u.ad || '—',
+      telefon: getTelefon(u),
       kullaniciAdi: u.kullaniciAdi || '',
       sifre: u.sifre || 'Kayıtlı değil',
       aktif: u.aktif !== false,
@@ -118,8 +123,8 @@ export default function SuperAdminCredentialsPdf() {
       <section class="section">
         <h2>${baslik}</h2>
         <table>
-          <thead><tr><th>Ad Soyad</th><th>Kullanıcı Adı</th><th>Şifre</th></tr></thead>
-          <tbody>${liste.map((x) => `<tr><td>${escapeHtml(x.ad || '—')}</td><td class="mono">${escapeHtml(x.kullaniciAdi)}</td><td class="mono">${escapeHtml(x.sifre || 'Kayıtlı değil')}</td></tr>`).join('')}</tbody>
+          <thead><tr><th>Ad Soyad</th><th>Telefon</th><th>Kullanıcı Adı</th><th>Şifre</th></tr></thead>
+          <tbody>${liste.map((x) => `<tr><td>${escapeHtml(x.ad || '—')}</td><td class="mono">${escapeHtml(x.telefon || '—')}</td><td class="mono">${escapeHtml(x.kullaniciAdi)}</td><td class="mono">${escapeHtml(x.sifre || 'Kayıtlı değil')}</td></tr>`).join('')}</tbody>
         </table>
       </section>` : '';
 
