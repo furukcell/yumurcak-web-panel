@@ -1,0 +1,38 @@
+name: Fix SuperAdmin JSX
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: contains(github.event.head_commit.message, 'fix: partial SuperAdmin JSX') == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Fix extra JSX closing tag
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('superadmin/SuperAdminBulkOnboarding.jsx')
+          s = p.read_text()
+          old = "{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text></Space>)}"
+          new = "{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text>)}"
+          if old not in s:
+              raise SystemExit('Expected JSX pattern not found; no changes made.')
+          p.write_text(s.replace(old, new, 1))
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add superadmin/SuperAdminBulkOnboarding.jsx
+          git commit -m "fix: partial SuperAdmin JSX"
+          git push
