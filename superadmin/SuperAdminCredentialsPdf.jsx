@@ -38,27 +38,46 @@ export default function SuperAdminCredentialsPdf() {
   const [kresId, setKresId] = useState(searchParams.get('kresId') || '');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usersLoading, setUsersLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([
-      getPlatformSnapshot(),
-      get(ref(database, 'kullanicilar')),
-    ]).then(([platform, userSnap]) => {
-      if (!mounted) return;
-      setInstitutions(platform?.institutions || []);
-      const allUsers = userSnap.exists() ? Object.values(userSnap.val()) : [];
-      setUsers(allUsers.filter((u) => u && (u.rol === 'ogretmen' || u.rol === 'veli')));
-      const initial = searchParams.get('kresId') || '';
-      if (initial) setKresId(initial);
-    }).catch((e) => {
-      if (mounted) message.error(e?.message || 'Kurum kullanıcıları alınamadı.');
-    }).finally(() => {
-      if (mounted) setLoading(false);
-    });
+    Promise.all([getPlatformSnapshot(), get(ref(database, 'kullanicilar'))])
+      .then(([platform, userSnap]) => {
+        if (!mounted) return;
+        const list = platform?.institutions || [];
+        setInstitutions(list);
+        const allUsers = userSnap.exists() ? Object.values(userSnap.val()) : [];
+        setUsers(allUsers.filter((u) => u && (u.rol === 'ogretmen' || u.rol === 'veli')));
+        const initial = searchParams.get('kresId') || '';
+        if (initial) setKresId(initial);
+      })
+      .catch((e) => {
+        if (mounted) message.error(e?.message || 'Kurum kullanıcıları alınamadı.');
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     return () => { mounted = false; };
   }, [searchParams]);
+
+  // Toplu Kurulum ekranındaki kurum seçimi değiştiğinde üstteki kullanıcı kartını da aynı kuruma bağla.
+  useEffect(() => {
+    if (!institutions.length) return undefined;
+    const syncFromBulkSelect = () => {
+      const selectedTexts = [...document.querySelectorAll('.ant-select-selection-item')]
+        .map((el) => el.textContent?.trim())
+        .filter(Boolean);
+      const matched = institutions.find((x) => {
+        const name = x.ad || x.kresAdi || x.isim || x.id;
+        return selectedTexts.includes(name);
+      });
+      if (matched && matched.id !== kresId) setKresId(matched.id);
+    };
+    syncFromBulkSelect();
+    const observer = new MutationObserver(syncFromBulkSelect);
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
+  }, [institutions, kresId]);
 
   const selectedInstitution = institutions.find((x) => x.id === kresId);
   const selectedInstitutionName = selectedInstitution?.ad || selectedInstitution?.kresAdi || selectedInstitution?.isim || selectedInstitution?.id || 'Kurum';
@@ -80,7 +99,6 @@ export default function SuperAdminCredentialsPdf() {
   const pdfAktar = async () => {
     let exportRows = rows;
     let kurum = selectedInstitutionName;
-
     if (!exportRows.length) exportRows = collectDomCredentials().map((x, i) => ({ ...x, key: i, ad: '' }));
     if (!exportRows.length) {
       message.info('Bu kurum için öğretmen/veli hesabı bulunamadı.');
@@ -150,7 +168,7 @@ export default function SuperAdminCredentialsPdf() {
           optionFilterProp="label"
           value={kresId || undefined}
           onChange={setKresId}
-          placeholder="PDF/kullanıcı bilgilerini görmek için kurum seçin"
+          placeholder="Kurum seçin"
           style={{ minWidth: 360 }}
           options={institutions.map((x) => ({ value: x.id, label: x.ad || x.kresAdi || x.isim || x.id }))}
         />
