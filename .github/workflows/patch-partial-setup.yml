@@ -1,0 +1,97 @@
+name: Patch partial setup
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  patch:
+    if: contains(github.event.head_commit.message, 'feat: partial setup PDF') == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch onboarding
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('superadmin/SuperAdminBulkOnboarding.jsx')
+          s = p.read_text()
+          s = s.replace("import { DeleteOutlined, PlusOutlined, RocketOutlined, UserAddOutlined } from '@ant-design/icons';", "import { DeleteOutlined, PlusOutlined, RocketOutlined, UserAddOutlined, CheckCircleOutlined } from '@ant-design/icons';")
+          marker = "  const olustur = async () => {"
+          insert = '''  const kurulumuTamamla = async () => {
+    if (!kresId) { message.error('Önce bir kreş seçin.'); return; }
+    if (sifre.trim().length < 6) { message.error('Ortak şifre en az 6 karakter olmalı.'); return; }
+    setSaving(true);
+    const index = {};
+    const ozet = { siniflar: 0, ogretmenler: [], veliler: [], ogrenciler: 0, hatalar: [] };
+    const now = Date.now();
+    try {
+      for (const sinifData of siniflar) {
+        const className = sinifData.ad.trim();
+        if (!className || !sinifData.yasGrubu) {
+          if (className || sinifData.yasGrubu) ozet.hatalar.push(`${className || 'İsimsiz sınıf'}: sınıf adı ve yaş grubu birlikte gerekli; bu sınıf atlandı.`);
+          continue;
+        }
+        const completeStudents = sinifData.ogrenciler.filter((o) => o.ad.trim() && o.veliAd.trim() && o.veliKullaniciAdi.trim());
+        const incompleteStudents = sinifData.ogrenciler.filter((o) => o.ad.trim() || o.veliAd.trim() || o.veliKullaniciAdi.trim()).filter((o) => !(o.ad.trim() && o.veliAd.trim() && o.veliKullaniciAdi.trim()));
+        incompleteStudents.forEach((o) => ozet.hatalar.push(`${className} — ${o.ad || 'isimsiz öğrenci'}: öğrenci + veli bilgileri eksik, atlandı.`));
+        try {
+          const updates = {};
+          const sinifId = push(ref(database, 'siniflar')).key;
+          const sinifRecord = { id: sinifId, ad: className, yasGrubu: sinifData.yasGrubu, ogretmenIds: [], kresId, createdAt: now, updatedAt: now };
+          const teacherName = sinifData.ogretmenAd.trim();
+          const teacherUsername = sinifData.ogretmenKullaniciAdi.trim();
+          if (teacherName && teacherUsername) {
+            const t = await bulOrOlusturKullanici({ ad: teacherName, kullaniciAdi: teacherUsername, rol: 'ogretmen', kresId, sifre: sifre.trim(), updates, index });
+            sinifRecord.ogretmenIds = [t.id];
+            ozet.ogretmenler.push({ ad: teacherName, kullaniciAdi: normalizeUsername(teacherUsername), yeniMi: t.yeniMi });
+          } else if (teacherName || teacherUsername) {
+            ozet.hatalar.push(`${className}: öğretmen adı ve kullanıcı adı birlikte gerekli; öğretmen atlandı.`);
+          }
+          updates[`siniflar/${sinifId}`] = sinifRecord;
+          addClassIndexUpdates(updates, sinifId, sinifRecord);
+          for (const student of completeStudents) {
+            const parent = await bulOrOlusturKullanici({ ad: student.veliAd.trim(), kullaniciAdi: student.veliKullaniciAdi.trim(), rol: 'veli', kresId, sifre: sifre.trim(), updates, index });
+            ozet.veliler.push({ ad: student.veliAd.trim(), kullaniciAdi: normalizeUsername(student.veliKullaniciAdi), yeniMi: parent.yeniMi });
+            const childId = generateId();
+            const child = { id: childId, ad: student.ad.trim(), dogumTarihi: student.dogumTarihi ? normalizeChildBirthDate(student.dogumTarihi) : '', sinifId, kresId, veliIds: [parent.id], yeniBaslayan: true, uyumTakibiAktif: true, uyumBaslangicTarihi: new Date().toISOString().slice(0, 10), uyumSureGun: 30, uyumDurumu: 'aktif', createdAt: now, updatedAt: now };
+            updates[`cocuklar/${childId}`] = child;
+            addChildIndexUpdates(updates, childId, child);
+            ozet.ogrenciler += 1;
+          }
+          await update(ref(database), updates);
+          ozet.siniflar += 1;
+        } catch (e) { ozet.hatalar.push(`${className}: ${e?.code || e?.message || 'Bilinmeyen hata'}`); }
+      }
+      ozet.ogretmenler = [...new Map(ozet.ogretmenler.map((x) => [x.kullaniciAdi, x])).values()];
+      ozet.veliler = [...new Map(ozet.veliler.map((x) => [x.kullaniciAdi, x])).values()];
+      setSonuc(ozet);
+      if (ozet.siniflar || ozet.ogretmenler.length || ozet.veliler.length) message.success('Kurulumdaki doldurulmuş bilgiler işlendi. Eksik alanlar atlandı; PDF alabilirsin.');
+      else message.info('Tamamlanabilir bir kayıt bulunamadı. En az bir sınıf adı + yaş grubu girin.');
+    } finally { setSaving(false); }
+  };
+
+'''
+          if marker not in s:
+              raise SystemExit('marker missing')
+          s = s.replace(marker, insert + marker, 1)
+          old = '<Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={olustur}>Kur ({toplamOgrenci} öğrenci)</Button>'
+          new = '''<Space wrap>
+        <Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={olustur}>Kur ({toplamOgrenci} öğrenci)</Button>
+        <Button size="large" icon={<CheckCircleOutlined />} loading={saving} onClick={kurulumuTamamla}>Kurulumu Tamamla</Button>
+      </Space>'''
+          if old not in s:
+              raise SystemExit('button marker missing')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Commit patch and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/patch-partial-setup.yml
+          git add superadmin/SuperAdminBulkOnboarding.jsx .github/workflows/patch-partial-setup.yml
+          git commit -m 'feat: partial setup PDF [skip ci]'
+          git push
