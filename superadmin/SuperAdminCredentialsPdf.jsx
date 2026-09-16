@@ -1,17 +1,19 @@
-import React from 'react';
-import { Button, message } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Card, Empty, Select, Space, Spin, Table, Tag, Typography, message } from 'antd';
 import { PrinterOutlined } from '@ant-design/icons';
 import { get, ref } from 'firebase/database';
 import { useSearchParams } from 'react-router-dom';
 import { database } from '../src/config/firebase';
 import { getPlatformSnapshot } from './superadminService';
 
+const { Text } = Typography;
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
 
@@ -32,50 +34,61 @@ function collectDomCredentials() {
 
 export default function SuperAdminCredentialsPdf() {
   const [searchParams] = useSearchParams();
+  const [institutions, setInstitutions] = useState([]);
+  const [kresId, setKresId] = useState(searchParams.get('kresId') || '');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      getPlatformSnapshot(),
+      get(ref(database, 'kullanicilar')),
+    ]).then(([platform, userSnap]) => {
+      if (!mounted) return;
+      setInstitutions(platform?.institutions || []);
+      const allUsers = userSnap.exists() ? Object.values(userSnap.val()) : [];
+      setUsers(allUsers.filter((u) => u && (u.rol === 'ogretmen' || u.rol === 'veli')));
+      const initial = searchParams.get('kresId') || '';
+      if (initial) setKresId(initial);
+    }).catch((e) => {
+      if (mounted) message.error(e?.message || 'Kurum kullanıcıları alınamadı.');
+    }).finally(() => {
+      if (mounted) setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, [searchParams]);
+
+  const selectedInstitution = institutions.find((x) => x.id === kresId);
+  const selectedInstitutionName = selectedInstitution?.ad || selectedInstitution?.kresAdi || selectedInstitution?.isim || selectedInstitution?.id || 'Kurum';
+
+  const rows = useMemo(() => users
+    .filter((u) => u.kresId === kresId)
+    .map((u) => ({
+      key: u.id || u.uid || u.kullaniciAdi,
+      role: u.rol === 'ogretmen' ? 'Öğretmen' : 'Veli',
+      ad: u.ad || '—',
+      kullaniciAdi: u.kullaniciAdi || '',
+      sifre: u.sifre || 'Kayıtlı değil',
+      aktif: u.aktif !== false,
+    }))
+    .filter((x) => x.kullaniciAdi)
+    .sort((a, b) => a.role.localeCompare(b.role, 'tr') || a.ad.localeCompare(b.ad, 'tr')),
+  [users, kresId]);
 
   const pdfAktar = async () => {
-    let kresId = searchParams.get('kresId') || '';
-    const kurum = document.querySelector('.ant-select-selection-item')?.textContent?.trim() || 'Yumurcak Kurumu';
-    let rows = [];
+    let exportRows = rows;
+    let kurum = selectedInstitutionName;
 
-    if (!kresId) {
-      try {
-        const platform = await getPlatformSnapshot();
-        const institutions = platform?.institutions || [];
-        const selected = institutions.find((x) => (x.ad || x.kresAdi || x.isim || x.id) === kurum);
-        kresId = selected?.id || '';
-      } catch (e) {}
-    }
-
-    if (kresId) {
-      try {
-        const snap = await get(ref(database, 'kullanicilar'));
-        const users = snap.exists() ? Object.values(snap.val()) : [];
-        rows = users
-          .filter((u) => u && u.kresId === kresId && (u.rol === 'ogretmen' || u.rol === 'veli'))
-          .map((u) => ({
-            role: u.rol === 'ogretmen' ? 'Öğretmen' : 'Veli',
-            ad: u.ad || '',
-            kullaniciAdi: u.kullaniciAdi || '',
-            sifre: u.sifre || '',
-          }))
-          .filter((x) => x.kullaniciAdi)
-          .sort((a, b) => a.role.localeCompare(b.role, 'tr') || a.ad.localeCompare(b.ad, 'tr'));
-      } catch (e) {
-        message.error(e?.message || 'Kurum kullanıcıları alınamadı.');
-        return;
-      }
-    }
-
-    if (!rows.length) rows = collectDomCredentials();
-
-    if (!rows.length) {
+    if (!exportRows.length) exportRows = collectDomCredentials().map((x, i) => ({ ...x, key: i, ad: '' }));
+    if (!exportRows.length) {
       message.info('Bu kurum için öğretmen/veli hesabı bulunamadı.');
       return;
     }
 
-    const ogretmenler = rows.filter((x) => x.role === 'Öğretmen');
-    const veliler = rows.filter((x) => x.role === 'Veli');
+    const ogretmenler = exportRows.filter((x) => x.role === 'Öğretmen');
+    const veliler = exportRows.filter((x) => x.role === 'Veli');
     const tarih = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date());
     const popup = window.open('', '_blank', 'width=1000,height=800');
     if (!popup) {
@@ -122,5 +135,43 @@ export default function SuperAdminCredentialsPdf() {
     setTimeout(() => popup.print(), 250);
   };
 
-  return <Button icon={<PrinterOutlined />} onClick={pdfAktar}>Kurum Kullanıcılarını PDF'e Aktar</Button>;
+  if (loading) return <Card><Spin /> <Text style={{ marginLeft: 8 }}>Kurum kullanıcıları yükleniyor...</Text></Card>;
+
+  return (
+    <Card
+      title="Kurum Kullanıcıları"
+      extra={<Button type="primary" icon={<PrinterOutlined />} onClick={pdfAktar} disabled={!kresId}>Kurum Kullanıcılarını PDF'e Aktar</Button>}
+      style={{ marginBottom: 16 }}
+    >
+      <Space wrap style={{ width: '100%', marginBottom: 16 }}>
+        <Text strong>Kurum:</Text>
+        <Select
+          showSearch
+          optionFilterProp="label"
+          value={kresId || undefined}
+          onChange={setKresId}
+          placeholder="PDF/kullanıcı bilgilerini görmek için kurum seçin"
+          style={{ minWidth: 360 }}
+          options={institutions.map((x) => ({ value: x.id, label: x.ad || x.kresAdi || x.isim || x.id }))}
+        />
+        {kresId && <Tag color="blue">{rows.length} kullanıcı</Tag>}
+      </Space>
+
+      {kresId && !rows.length && <Empty description="Bu kurumda öğretmen/veli hesabı bulunamadı." />}
+      {kresId && rows.length > 0 && (
+        <Table
+          size="small"
+          pagination={{ pageSize: 20, showSizeChanger: false }}
+          dataSource={rows}
+          columns={[
+            { title: 'Rol', dataIndex: 'role', width: 110, render: (value) => <Tag color={value === 'Öğretmen' ? 'blue' : 'purple'}>{value}</Tag> },
+            { title: 'Ad Soyad', dataIndex: 'ad' },
+            { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi' },
+            { title: 'Şifre', dataIndex: 'sifre' },
+            { title: 'Durum', dataIndex: 'aktif', width: 100, render: (value) => <Tag color={value ? 'green' : 'red'}>{value ? 'Aktif' : 'Pasif'}</Tag> },
+          ]}
+        />
+      )}
+    </Card>
+  );
 }
