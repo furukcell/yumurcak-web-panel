@@ -3,6 +3,7 @@ import { Layout, Menu, Typography, Dropdown, Avatar } from 'antd';
 import { DashboardOutlined, ApartmentOutlined, BarChartOutlined, CrownOutlined, LogoutOutlined, UsergroupAddOutlined, CustomerServiceOutlined } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
+import SuperAdminCredentialsPdf from './SuperAdminCredentialsPdf';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -25,6 +26,7 @@ export default function SuperAdminLayout() {
     : '/superadmin';
 
   const menu = { items: [{ key: 'cikis', icon: <LogoutOutlined />, label: 'Çıkış Yap' }], onClick: async ({ key }) => { if (key === 'cikis') await cikisYap(); } };
+  const topluKurulum = location.pathname === '/superadmin/toplu-kurulum' || location.pathname.startsWith('/superadmin/toplu-kurulum/');
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#F7F8FC' }}>
@@ -40,7 +42,10 @@ export default function SuperAdminLayout() {
           <div><Text strong style={{ fontSize: 16 }}>SuperAdmin</Text><Text type="secondary" style={{ marginLeft: 10, fontSize: 12 }}>Yumurcak Platform</Text></div>
           <Dropdown menu={menu} placement="bottomRight"><div style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}><Avatar style={{ background: '#6C3DEB' }}>{String(kullanici?.adSoyad || kullanici?.ad || 'S').charAt(0).toUpperCase()}</Avatar><div style={{ lineHeight: 1.2 }}><Text strong style={{ display: 'block', fontSize: 13 }}>{kullanici?.adSoyad || kullanici?.ad || 'SuperAdmin'}</Text><Text type="secondary" style={{ fontSize: 11 }}>SuperAdmin</Text></div></div></Dropdown>
         </Header>
-        <Content style={{ padding: 28, minHeight: 0 }}><Outlet /></Content>
+        <Content style={{ padding: 28, minHeight: 0 }}>
+          {topluKurulum && <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}><SuperAdminCredentialsPdf /></div>}
+          <Outlet />
+        </Content>
       </Layout>
     </Layout>
   );
