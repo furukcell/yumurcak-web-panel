@@ -4,6 +4,7 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { get, ref } from 'firebase/database';
 import { useSearchParams } from 'react-router-dom';
 import { database } from '../src/config/firebase';
+import { getPlatformSnapshot } from './superadminService';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -33,9 +34,18 @@ export default function SuperAdminCredentialsPdf() {
   const [searchParams] = useSearchParams();
 
   const pdfAktar = async () => {
-    const kresId = searchParams.get('kresId') || '';
+    let kresId = searchParams.get('kresId') || '';
+    const kurum = document.querySelector('.ant-select-selection-item')?.textContent?.trim() || 'Yumurcak Kurumu';
     let rows = [];
-    let kurum = document.querySelector('.ant-select-selection-item')?.textContent?.trim() || 'Yumurcak Kurumu';
+
+    if (!kresId) {
+      try {
+        const platform = await getPlatformSnapshot();
+        const institutions = platform?.institutions || [];
+        const selected = institutions.find((x) => (x.ad || x.kresAdi || x.isim || x.id) === kurum);
+        kresId = selected?.id || '';
+      } catch (e) {}
+    }
 
     if (kresId) {
       try {
@@ -49,17 +59,15 @@ export default function SuperAdminCredentialsPdf() {
             kullaniciAdi: u.kullaniciAdi || '',
             sifre: u.sifre || '',
           }))
-          .filter((x) => x.kullaniciAdi);
+          .filter((x) => x.kullaniciAdi)
+          .sort((a, b) => a.role.localeCompare(b.role, 'tr') || a.ad.localeCompare(b.ad, 'tr'));
       } catch (e) {
         message.error(e?.message || 'Kurum kullanıcıları alınamadı.');
         return;
       }
     }
 
-    // URL'de kurum yoksa, son kuruluma ait ekrandaki bilgileri yine kullan.
-    if (!rows.length) {
-      rows = collectDomCredentials();
-    }
+    if (!rows.length) rows = collectDomCredentials();
 
     if (!rows.length) {
       message.info('Bu kurum için öğretmen/veli hesabı bulunamadı.');
@@ -84,7 +92,7 @@ export default function SuperAdminCredentialsPdf() {
         </table>
       </section>` : '';
 
-    popup.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8" /><title>Yumurcak - Kullanıcı Bilgileri</title>
+    popup.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8" /><title>Yumurcak - Kurum Kullanıcı Bilgileri</title>
       <style>
         @page { size: A4; margin: 16mm; }
         * { box-sizing: border-box; }
