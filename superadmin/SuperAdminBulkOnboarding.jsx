@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, AutoComplete, Button, Card, Collapse, Divider, Empty, Input, Select, Space, Tag, Typography, message } from 'antd';
-import { DeleteOutlined, PlusOutlined, RocketOutlined, UserAddOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, RocketOutlined, UserAddOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { get, onValue, push, ref, update } from 'firebase/database';
 import { useSearchParams } from 'react-router-dom';
@@ -117,6 +117,59 @@ export default function SuperAdminBulkOnboarding() {
     return errors;
   };
 
+  const kurulumuTamamla = async () => {
+    if (!kresId) { message.error('Önce bir kreş seçin.'); return; }
+    if (sifre.trim().length < 6) { message.error('Ortak şifre en az 6 karakter olmalı.'); return; }
+    setSaving(true);
+    const index = {};
+    const ozet = { siniflar: 0, ogretmenler: [], veliler: [], ogrenciler: 0, hatalar: [] };
+    const now = Date.now();
+    try {
+      for (const sinifData of siniflar) {
+        const className = sinifData.ad.trim();
+        if (!className || !sinifData.yasGrubu) {
+          if (className || sinifData.yasGrubu) ozet.hatalar.push(`${className || 'İsimsiz sınıf'}: sınıf adı ve yaş grubu birlikte gerekli; bu sınıf atlandı.`);
+          continue;
+        }
+        const completeStudents = sinifData.ogrenciler.filter((o) => o.ad.trim() && o.veliAd.trim() && o.veliKullaniciAdi.trim());
+        const incompleteStudents = sinifData.ogrenciler.filter((o) => o.ad.trim() || o.veliAd.trim() || o.veliKullaniciAdi.trim()).filter((o) => !(o.ad.trim() && o.veliAd.trim() && o.veliKullaniciAdi.trim()));
+        incompleteStudents.forEach((o) => ozet.hatalar.push(`${className} — ${o.ad || 'isimsiz öğrenci'}: öğrenci + veli bilgileri eksik, atlandı.`));
+        try {
+          const updates = {};
+          const sinifId = push(ref(database, 'siniflar')).key;
+          const sinifRecord = { id: sinifId, ad: className, yasGrubu: sinifData.yasGrubu, ogretmenIds: [], kresId, createdAt: now, updatedAt: now };
+          const teacherName = sinifData.ogretmenAd.trim();
+          const teacherUsername = sinifData.ogretmenKullaniciAdi.trim();
+          if (teacherName && teacherUsername) {
+            const t = await bulOrOlusturKullanici({ ad: teacherName, kullaniciAdi: teacherUsername, rol: 'ogretmen', kresId, sifre: sifre.trim(), updates, index });
+            sinifRecord.ogretmenIds = [t.id];
+            ozet.ogretmenler.push({ ad: teacherName, kullaniciAdi: normalizeUsername(teacherUsername), yeniMi: t.yeniMi });
+          } else if (teacherName || teacherUsername) {
+            ozet.hatalar.push(`${className}: öğretmen adı ve kullanıcı adı birlikte gerekli; öğretmen atlandı.`);
+          }
+          updates[`siniflar/${sinifId}`] = sinifRecord;
+          addClassIndexUpdates(updates, sinifId, sinifRecord);
+          for (const student of completeStudents) {
+            const parent = await bulOrOlusturKullanici({ ad: student.veliAd.trim(), kullaniciAdi: student.veliKullaniciAdi.trim(), rol: 'veli', kresId, sifre: sifre.trim(), updates, index });
+            ozet.veliler.push({ ad: student.veliAd.trim(), kullaniciAdi: normalizeUsername(student.veliKullaniciAdi), yeniMi: parent.yeniMi });
+            const childId = generateId();
+            const child = { id: childId, ad: student.ad.trim(), dogumTarihi: student.dogumTarihi ? normalizeChildBirthDate(student.dogumTarihi) : '', sinifId, kresId, veliIds: [parent.id], yeniBaslayan: true, uyumTakibiAktif: true, uyumBaslangicTarihi: new Date().toISOString().slice(0, 10), uyumSureGun: 30, uyumDurumu: 'aktif', createdAt: now, updatedAt: now };
+            updates[`cocuklar/${childId}`] = child;
+            addChildIndexUpdates(updates, childId, child);
+            ozet.ogrenciler += 1;
+          }
+          await update(ref(database), updates);
+          ozet.siniflar += 1;
+        } catch (e) { ozet.hatalar.push(`${className}: ${e?.code || e?.message || 'Bilinmeyen hata'}`); }
+      }
+      ozet.ogretmenler = [...new Map(ozet.ogretmenler.map((x) => [x.kullaniciAdi, x])).values()];
+      ozet.veliler = [...new Map(ozet.veliler.map((x) => [x.kullaniciAdi, x])).values()];
+      setSonuc(ozet);
+      if (ozet.siniflar || ozet.ogretmenler.length || ozet.veliler.length) message.success('Kurulumdaki doldurulmuş bilgiler işlendi. Eksik alanlar atlandı; PDF alabilirsin.');
+      else message.info('Tamamlanabilir bir kayıt bulunamadı. En az bir sınıf adı + yaş grubu girin.');
+    } finally { setSaving(false); }
+  };
+
   const olustur = async () => {
     const errors = dogrula();
     if (errors.length) { message.error(errors[0]); return; }
@@ -195,10 +248,13 @@ export default function SuperAdminBulkOnboarding() {
         </div>,
       }))} />
       <Button icon={<PlusOutlined />} onClick={sinifEkle} style={{ marginBottom: 24 }}>+ Yeni Sınıf</Button><br />
-      <Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={olustur}>Kur ({toplamOgrenci} öğrenci)</Button>
+      <Space wrap>
+        <Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={olustur}>Kur ({toplamOgrenci} öğrenci)</Button>
+        <Button size="large" icon={<CheckCircleOutlined />} loading={saving} onClick={kurulumuTamamla}>Kurulumu Tamamla</Button>
+      </Space>
       {sonuc && <Card style={{ marginTop: 16 }} title="Sonuç"><Paragraph>✅ {sonuc.siniflar} sınıf, {sonuc.ogrenciler} öğrenci oluşturuldu.</Paragraph>
         {sonuc.ogretmenler.length > 0 && <><Divider orientation="left" plain>Öğretmenler</Divider><Space direction="vertical">{sonuc.ogretmenler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text>)}</Space></>}
-        {sonuc.veliler.length > 0 && <><Divider orientation="left" plain>Veliler</Divider><Space direction="vertical">{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text>)}</Space></>}
+        {sonuc.veliler.length > 0 && <><Divider orientation="left" plain>Veliler</Divider><Space direction="vertical">{sonuc.veliler.map((x, i) => <Text key={i}><Tag color={x.yeniMi ? 'green' : 'default'}>{x.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>{x.kullaniciAdi} / {sifre}</Text></Space></>}
         {sonuc.hatalar.length > 0 && <><Divider orientation="left" plain>Hatalar</Divider><Space direction="vertical">{sonuc.hatalar.map((x, i) => <Text key={i} type="danger">❌ {x}</Text>)}</Space></>}
       </Card>}
     </>}
