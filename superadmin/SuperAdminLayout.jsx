@@ -4,6 +4,7 @@ import { DashboardOutlined, ApartmentOutlined, BarChartOutlined, CrownOutlined, 
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
 import SuperAdminCredentialsPdf from './SuperAdminCredentialsPdf';
+import SuperAdminInstitutionCredentials from './SuperAdminInstitutionCredentials';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -43,7 +44,10 @@ export default function SuperAdminLayout() {
           <Dropdown menu={menu} placement="bottomRight"><div style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}><Avatar style={{ background: '#6C3DEB' }}>{String(kullanici?.adSoyad || kullanici?.ad || 'S').charAt(0).toUpperCase()}</Avatar><div style={{ lineHeight: 1.2 }}><Text strong style={{ display: 'block', fontSize: 13 }}>{kullanici?.adSoyad || kullanici?.ad || 'SuperAdmin'}</Text><Text type="secondary" style={{ fontSize: 11 }}>SuperAdmin</Text></div></div></Dropdown>
         </Header>
         <Content style={{ padding: 28, minHeight: 0 }}>
-          {topluKurulum && <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}><SuperAdminCredentialsPdf /></div>}
+          {topluKurulum && <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}><SuperAdminCredentialsPdf /></div>
+            <SuperAdminInstitutionCredentials />
+          </>}
           <Outlet />
         </Content>
       </Layout>
