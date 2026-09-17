@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Table, Button, Drawer, Form, Input, Select, Radio, Segmented, Tag, message, Empty, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Drawer, Form, Input, Select, Radio, Segmented, Tag, message, Empty, Space, Popconfirm } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import { THEME } from '../theme';
 import { generateId, asArray, bugunKey } from '../utils/crudHelpers';
 import { calculateChildAge, formatChildBirthDate, getChildBirthDate, normalizeChildBirthDate, parseChildBirthDate } from '../utils/childDates';
 import { denetimKaydiYaz } from '../utils/auditLog';
+import { deleteCocukKaydi } from '../utils/childDelete';
 
 const { Title, Text } = Typography;
 
@@ -24,6 +25,7 @@ export default function ChildrenPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [yeniBaslayan, setYeniBaslayan] = useState(false);
   const [uyumDurumu, setUyumDurumu] = useState('pasif');
   const [durum, setDurum] = useState('aktif');
@@ -313,6 +315,27 @@ export default function ChildrenPage() {
     }
   };
 
+  const handleDelete = async (record) => {
+    setDeletingId(record.id);
+    try {
+      await deleteCocukKaydi(record.id);
+      message.success('Çocuk kaydı kalıcı olarak silindi');
+      denetimKaydiYaz({
+        kresId: kresId || 'default-kres',
+        kullanici,
+        islem: 'sil',
+        modul: 'Çocuklar',
+        hedef: record.ad,
+        detay: 'Ayrıldı listesinden kalıcı olarak silindi',
+      });
+    } catch (error) {
+      console.error(error);
+      message.error(`Çocuk silinemedi. ${error?.message || ''}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const columns = [
     { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
     { title: 'Sınıf', dataIndex: 'sinifAd', key: 'sinifAd', render: (v) => v || <Text type="secondary">Belirtilmemiş</Text> },
@@ -334,6 +357,28 @@ export default function ChildrenPage() {
       render: (_, r) => (r.durum === 'ayrildi'
         ? <Tag color="red">Ayrıldı{r.ayrilmaTarihi ? ` · ${formatChildBirthDate(r.ayrilmaTarihi)}` : ''}</Tag>
         : <Tag color="green">Aktif</Tag>),
+    },
+    {
+      title: '',
+      key: 'sil',
+      width: 48,
+      render: (_, r) =>
+        r.durum === 'ayrildi' ? (
+          <Popconfirm
+            title="Çocuk kaydı kalıcı olarak silinsin mi?"
+            description="Bu işlem geri alınamaz: çocuğun tüm bilgileri, geçmiş yoklama/rapor/gelişim kayıtları ve veli bağlantıları tamamen silinir."
+            okText="Sil"
+            okButtonProps={{ danger: true }}
+            cancelText="Vazgeç"
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDelete(r);
+            }}
+            onCancel={(e) => e?.stopPropagation()}
+          >
+            <Button danger type="text" icon={<DeleteOutlined />} loading={deletingId === r.id} onClick={(e) => e.stopPropagation()} />
+          </Popconfirm>
+        ) : null,
     },
   ];
 
