@@ -169,8 +169,16 @@ export default function ParentsPage() {
     try {
       const id = editingId || generateId();
       const now = Date.now();
-      const veliSnap = await get(ref(database, `kullanicilar/${id}`));
-      const oldVeli = veliSnap.exists() ? veliSnap.val() || {} : {};
+      // Yeni veli eklerken (editingId yok) henüz var olmayan bir id için get()
+      // çağırmıyoruz: database.rules.json'daki .read kuralı admin.kresId'i
+      // data.child('kresId').val() ile karşılaştırıyor, veri hiç yoksa bu null
+      // olup koşul hep false'a düşüyor → permission_denied. Yeni kayıtta zaten
+      // oldVeli'ye ihtiyacımız yok, boş obje yeterli.
+      let oldVeli = {};
+      if (editingId) {
+        const veliSnap = await get(ref(database, `kullanicilar/${id}`));
+        oldVeli = veliSnap.exists() ? veliSnap.val() || {} : {};
+      }
 
       if (editingId && oldVeli.authUid && (values.sifre || '').trim()) {
         message.error('Bu veli Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
