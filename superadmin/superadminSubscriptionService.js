@@ -18,6 +18,7 @@ export const computePerStudentPrice = (count, period='aylik') => Number(count ||
 
 export function subscriptionStatus(sub) {
   if (!sub) return { key:'none', label:'Abonelik Yok', color:'default', days:null };
+  if (sub.erisimKisitli === true) return { key:'restricted', label:'Sonlandırıldı', color:'red', days:null };
   const end = sub.bitisTarihi ? new Date(sub.bitisTarihi) : null;
   const days = end && !Number.isNaN(end.getTime()) ? Math.ceil((end.getTime()-Date.now())/86400000) : null;
   if (days !== null && days < 0) return { key:'expired', label:'Süresi Doldu', color:'red', days };
@@ -42,13 +43,33 @@ export async function activateManualSubscription({ kresId, tierId, period, custo
   const finalLimit = Number.isFinite(customLimit) && customLimit > 0 ? Math.floor(customLimit) : tier.maxStudent;
   const finalPrice = price === '' || price == null ? (period === 'yillik' ? tier.yearly : tier.monthly) : Number(price);
   const endDate = period === 'ozel' && customEndDate ? customEndDate : toDateStr(addMonths(new Date(), period === 'yillik' ? 12 : 1));
-  const record = { kresId, plan: tierId === 'custom' ? `ozel_${period}` : `${tier.id}_${period}`, planTier:tierId === 'custom' ? 'custom' : tier.id, planPeriod:period, ogrenciLimiti:finalLimit, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
+  const record = { kresId, plan: tierId === 'custom' ? `ozel_${period}` : `${tier.id}_${period}`, planTier:tierId === 'custom' ? 'custom' : tier.id, planPeriod:period, ogrenciLimiti:finalLimit, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', erisimKisitli:false, createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
   await set(ref(database, `abonelikler/${kresId}`), record);
   if (finalPrice > 0) await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:record.planTier, tierTitle:tierId === 'custom' ? `${finalLimit} Öğrenci Özel Limit` : tier.title, period, ogrenciLimiti:finalLimit, fiyat:finalPrice, paraBirimi:'TRY', odemeReferansi:odemeReferansi || '', manuelNot:manuelNot || '', tanimlayanUid:tanimlayanUid || '', tarih:toDateStr(new Date()), createdAt:Date.now() });
 }
 
 export async function setManualAccessRestriction({ kresId, restricted, tanimlayanUid='' }) {
   await update(ref(database, `abonelikler/${kresId}`), { erisimKisitli:!!restricted, erisimKisitlayanUid:tanimlayanUid, erisimKisitTarihi:toDateStr(new Date()), updatedAt:Date.now() });
+}
+
+export async function endSubscription({ kresId, tanimlayanUid='' }) {
+  if (!kresId) throw new Error('Kreş ID bulunamadı.');
+  await update(ref(database, `abonelikler/${kresId}`), {
+    durum: 'sonlandirildi',
+    erisimKisitli: true,
+    erisimKisitlayanUid: tanimlayanUid,
+    erisimKisitTarihi: toDateStr(new Date()),
+    sonlandirmaTarihi: Date.now(),
+    updatedAt: Date.now(),
+  });
+}
+
+export async function updateSubscriptionDetails({ kresId, fiyat, bitisTarihi, tanimlayanUid='' }) {
+  if (!kresId) throw new Error('Kreş ID bulunamadı.');
+  const updates = { updatedAt: Date.now(), duzenleyenUid: tanimlayanUid };
+  if (fiyat !== undefined && fiyat !== null && fiyat !== '') updates.fiyat = Number(fiyat);
+  if (bitisTarihi) updates.bitisTarihi = bitisTarihi;
+  await update(ref(database, `abonelikler/${kresId}`), updates);
 }
 
 export async function confirmManualPayment({ kresId, subscription, tanimlayanUid='' }) {
@@ -70,7 +91,7 @@ export async function approveManualRequest({ kresId, talepId, tanimlayanUid='', 
   const tier = { id:'per_student', title:`${count} Öğrenci (Özel Fiyat)`, maxStudent:count };
   const price = Number(req.hesaplananTutar ?? computePerStudentPrice(count, period));
   const endDate = toDateStr(addMonths(new Date(), period === 'yillik' ? 12 : 1));
-  await set(ref(database, `abonelikler/${kresId}`), { kresId, plan:`per_student_${period}`, planTier:'per_student', planPeriod:period, ogrenciLimiti:count, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, fiyat:price, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, odemeReferansi:req.odemeReferansi || req.dekontReferansi || '', manuelNot:req.not || '', tanimlayanUid, createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() });
+  await set(ref(database, `abonelikler/${kresId}`), { kresId, plan:`per_student_${period}`, planTier:'per_student', planPeriod:period, ogrenciLimiti:count, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, fiyat:price, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, odemeReferansi:req.odemeReferansi || req.dekontReferansi || '', manuelNot:req.not || '', tanimlayanUid, erisimKisitli:false, createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() });
   await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:tier.id, tierTitle:tier.title, period, fiyat:price, paraBirimi:'TRY', odemeReferansi:req.odemeReferansi || req.dekontReferansi || '', tanimlayanUid, tarih:toDateStr(new Date()), createdAt:Date.now() });
   await update(ref(database, `abonelikTalepleri/${kresId}/${talepId}`), { durum:'onaylandi', onaylayanUid:tanimlayanUid, onaylanmaTarihi:Date.now() });
 }
