@@ -3,6 +3,7 @@ import { Alert, Button, Card, Col, Descriptions, Empty, Progress, Row, Statistic
 import { ArrowLeftOutlined, ApartmentOutlined, TeamOutlined, SmileOutlined, ReadOutlined, ThunderboltOutlined, LoginOutlined, RiseOutlined, UsergroupAddOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getPlatformSnapshot, getUsageLogs, normalizeUsageLogs } from './superadminService';
+import { formatInstitutionLocation } from './locationData';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
@@ -99,7 +100,7 @@ export default function SuperAdminKresDetail() {
 
     <Card style={{ ...card, marginTop: 16 }} title="Kurum Bilgileri">
       <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} bordered size="small">
-        <Descriptions.Item label="Kurum">{name}</Descriptions.Item><Descriptions.Item label="İl">{institution.il || '—'}</Descriptions.Item><Descriptions.Item label="İlçe">{institution.ilce || '—'}</Descriptions.Item><Descriptions.Item label="Telefon">{institution.telefon || institution.phone || '—'}</Descriptions.Item><Descriptions.Item label="E-posta">{institution.email || '—'}</Descriptions.Item><Descriptions.Item label="Abonelik">{subscription ? <Tag color="green">Kayıt mevcut</Tag> : <Tag>Yok</Tag>}</Descriptions.Item><Descriptions.Item label="Çocuk">{children.length}</Descriptions.Item><Descriptions.Item label="Sınıf">{classes.length}</Descriptions.Item><Descriptions.Item label="Toplam kullanıcı">{users.length}</Descriptions.Item>
+        <Descriptions.Item label="Kurum">{name}</Descriptions.Item><Descriptions.Item label="Konum">{formatInstitutionLocation(institution)}</Descriptions.Item><Descriptions.Item label="Telefon">{institution.telefon || institution.phone || '—'}</Descriptions.Item><Descriptions.Item label="E-posta">{institution.email || '—'}</Descriptions.Item><Descriptions.Item label="Abonelik">{subscription ? <Tag color="green">Kayıt mevcut</Tag> : <Tag>Yok</Tag>}</Descriptions.Item><Descriptions.Item label="Çocuk">{children.length}</Descriptions.Item><Descriptions.Item label="Sınıf">{classes.length}</Descriptions.Item><Descriptions.Item label="Toplam kullanıcı">{users.length}</Descriptions.Item>
       </Descriptions>
     </Card>
   </div>;
