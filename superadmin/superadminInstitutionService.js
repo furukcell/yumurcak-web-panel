@@ -154,3 +154,12 @@ export async function deleteInstitution(kresId, snapshot) {
   await update(ref(database), updates);
   return { users: users.length, children: children.length, classes: classes.length };
 }
+
+export async function setInstitutionActive(kresId, aktif) {
+  if (!kresId) throw new Error('Kreş ID bulunamadı.');
+  await update(ref(database), {
+    [`kresler/${kresId}/aktif`]: !!aktif,
+    [`kresler/${kresId}/updatedAt`]: Date.now(),
+  });
+  return { kresId, aktif: !!aktif };
+}
