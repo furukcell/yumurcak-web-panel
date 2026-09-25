@@ -6,6 +6,7 @@ import { get, onValue, push, ref, update } from 'firebase/database';
 import { useSearchParams } from 'react-router-dom';
 import { database } from '../src/config/firebase';
 import { getPlatformSnapshot } from './superadminService';
+import { formatInstitutionLocation } from './locationData';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../src/utils/secondaryAuth';
 import { normalizeUsername, usernameToEmail } from '../src/utils/authHelpers';
 import { generateId } from '../src/utils/crudHelpers';
@@ -220,7 +221,7 @@ export default function SuperAdminBulkOnboarding() {
     <div style={{ marginBottom: 18 }}><Title level={2} style={{ margin: 0 }}>Toplu Kurulum</Title><Text type="secondary">SuperAdmin olarak seçtiğin kreş için sınıf, öğretmen, öğrenci ve veli hesaplarını tek seferde oluştur.</Text></div>
     <Card style={{ marginBottom: 16 }} title="Kurum Seçimi">
       <Select showSearch optionFilterProp="label" value={kresId || undefined} onChange={setKresId} placeholder="Kreş seçin" style={{ width: '100%', maxWidth: 520 }} options={institutions.map((x) => ({ value: x.id, label: x.ad || x.kresAdi || x.isim || x.id }))} />
-      {selectedInstitution && <div style={{ marginTop: 10 }}><Tag color="blue">{selectedInstitution.il || '—'} / {selectedInstitution.ilce || '—'}</Tag><Text type="secondary"> {selectedInstitution.telefon || ''}</Text></div>}
+      {selectedInstitution && <div style={{ marginTop: 10 }}><Tag color="blue">{formatInstitutionLocation(selectedInstitution)}</Tag><Text type="secondary"> {selectedInstitution.telefon || ''}</Text></div>}
     </Card>
     {!kresId ? <Empty description="Kurulum yapılacak kreşi seçin" /> : <>
       {ogrenciLimiti != null && <Alert style={{ marginBottom: 16 }} type={mevcutOgrenciSayisi >= ogrenciLimiti ? 'error' : 'info'} showIcon message={`Öğrenci limiti: ${mevcutOgrenciSayisi} / ${ogrenciLimiti} (eklenecek: ${toplamOgrenci})`} />}
