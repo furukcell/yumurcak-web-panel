@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, Form, Input, Modal, Space, Table, Tag, Typography, message } from 'antd';
-import { DeleteOutlined, EyeOutlined, PlusOutlined, PoweroffOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, PlusOutlined, PoweroffOutlined, ReloadOutlined, SearchOutlined, StopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../src/context/AuthContext';
 import { getPlatformSnapshot } from './superadminService';
 import { createInstitution, deleteInstitution, setInstitutionActive } from './superadminInstitutionService';
+import { endSubscription, subscriptionStatus } from './superadminSubscriptionService';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
@@ -15,6 +17,7 @@ const emptyForm = {
 };
 
 export default function SuperAdminKresler() {
+  const { kullanici } = useAuth();
   const [data, setData] = useState(null);
   const [q, setQ] = useState('');
   const [error, setError] = useState('');
@@ -22,6 +25,7 @@ export default function SuperAdminKresler() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState('');
   const [togglingId, setTogglingId] = useState('');
+  const [endingId, setEndingId] = useState('');
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -118,6 +122,30 @@ export default function SuperAdminKresler() {
     });
   };
 
+  const handleEndSubscription = (record) => {
+    Modal.confirm({
+      title: `${record.ad || record.kresAdi || 'Bu kreş'} aboneliği sonlandırılsın mı?`,
+      content: 'Bu kurumun aboneliği sonlandırılmış olarak işaretlenecek ve kurum yöneticisinin panele girişi engellenecek. Kayıtlar silinmez, istersen Abonelikler sayfasından yeniden aktif edebilirsin.',
+      okText: 'Evet, sonlandır',
+      cancelText: 'Vazgeç',
+      okButtonProps: { danger: true },
+      centered: true,
+      onOk: async () => {
+        if (endingId) return;
+        setEndingId(record.id);
+        try {
+          await endSubscription({ kresId: record.id, tanimlayanUid: kullanici?.uid || kullanici?.id || '' });
+          messageApi.success('Abonelik sonlandırıldı, erişim kapatıldı.');
+          await load();
+        } catch (e) {
+          messageApi.error(e?.message || 'Abonelik sonlandırılamadı.');
+        } finally {
+          setEndingId('');
+        }
+      },
+    });
+  };
+
   const columns = [
     {
       title: 'Kurum', key: 'name', render: (_, r) => (
@@ -133,16 +161,28 @@ export default function SuperAdminKresler() {
     { title: 'Kullanıcı', key: 'users', align: 'center', render: (_, r) => data.usersByKres[r.id] || 0 },
     { title: 'Çocuk', key: 'children', align: 'center', render: (_, r) => data.childrenByKres[r.id] || 0 },
     { title: 'Sınıf', key: 'classes', align: 'center', render: (_, r) => data.classesByKres[r.id] || 0 },
-    { title: 'Abonelik', key: 'subscription', render: (_, r) => data.subscriptionsByKres[r.id] ? <Tag color="green">Kayıt var</Tag> : <Tag>Yok</Tag> },
+    {
+      title: 'Abonelik', key: 'subscription', render: (_, r) => {
+        const s = subscriptionStatus(data.subscriptionsByKres[r.id]);
+        return <Tag color={s.color}>{s.label}</Tag>;
+      }
+    },
     { title: 'Durum', key: 'aktif', render: (_, r) => r.aktif === false ? <Tag color="red">Pasif</Tag> : <Tag color="green">Aktif</Tag> },
     {
-      title: 'İşlem', key: 'actions', align: 'right', render: (_, r) => (
-        <Space size={8}>
-          <Button icon={<EyeOutlined />} onClick={() => navigate(`/superadmin/kresler/${r.id}`)}>Detay</Button>
-          <Button icon={<PoweroffOutlined />} loading={togglingId === r.id} onClick={() => handleToggleActive(r)}>{r.aktif === false ? 'Aktif Et' : 'Pasif Et'}</Button>
-          <Button danger icon={<DeleteOutlined />} loading={deletingId === r.id} onClick={() => handleDelete(r)}>Sil</Button>
-        </Space>
-      )
+      title: 'İşlem', key: 'actions', align: 'right', render: (_, r) => {
+        const sub = data.subscriptionsByKres[r.id];
+        const subEnded = sub?.erisimKisitli === true;
+        return (
+          <Space size={8} wrap>
+            <Button icon={<EyeOutlined />} onClick={() => navigate(`/superadmin/kresler/${r.id}`)}>Detay</Button>
+            <Button icon={<PoweroffOutlined />} loading={togglingId === r.id} onClick={() => handleToggleActive(r)}>{r.aktif === false ? 'Aktif Et' : 'Pasif Et'}</Button>
+            <Button danger icon={<StopOutlined />} loading={endingId === r.id} disabled={!sub || subEnded} onClick={() => handleEndSubscription(r)}>
+              {subEnded ? 'Abonelik Sonlandırıldı' : 'Aboneliği Sonlandır'}
+            </Button>
+            <Button danger icon={<DeleteOutlined />} loading={deletingId === r.id} onClick={() => handleDelete(r)}>Sil</Button>
+          </Space>
+        );
+      }
     },
   ];
 
