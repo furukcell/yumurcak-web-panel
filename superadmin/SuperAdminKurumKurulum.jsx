@@ -12,6 +12,7 @@ import ServicePage from '../src/pages/ServicePage';
 import MealsPage from '../src/pages/MealsPage';
 import SchedulePage from '../src/pages/SchedulePage';
 import { getPlatformSnapshot } from './superadminService';
+import { formatInstitutionLocation } from './locationData';
 
 const { Title, Text } = Typography;
 
@@ -112,7 +113,7 @@ export default function SuperAdminKurumKurulum() {
     </div>
     <Card title="Kurum Seçimi" style={{ marginBottom:18 }}>
       <Select showSearch optionFilterProp="label" value={kresId || undefined} onChange={selectInstitution} placeholder="Kurulum yapılacak kreşi seçin" style={{ width:'100%', maxWidth:650 }} options={institutions.map((x) => ({ value:x.id, label:x.ad || x.kresAdi || x.isim || x.id }))} />
-      {selected && <div style={{ marginTop:10 }}><Text strong>{selected.ad || selected.kresAdi || selected.isim}</Text><Text type="secondary" style={{ marginLeft:12 }}>{selected.il || '—'} / {selected.ilce || '—'}{selected.telefon ? ` · ${selected.telefon}` : ''}</Text></div>}
+      {selected && <div style={{ marginTop:10 }}><Text strong>{selected.ad || selected.kresAdi || selected.isim}</Text><Text type="secondary" style={{ marginLeft:12 }}>{formatInstitutionLocation(selected)}{selected.telefon ? ` · ${selected.telefon}` : ''}</Text></div>}
     </Card>
     {!kresId ? <Alert type="info" showIcon message="Önce bir kreş seçerek kuruluma başla." /> : <Card><Tabs items={tabs} destroyOnHidden={false} /></Card>}
   </div>;
