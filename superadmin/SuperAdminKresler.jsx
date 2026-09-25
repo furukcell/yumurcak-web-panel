@@ -1,17 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Form, Input, Modal, Space, Table, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd';
 import { DeleteOutlined, EyeOutlined, PlusOutlined, PoweroffOutlined, ReloadOutlined, SearchOutlined, StopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
 import { getPlatformSnapshot } from './superadminService';
 import { createInstitution, deleteInstitution, setInstitutionActive } from './superadminInstitutionService';
 import { endSubscription, subscriptionStatus } from './superadminSubscriptionService';
+import { COUNTRIES, TR_COUNTRY_CODE, TR_ILLER, formatInstitutionLocation, getCountryName, getIlceler } from './locationData';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
 
+const COUNTRY_OPTIONS = COUNTRIES.map((c) => ({ value: c.code, label: c.name }));
+const IL_OPTIONS = TR_ILLER.map((il) => ({ value: il, label: il }));
+
 const emptyForm = {
-  ad: '', il: '', ilce: '', adres: '', telefon: '', email: '',
+  ad: '', ulke: TR_COUNTRY_CODE, il: undefined, ilce: undefined, sehir: '', adres: '', telefon: '', email: '',
   yoneticiAd: '', yoneticiSoyad: '', yoneticiTelefon: '',
   kullaniciAdi: '', sifre: '', demoGun: '15',
 };
@@ -30,6 +34,24 @@ export default function SuperAdminKresler() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const selectedCountry = Form.useWatch('ulke', form) || TR_COUNTRY_CODE;
+  const selectedIl = Form.useWatch('il', form);
+  const isTurkey = selectedCountry === TR_COUNTRY_CODE;
+  const ilceOptions = useMemo(
+    () => getIlceler(selectedIl).map((ilce) => ({ value: ilce, label: ilce })),
+    [selectedIl]
+  );
+
+  const handleCountryChange = () => {
+    // Ülke değişince önceki il/ilçe/şehir değerleri diğer ülkeye ait
+    // kalmasın diye temizleniyor.
+    form.setFieldsValue({ il: '', ilce: '', sehir: '' });
+  };
+  const handleIlChange = () => {
+    // İl değişince eski ilçe artık geçersiz olabileceği için sıfırlanıyor.
+    form.setFieldValue('ilce', undefined);
+  };
+
   const load = () => {
     setError('');
     return getPlatformSnapshot().then(setData).catch((e) => setError(e?.message || 'Veriler alınamadı.'));
@@ -41,7 +63,7 @@ export default function SuperAdminKresler() {
     const needle = q.trim().toLocaleLowerCase('tr-TR');
     return data.institutions.filter((r) => {
       if (!needle) return true;
-      return [r.ad, r.adSoyad, r.isim, r.kresAdi, r.il, r.ilce, r.telefon, r.email].some((x) => String(x || '').toLocaleLowerCase('tr-TR').includes(needle));
+      return [r.ad, r.adSoyad, r.isim, r.kresAdi, r.il, r.ilce, r.sehir, getCountryName(r.ulke), r.telefon, r.email].some((x) => String(x || '').toLocaleLowerCase('tr-TR').includes(needle));
     });
   }, [data, q]);
 
@@ -157,7 +179,7 @@ export default function SuperAdminKresler() {
         </div>
       )
     },
-    { title: 'Konum', key: 'location', render: (_, r) => [r.il, r.ilce].filter(Boolean).join(' / ') || '—' },
+    { title: 'Konum', key: 'location', render: (_, r) => formatInstitutionLocation(r) },
     { title: 'Kullanıcı', key: 'users', align: 'center', render: (_, r) => data.usersByKres[r.id] || 0 },
     { title: 'Çocuk', key: 'children', align: 'center', render: (_, r) => data.childrenByKres[r.id] || 0 },
     { title: 'Sınıf', key: 'classes', align: 'center', render: (_, r) => data.classesByKres[r.id] || 0 },
@@ -215,8 +237,23 @@ export default function SuperAdminKresler() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <Form.Item name="ad" label="Kreş Adı" rules={[{ required: true, message: 'Kreş adı zorunlu.' }]}><Input placeholder="Örn. Minik Kalpler Kreşi" /></Form.Item>
           <Form.Item name="email" label="Kurum E-posta"><Input type="email" placeholder="info@kres.com" /></Form.Item>
-          <Form.Item name="il" label="İl" rules={[{ required: true, message: 'İl zorunlu.' }]}><Input placeholder="Muğla" /></Form.Item>
-          <Form.Item name="ilce" label="İlçe" rules={[{ required: true, message: 'İlçe zorunlu.' }]}><Input placeholder="Milas" /></Form.Item>
+          <Form.Item name="ulke" label="Ülke" rules={[{ required: true, message: 'Ülke zorunlu.' }]}>
+            <Select showSearch optionFilterProp="label" options={COUNTRY_OPTIONS} onChange={handleCountryChange} />
+          </Form.Item>
+          {isTurkey ? (
+            <>
+              <Form.Item name="il" label="İl" rules={[{ required: true, message: 'İl zorunlu.' }]}>
+                <Select showSearch optionFilterProp="label" placeholder="İl seçin" options={IL_OPTIONS} onChange={handleIlChange} />
+              </Form.Item>
+              <Form.Item name="ilce" label="İlçe" rules={[{ required: true, message: 'İlçe zorunlu.' }]}>
+                <Select showSearch optionFilterProp="label" placeholder={selectedIl ? 'İlçe seçin' : 'Önce il seçin'} disabled={!selectedIl} options={ilceOptions} />
+              </Form.Item>
+            </>
+          ) : (
+            <Form.Item name="sehir" label="Şehir" rules={[{ required: true, message: 'Şehir zorunlu.' }]}>
+              <Input placeholder="Şehir adı" />
+            </Form.Item>
+          )}
           <Form.Item name="telefon" label="Kurum Telefon"><Input placeholder="05xx xxx xx xx" /></Form.Item>
           <Form.Item name="adres" label="Adres"><Input placeholder="Mahalle / cadde / no" /></Form.Item>
         </div>
