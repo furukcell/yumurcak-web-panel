@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, Form, Input, Modal, Space, Table, Tag, Typography, message } from 'antd';
-import { DeleteOutlined, EyeOutlined, PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, PlusOutlined, PoweroffOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getPlatformSnapshot } from './superadminService';
-import { createInstitution, deleteInstitution } from './superadminInstitutionService';
+import { createInstitution, deleteInstitution, setInstitutionActive } from './superadminInstitutionService';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
@@ -21,6 +21,7 @@ export default function SuperAdminKresler() {
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState('');
+  const [togglingId, setTogglingId] = useState('');
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -88,6 +89,35 @@ export default function SuperAdminKresler() {
     });
   };
 
+  const handleToggleActive = (record) => {
+    const nextActive = record.aktif === false;
+    Modal.confirm({
+      title: nextActive
+        ? `${record.ad || record.kresAdi || 'Bu kreş'} tekrar aktif edilsin mi?`
+        : `${record.ad || record.kresAdi || 'Bu kreş'} pasif edilsin mi?`,
+      content: nextActive
+        ? 'Kurum yöneticisi ve kullanıcıları panele tekrar giriş yapabilecek.'
+        : 'Kurum yöneticisi ve kullanıcıları panele giriş yapamayacak. Veriler silinmez, istediğin zaman tekrar aktif edebilirsin.',
+      okText: nextActive ? 'Evet, aktif et' : 'Evet, pasif et',
+      cancelText: 'Vazgeç',
+      okButtonProps: { danger: !nextActive },
+      centered: true,
+      onOk: async () => {
+        if (togglingId) return;
+        setTogglingId(record.id);
+        try {
+          await setInstitutionActive(record.id, nextActive);
+          messageApi.success(nextActive ? 'Kurum aktif edildi.' : 'Kurum pasif edildi, erişim kapatıldı.');
+          await load();
+        } catch (e) {
+          messageApi.error(e?.message || 'Durum güncellenemedi.');
+        } finally {
+          setTogglingId('');
+        }
+      },
+    });
+  };
+
   const columns = [
     {
       title: 'Kurum', key: 'name', render: (_, r) => (
@@ -104,10 +134,12 @@ export default function SuperAdminKresler() {
     { title: 'Çocuk', key: 'children', align: 'center', render: (_, r) => data.childrenByKres[r.id] || 0 },
     { title: 'Sınıf', key: 'classes', align: 'center', render: (_, r) => data.classesByKres[r.id] || 0 },
     { title: 'Abonelik', key: 'subscription', render: (_, r) => data.subscriptionsByKres[r.id] ? <Tag color="green">Kayıt var</Tag> : <Tag>Yok</Tag> },
+    { title: 'Durum', key: 'aktif', render: (_, r) => r.aktif === false ? <Tag color="red">Pasif</Tag> : <Tag color="green">Aktif</Tag> },
     {
       title: 'İşlem', key: 'actions', align: 'right', render: (_, r) => (
         <Space size={8}>
           <Button icon={<EyeOutlined />} onClick={() => navigate(`/superadmin/kresler/${r.id}`)}>Detay</Button>
+          <Button icon={<PoweroffOutlined />} loading={togglingId === r.id} onClick={() => handleToggleActive(r)}>{r.aktif === false ? 'Aktif Et' : 'Pasif Et'}</Button>
           <Button danger icon={<DeleteOutlined />} loading={deletingId === r.id} onClick={() => handleDelete(r)}>Sil</Button>
         </Space>
       )
