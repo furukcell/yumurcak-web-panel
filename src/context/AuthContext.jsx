@@ -70,7 +70,22 @@ export function AuthProvider({ children }) {
           email: firebaseUser.email,
           ...userSnap.val(),
         };
+        if (userData.aktif === false) {
+          setErisimHatasi('Bu hesap pasif durumda.');
+          await signOut(auth);
+          setYukleniyor(false);
+          return;
+        }
 
+        if (userData.rol === 'yonetici' && userData.kresId) {
+          const kresSnap = await get(ref(database, `kresler/${userData.kresId}`));
+          if (kresSnap.exists() && kresSnap.val()?.aktif === false) {
+            setErisimHatasi('Bu kurum pasif durumda. Erişim engellendi.');
+            await signOut(auth);
+            setYukleniyor(false);
+            return;
+          }
+        }
         if (userData.rol !== 'yonetici' && userData.rol !== 'superadmin') {
           setErisimHatasi('Bu panel için yetkiniz bulunmuyor.');
           await signOut(auth);
