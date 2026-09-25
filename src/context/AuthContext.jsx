@@ -85,6 +85,14 @@ export function AuthProvider({ children }) {
             setYukleniyor(false);
             return;
           }
+
+          const abonelikSnap = await get(ref(database, `abonelikler/${userData.kresId}`));
+          if (abonelikSnap.exists() && abonelikSnap.val()?.erisimKisitli === true) {
+            setErisimHatasi('Bu kurumun aboneliği sonlandırıldı. Erişim engellendi.');
+            await signOut(auth);
+            setYukleniyor(false);
+            return;
+          }
         }
         if (userData.rol !== 'yonetici' && userData.rol !== 'superadmin') {
           setErisimHatasi('Bu panel için yetkiniz bulunmuyor.');
