@@ -6,6 +6,7 @@ import { database } from '../config/firebase';
 import { todayDateKey } from '../services/monthlyDocuments';
 import { toList, filterByKres, getChildId, isAbsentStatus, isSameDay, extractDate, getName, findClassName } from '../utils/statisticsHelpers';
 import { THEME, cardStyle } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Text, Title } = Typography;
 
@@ -14,6 +15,7 @@ const { Text, Title } = Typography;
 // SADECE okur, admin panelden yoklama girişi YAPILMAZ — bkz. sohbet notu.
 // Sınıf bazlı geldi/gelmedi kırılımı + gelmeyen çocukların isim listesi.
 function useTodayAttendance(kresId) {
+  const { t, i18n } = useTranslation();
   const [state, setState] = useState({ loading: true, classes: [], present: 0, total: 0 });
 
   useEffect(() => {
@@ -39,23 +41,23 @@ function useTodayAttendance(kresId) {
       const classGroups = new Map();
       const addToGroup = (classId, className) => {
         if (!classGroups.has(classId)) {
-          classGroups.set(classId, { classId, className: className || 'Sınıfsız', total: 0, present: 0, absentChildren: [] });
+          classGroups.set(classId, { classId, className: className || t('dashboard.classless'), total: 0, present: 0, absentChildren: [] });
         }
         return classGroups.get(classId);
       };
 
       children.forEach((child) => {
         const classId = child.sinifId || child.classId || '_none';
-        const className = classId === '_none' ? 'Sınıfsız' : findClassName(classes, classId);
+        const className = classId === '_none' ? t('dashboard.classless') : findClassName(classes, classId);
         const group = addToGroup(classId, className);
         group.total += 1;
         const record = byChild.get(child.id);
         const geldi = record && !isAbsentStatus(record.durum || record.status);
         if (geldi) group.present += 1;
-        else group.absentChildren.push({ id: child.id, name: getName(child, child.adSoyad || 'Çocuk'), recorded: !!record });
+        else group.absentChildren.push({ id: child.id, name: getName(child, child.adSoyad || t('dashboard.childFallback')), recorded: !!record });
       });
 
-      const groups = Array.from(classGroups.values()).sort((a, b) => a.className.localeCompare(b.className, 'tr'));
+      const groups = Array.from(classGroups.values()).sort((a, b) => a.className.localeCompare(b.className, i18n.language));
       const total = children.length;
       const present = groups.reduce((sum, g) => sum + g.present, 0);
       setState({ loading: false, classes: groups, present, total });
@@ -78,7 +80,7 @@ function useTodayAttendance(kresId) {
     );
 
     return () => { childrenUnsub(); classesUnsub(); attendanceUnsub(); };
-  }, [kresId]);
+  }, [kresId, t, i18n.language]);
 
   return state;
 }
@@ -100,9 +102,9 @@ function useTodayMeal(kresId) {
         const record = list.find((item) => !item.sinifId) || list[0];
         const ogunler = record.ogunler || {};
         const parts = [
-          { label: 'Kahvaltı', items: ogunler.kahvalti },
-          { label: 'Öğle', items: ogunler.ogle },
-          { label: 'Ara Öğün', items: ogunler.araOgun },
+          { label: t('dashboard.breakfast'), items: ogunler.kahvalti },
+          { label: t('dashboard.lunch'), items: ogunler.ogle },
+          { label: t('dashboard.snack'), items: ogunler.araOgun },
         ].filter((p) => Array.isArray(p.items) && p.items.length);
         setState({ loading: false, summary: parts.length ? parts : null });
       },
@@ -168,6 +170,7 @@ function CardShell({ title, icon, loading, empty, emptyText, onSeeAll, children 
 }
 
 function AttendanceCard({ navigate, kresId }) {
+  const { t } = useTranslation();
   const { loading, classes, present, total } = useTodayAttendance(kresId);
   const [openClassId, setOpenClassId] = useState(null);
   const absent = total - present;
@@ -175,19 +178,19 @@ function AttendanceCard({ navigate, kresId }) {
 
   return (
     <CardShell
-      title="Bugünkü Yoklama"
+      title={t('dashboard.attendance')}
       icon={<CheckSquareOutlined />}
       color={THEME.green}
       loading={loading}
       empty={!total}
-      emptyText="Kayıtlı çocuk yok"
+      emptyText={t('dashboard.noChildren')}
       onSeeAll={() => navigate('/istatistik')}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <Progress type="circle" percent={rate} size={48} strokeColor={THEME.green} format={() => `${present}/${total}`} />
         <div>
-          <Text strong style={{ fontSize: 14, display: 'block' }}>{present} geldi</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>{absent} gelmedi</Text>
+          <Text strong style={{ fontSize: 14, display: 'block' }}>{present} {t('dashboard.present')}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>{absent} {t('dashboard.absent')}</Text>
         </div>
       </div>
       <div>
@@ -201,7 +204,7 @@ function AttendanceCard({ navigate, kresId }) {
               >
                 <Text style={{ fontSize: 12.5, fontWeight: 600 }}>{group.className}</Text>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{group.present}/{group.total} geldi</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{group.present}/{group.total} {t('dashboard.present')}</Text>
                   {group.absentChildren.length > 0 && (isOpen ? <UpOutlined style={{ fontSize: 10, color: THEME.muted }} /> : <DownOutlined style={{ fontSize: 10, color: THEME.muted }} />)}
                 </div>
               </div>
@@ -209,7 +212,7 @@ function AttendanceCard({ navigate, kresId }) {
                 <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {group.absentChildren.map((child) => (
                     <Tag key={child.id} color={child.recorded ? THEME.red : undefined} style={{ margin: 0, fontSize: 11 }}>
-                      {child.name}{!child.recorded ? ' · girilmedi' : ''}
+                      {child.name}{!child.recorded ? ` · ${t('dashboard.notEntered')}` : ''}
                     </Tag>
                   ))}
                 </div>
@@ -223,15 +226,16 @@ function AttendanceCard({ navigate, kresId }) {
 }
 
 function MealCard({ navigate, kresId }) {
+  const { t } = useTranslation();
   const { loading, summary } = useTodayMeal(kresId);
   return (
     <CardShell
-      title="Bugünkü Menü"
+      title={t('dashboard.meal')}
       icon={<CoffeeOutlined />}
       color={THEME.orange}
       loading={loading}
       empty={!summary}
-      emptyText="Bugün için menü girilmedi"
+      emptyText={t('dashboard.noMeal')}
       onSeeAll={() => navigate('/yemek-listesi')}
     >
       {summary && summary.map((part) => (
@@ -245,20 +249,21 @@ function MealCard({ navigate, kresId }) {
 }
 
 function EventCard({ navigate, kresId }) {
+  const { t } = useTranslation();
   const { loading, events } = useTodayEvents(kresId);
   return (
     <CardShell
-      title="Bugünkü Etkinlik"
+      title={t('dashboard.event')}
       icon={<CalendarOutlined />}
       color={THEME.teal}
       loading={loading}
       empty={!events.length}
-      emptyText="Bugün planlı etkinlik yok"
+      emptyText={t('dashboard.noEvent')}
       onSeeAll={() => navigate('/etkinlikler')}
     >
       {events.map((e) => (
         <div key={e.id} style={{ marginBottom: 8 }}>
-          <Text strong style={{ fontSize: 12.5, display: 'block' }}>{e.baslik || 'Etkinlik'}</Text>
+          <Text strong style={{ fontSize: 12.5, display: 'block' }}>{e.baslik || t('dashboard.eventFallback')}</Text>
           {e.saat && <Text type="secondary" style={{ fontSize: 11 }}>{e.saat}</Text>}
         </div>
       ))}
@@ -274,7 +279,7 @@ function EventCard({ navigate, kresId }) {
 export default function DailySummary({ navigate, kresId }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Title level={5} style={{ marginBottom: 12 }}>Günlük Özet</Title>
+      <Title level={5} style={{ marginBottom: 12 }}>{t('dashboard.dailySummary')}</Title>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
         <AttendanceCard navigate={navigate} kresId={kresId} />
         <MealCard navigate={navigate} kresId={kresId} />
