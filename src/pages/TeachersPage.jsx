@@ -277,11 +277,11 @@ export default function TeachersPage() {
   });
 
   const columns = [
-    { title: 't('teachers.name')', dataIndex: 'ad', key: 'ad' },
-    { title: 't('teachers.username')', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
-    { title: 'Sınıf', key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">Atanmamış</Text>) },
+    { title: t('teachers.name'), dataIndex: 'ad', key: 'ad' },
+    { title: t('teachers.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
+    { title: 'Sınıf', key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">{t('teachers.unassigned')}</Text>) },
     { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
-    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 't('teachers.active')' : 't('teachers.inactive')'}</Tag> },
+    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('teachers.active') : t('teachers.inactive')}</Tag> },
     {
       title: '',
       key: 'sil',
@@ -315,10 +315,10 @@ export default function TeachersPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Öğretmenler</Title>
+          <Title level={3} style={{ margin: 0 }}>{t('teachers.title')}</Title>
           <Text type="secondary">{t('teachers.summary', { total: teachers.length, active: aktifSayisi, assigned: atanmisSayisi })}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Öğretmen Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('teachers.add')}</Button>
       </div>
 
       <Input.Search
@@ -340,30 +340,30 @@ export default function TeachersPage() {
       />
 
       <Drawer
-        title={editingId ? 't('teachers.edit')' : 't('teachers.new')'}
+        title={editingId ? t('teachers.edit') : t('teachers.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={420}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 't('teachers.update')' : 't('teachers.create')'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('teachers.update') : t('teachers.create')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="kullaniciAdi" label={t('teachers.username')} rules={[{ required: true, message: 't('teachers.usernameRequired')' }]}>
+          <Form.Item name="kullaniciAdi" label={t('teachers.username')} rules={[{ required: true, message: t('teachers.usernameRequired') }]}>
             <Input placeholder="Örn: ogretmen1" autoCapitalize="none" />
           </Form.Item>
-          <Form.Item name="ad" label={t('teachers.name')} rules={[{ required: true, message: 't('teachers.nameRequired')' }]}>
+          <Form.Item name="ad" label={t('teachers.name')} rules={[{ required: true, message: t('teachers.nameRequired') }]}>
             <Input placeholder="Örn: Ayşe Yılmaz" />
           </Form.Item>
           <Form.Item
             name="sifre"
             label={t('teachers.password')}
-            extra={editingId ? 't('teachers.passwordKeep')' : 't('teachers.passwordDefault')'}
+            extra={editingId ? t('teachers.passwordKeep') : t('teachers.passwordDefault')}
           >
-            <Input.Password placeholder={editingId ? 't('teachers.passwordUnchanged')' : 't('teachers.passwordDefaultShort')'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
+            <Input.Password placeholder={editingId ? t('teachers.passwordUnchanged') : t('teachers.passwordDefaultShort')} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
           <Form.Item name="sinifId" label={t('teachers.classAssign')}>
             <Select
               allowClear
-              placeholder={siniflar.length === 0 ? 't('teachers.createClassFirst')' : 't('teachers.selectClass')'}
+              placeholder={siniflar.length === 0 ? t('teachers.createClassFirst') : t('teachers.selectClass')}
               disabled={siniflar.length === 0}
               options={siniflar.map((s) => ({ value: s.id, label: `${s.ad} — ${s.yasGrubu}` }))}
             />
