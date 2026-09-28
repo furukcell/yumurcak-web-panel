@@ -4,6 +4,7 @@ import { LeftOutlined, RightOutlined, PlusOutlined, DeleteOutlined, CopyOutlined
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { fetchInstitutionInfo, buildMonthlyDocumentHtml, printHtmlDocument } from '../services/documentPdf';
@@ -18,9 +19,9 @@ const KAYNAK = 'admin_aylik';
 
 function defaultSections() {
   return [
-    { id: generateId(), baslik: 'Öğretmenler', icerik: '' },
-    { id: generateId(), baslik: 'Mutfak / Temizlik Personeli', icerik: '' },
-    { id: generateId(), baslik: 'Genel Hatırlatmalar', icerik: '' },
+    { id: generateId(), baslik: t('staffTasks.sections.teachers'), icerik: '' },
+    { id: generateId(), baslik: t('staffTasks.sections.kitchen'), icerik: '' },
+    { id: generateId(), baslik: t('staffTasks.sections.reminders'), icerik: '' },
   ];
 }
 function hasBulletinContent(baslik, bolumler) {
@@ -31,6 +32,7 @@ function hasBulletinContent(baslik, bolumler) {
 // Mobildeki AdminMonthlyStaffTasksScreen.js'in web karşılığı.
 export default function StaffTasksPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [monthDate, setMonthDate] = useState(new Date());
@@ -91,33 +93,33 @@ export default function StaffTasksPage() {
     try {
       const prevMonthKey = getMonthKey(shiftMonth(monthDate, -1));
       const prevRecord = await fetchActiveSingleRecord({ nodePath: NODE_PATH, kresId, monthKey: prevMonthKey, kaynak: KAYNAK });
-      if (!prevRecord) { message.warning(`${prevMonthKey} için yayınlanmış bir görev listesi yok.`); return; }
+      if (!prevRecord) { message.warning(t('staffTasks.noPrevious', { month: prevMonthKey })); return; }
       setBaslik(prevRecord.baslik || '');
       setBolumler(Array.isArray(prevRecord.bolumler) && prevRecord.bolumler.length > 0 ? prevRecord.bolumler.map((s) => ({ id: generateId(), baslik: s.baslik || '', icerik: s.icerik || '' })) : defaultSections());
-      message.success('Geçen ayın görev listesi kopyalandı.');
+      message.success(t('staffTasks.copied'));
     } catch {
-      message.error('Geçen ay kopyalanamadı.');
+      message.error(t('staffTasks.copyError'));
     } finally {
       setCopying(false);
     }
   }
 
   async function doPublish() {
-    if (!hasBulletinContent(baslik, bolumler)) { message.warning('Yayınlamak için en az bir bölüme içerik gir.'); return; }
+    if (!hasBulletinContent(baslik, bolumler)) { message.warning(t('staffTasks.publishRequired')); return; }
     setSaving(true);
     try {
       await publishSingleRecord({
         nodePath: NODE_PATH, kresId, monthKey, kaynak: KAYNAK,
         buildRecord: ({ kresId: kId, monthKey: mKey, kaynak, now }) => ({
           kresId: kId, kaynak, ayKey: mKey, tarih: `${mKey}-01`,
-          baslik: baslik.trim() || `${monthLabel} Görev Listesi`,
+          baslik: baslik.trim() || t('staffTasks.defaultTitle', { month: monthLabel }),
           bolumler: bolumler.filter((s) => s.baslik.trim() || s.icerik.trim()).map((s) => ({ baslik: s.baslik.trim(), icerik: s.icerik.trim() })),
           aktif: true, createdAt: now, updatedAt: now,
         }),
       });
-      message.success('Görev listesi yayınlandı');
+      message.success(t('staffTasks.published'));
     } catch {
-      message.error('Görev listesi yayınlanamadı.');
+      message.error(t('staffTasks.publishError'));
     } finally {
       setSaving(false);
     }
@@ -127,9 +129,9 @@ export default function StaffTasksPage() {
     setUnpublishing(true);
     try {
       await unpublishMonth({ nodePath: NODE_PATH, kresId, monthKey, kaynak: KAYNAK });
-      message.success('Yayından kaldırıldı');
+      message.success(t('staffTasks.unpublished'));
     } catch {
-      message.error('Yayından kaldırılamadı.');
+      message.error(t('staffTasks.unpublishError'));
     } finally {
       setUnpublishing(false);
     }
@@ -143,7 +145,7 @@ export default function StaffTasksPage() {
       const html = buildMonthlyDocumentHtml({ docType: 'gorev', kres, monthLabel, records: [record] });
       printHtmlDocument(html);
     } catch {
-      message.error('Yazdırılacak belge oluşturulamadı.');
+      message.error(t('staffTasks.printError'));
     } finally {
       setPrinting(false);
     }
@@ -151,8 +153,8 @@ export default function StaffTasksPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Personel Görev Listesi</Title>
-      <Text type="secondary">Ay başına tek bülten — bölüm bölüm görev/hatırlatma</Text>
+      <Title level={3} style={{ marginBottom: 4 }}{t('staffTasks.title')}</Title>
+      <Text type="secondary">{t('staffTasks.subtitle')}</Text>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 12px' }}>
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => changeMonth(-1)} />
@@ -163,34 +165,34 @@ export default function StaffTasksPage() {
       {publishedCount > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
-          <Popconfirm title="Yayından kaldırılsın mı?" okText="Kaldır" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}>Yayından Kaldır</Button>
+          <Popconfirm title={t('staffTasks.unpublishConfirm')} okText={t('staffTasks.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
+            <Button danger size="small" loading={unpublishing}{t('staffTasks.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('staffTasks.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
       </Space>
 
       {!loadingDraft && (
         <>
-          <Text strong>Bülten Başlığı (opsiyonel)</Text>
-          <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder={`${monthLabel} Görev Listesi`} style={{ marginTop: 6, marginBottom: 18 }} />
+          <Text strong{t('staffTasks.headingOptional')}</Text>
+          <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder={t('staffTasks.defaultTitle', { month: monthLabel })} style={{ marginTop: 6, marginBottom: 18 }} />
 
           {bolumler.map((section) => (
             <div key={section.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <Input value={section.baslik} onChange={(e) => updateSection(section.id, 'baslik', e.target.value)} placeholder="Bölüm başlığı" style={{ flex: 1 }} />
+                <Input value={section.baslik} onChange={(e) => updateSection(section.id, 'baslik', e.target.value)} placeholder={t('staffTasks.sectionPlaceholder')} style={{ flex: 1 }} />
                 <Button danger icon={<DeleteOutlined />} onClick={() => removeSection(section.id)} />
               </div>
-              <Input.TextArea value={section.icerik} onChange={(e) => updateSection(section.id, 'icerik', e.target.value)} rows={3} placeholder="Bu bölümün içeriği / görevler" />
+              <Input.TextArea value={section.icerik} onChange={(e) => updateSection(section.id, 'icerik', e.target.value)} rows={3} placeholder={t('staffTasks.contentPlaceholder')} />
             </div>
           ))}
-          <Button icon={<PlusOutlined />} onClick={addSection} block style={{ marginBottom: 16 }}>Bölüm Ekle</Button>
+          <Button icon={<PlusOutlined />} onClick={addSection} block style={{ marginBottom: 16 }}{t('staffTasks.addSection')}</Button>
 
-          <Button type="primary" block loading={saving} onClick={doPublish} style={{ height: 46 }}>Görev Listesini Yayınla</Button>
+          <Button type="primary" block loading={saving} onClick={doPublish} style={{ height: 46 }}{t('staffTasks.publish', { month: monthLabel })}
         </>
       )}
     </div>
