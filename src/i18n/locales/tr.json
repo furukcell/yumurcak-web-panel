@@ -374,8 +374,9 @@
     "passwordMin": "Password must be at least 6 characters",
     "authPassword": "This administrator is linked to a Firebase Auth account. The current user's password cannot be changed from this screen.",
     "authExists": "A Firebase Auth account already exists for this username. Try a different username.",
-    "fullName": "Full Name",
-    "phoneCol": "Phone"
+    "fullName": "Ad Soyad",
+    "phoneCol": "Telefon",
+    "unnamed": "İsimsiz yönetici"
   },
   "parents": {
     "title": "Parents",
@@ -412,6 +413,9 @@
     "passwordMin": "Password must be at least 6 characters",
     "authPassword": "This parent is linked to a Firebase Auth account. The current user's password cannot be changed from this screen.",
     "authExists": "A Firebase Auth account already exists for this username. Try a different username.",
-    "phoneCol": "Phone"
+    "phoneCol": "Telefon",
+    "unnamed": "İsimsiz veli",
+    "usernamePlaceholder": "Örn: veli1",
+    "namePlaceholder": "Örn: Mehmet Yılmaz"
   }
 }
