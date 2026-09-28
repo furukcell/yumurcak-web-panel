@@ -4,6 +4,7 @@ import { MessageOutlined, ScheduleOutlined, NotificationOutlined, BellOutlined, 
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { THEME } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 // "kurumZili" (bkz. BellPage.jsx) altındaki tamamlanmamış kayıtları canlı
 // sayar — dashboard'daki Kurum Zili rozetinde kaç veli beklediğini gösterir.
@@ -31,13 +32,14 @@ function useKurumZiliPendingCount(kresId) {
 // rozet sayaçları (okunmamış mesaj / bekleyen kurum zili).
 export default function QuickActions({ navigate, kresId, unreadMessages }) {
   const pendingBell = useKurumZiliPendingCount(kresId);
+  const { t } = useTranslation();
 
   const items = [
-    { key: '/mesajlar', label: 'Mesajlar', icon: <MessageOutlined />, color: THEME.blue, count: unreadMessages },
-    { key: '/ayarlar/kurum-zili', label: 'Kurum Zili', icon: <BellOutlined />, color: THEME.red, count: pendingBell },
-    { key: '/galeri', label: 'Galeri', icon: <PictureOutlined />, color: THEME.orange, count: 0 },
-    { key: '/duyurular', label: 'Duyurular', icon: <NotificationOutlined />, color: THEME.purple, count: 0 },
-    { key: '/ders-programi', label: 'Ders Programı', icon: <ScheduleOutlined />, color: THEME.teal, count: 0 },
+    { key: '/mesajlar', label: t('common.quickMessages'), icon: <MessageOutlined />, color: THEME.blue, count: unreadMessages },
+    { key: '/ayarlar/kurum-zili', label: t('common.quickInstitutionBell'), icon: <BellOutlined />, color: THEME.red, count: pendingBell },
+    { key: '/galeri', label: t('common.quickGallery'), icon: <PictureOutlined />, color: THEME.orange, count: 0 },
+    { key: '/duyurular', label: t('common.quickAnnouncements'), icon: <NotificationOutlined />, color: THEME.purple, count: 0 },
+    { key: '/ders-programi', label: t('common.quickSchedule'), icon: <ScheduleOutlined />, color: THEME.teal, count: 0 },
   ];
 
   return (
