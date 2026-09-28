@@ -16,6 +16,7 @@ import QuickActions from '../components/QuickActions';
 import TodayCards from '../components/TodayCards';
 import DailySummary from '../components/DailySummary';
 import { useTranslation } from 'react-i18next';
+import './DashboardPage.css';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -333,178 +334,73 @@ export default function DashboardPage() {
   const subStatus = getSubscriptionStatus(abonelik);
   const subUrgent = subStatus.key === 'expiring_soon' || subStatus.key === 'expired';
 
+  const todayLabel = new Date().toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+  const dolulukOrani = doluluk.toplamKapasite > 0 ? Math.round((istatistik.cocukSayisi / doluluk.toplamKapasite) * 100) : 0;
+  const kpiItems = [
+    { key:'sinifSayisi', label:t('navigation.classes'), hint:t('dashboard.kpiClassesHint',{count:istatistik.sinifSayisi}), icon:<ReadOutlined />, color:'#2872d7', soft:'#edf5ff', route:'/siniflar' },
+    { key:'cocukSayisi', label:t('navigation.children'), hint:t('dashboard.kpiChildrenHint',{count:istatistik.cocukSayisi}), icon:<SmileOutlined />, color:'#df8a18', soft:'#fff5e8', route:'/cocuklar' },
+    { key:'ogretmenSayisi', label:t('navigation.teachers'), hint:t('dashboard.kpiTeachersHint',{count:istatistik.ogretmenSayisi}), icon:<TeamOutlined />, color:'#6c3deb', soft:'#f0eaff', route:'/ogretmenler' },
+    { key:'veliSayisi', label:t('navigation.parents'), hint:t('dashboard.kpiParentsHint',{count:istatistik.veliSayisi}), icon:<ContactsOutlined />, color:'#16935b', soft:'#ecfbf3', route:'/veliler' },
+  ];
+
   return (
-    <div>
-      {/* Karşılama kartı: sağ üstte artık dekoratif bir ikon kutusu yok —
-          onun yerine hızlı erişim şeridi geldi, böylece aynı satır hem
-          selamlıyor hem de sık kullanılan sayfalara götürüyor. */}
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryDark} 100%)`,
-          borderRadius: 20,
-          padding: '22px 26px',
-          marginBottom: 16,
-          boxShadow: '0 14px 32px rgba(76, 41, 156, 0.20)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+    <div className="dashboard-page">
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-content">
           <div>
-            <Text style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 13 }}>{t('dashboard.welcome')}</Text>
-            <Title level={3} style={{ color: '#fff', margin: '2px 0 0' }}>{adSoyad}</Title>
+            <div className="dashboard-kicker">{t('dashboard.welcome')} 👋</div>
+            <Title className="dashboard-hero-title">{adSoyad}</Title>
+            <span className="dashboard-hero-subtitle">{kres?.ad || 'Yumurcak Kreş'} · {t('dashboard.dailySummary')}</span>
           </div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '7px 14px',
-              borderRadius: 999,
-              background: subUrgent ? (subStatus.key === 'expired' ? 'rgba(255,77,109,0.24)' : 'rgba(255,159,28,0.24)') : 'rgba(255,255,255,0.14)',
-              cursor: 'pointer',
-            }}
-            onClick={() => navigate('/ayarlar/abonelik')}
-          >
-            <CrownOutlined style={{ color: '#FFD97A', fontSize: 14 }} />
-            <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: 700 }}>
-              {subUrgent
-                ? (subStatus.key === 'expired' ? t('dashboard.subscriptionRenew') : t('dashboard.renewDays', { days: subStatus.remainingDays }))
-                : getSubscriptionBannerText(abonelik, subStatus, t)}
-            </Text>
+          <div className="dashboard-hero-side">
+            <div className="dashboard-hero-stat"><div className="dashboard-hero-stat-label">{todayLabel}</div><div className="dashboard-hero-stat-value">{t('dashboard.today')}</div></div>
+            <div className="dashboard-hero-stat"><div className="dashboard-hero-stat-label">{t('common.todayCapacity')}</div><div className="dashboard-hero-stat-value">{istatistik.cocukSayisi} / {doluluk.toplamKapasite || '—'} · %{dolulukOrani}</div></div>
           </div>
         </div>
+      </section>
+
+      <div className="dashboard-actions">
+        <div className="dashboard-action-label">{t('common.quickActions')}</div>
+        <button className="dashboard-action-btn dashboard-action-primary" onClick={() => navigate('/duyurular')}>＋ {t('common.quickAnnouncements')}</button>
+        <button className="dashboard-action-btn dashboard-action-blue" onClick={() => navigate('/etkinlikler')}>＋ {t('dashboard.upcomingEvents')}</button>
+        <button className="dashboard-action-btn dashboard-action-green" onClick={() => navigate('/cocuklar')}>＋ {t('navigation.children')}</button>
+        <button className="dashboard-action-btn dashboard-action-orange" onClick={() => navigate('/mesajlar')}>➤ {t('common.quickMessages')}</button>
       </div>
 
-      <QuickActions navigate={navigate} kresId={kresId} unreadMessages={unreadMessages} doluluk={doluluk} toplamCocuk={istatistik.cocukSayisi} />
-
-      {/* Genel Özet: dört sayı artık dört ayrı kart değil, tek bir panelin
-          içinde ince dikey çizgilerle bölünmüş sütunlar — sayfadaki tekrar
-          eden "renkli daire ikon" kartlarının sayısını azaltıp asıl
-          rakamlara daha fazla ağırlık veriyor. */}
-      {yukleniyor ? (
-        <div style={{ textAlign: 'center', padding: 40 }}>
-          <Spin size="large" />
-        </div>
-      ) : (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            border: `1px solid ${THEME.border}`,
-            borderRadius: THEME.radius,
-            background: THEME.card,
-            marginBottom: 16,
-            boxShadow: THEME.shadow,
-          }}
-        >
-          {OZET_ITEMS.map((item, idx) => (
-            <div
-              key={item.key}
-              onClick={() => navigate(item.route)}
-              style={{
-                flex: '1 1 140px',
-                padding: '18px 22px',
-                borderRight: idx < OZET_ITEMS.length - 1 ? `1px solid ${THEME.border}` : 'none',
-                borderBottom: `3px solid ${item.color}`,
-                borderBottomLeftRadius: idx === 0 ? THEME.radius : 0,
-                borderBottomRightRadius: idx === OZET_ITEMS.length - 1 ? THEME.radius : 0,
-                cursor: 'pointer',
-                transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `${item.color}0D`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-                <span style={{ fontSize: 13, color: item.color }}>{item.icon}</span>
-                <Text type="secondary" style={{ fontSize: 12.5, fontWeight: 600 }}>{t(`navigation.${item.labelKey}`)}</Text>
-              </div>
-              <Text style={{ fontSize: 26, fontWeight: 800, color: THEME.text, lineHeight: 1 }}>
-                {istatistik[item.key]}
-              </Text>
-            </div>
-          ))}
+      {yukleniyor ? <div style={{textAlign:'center',padding:40}}><Spin size="large" /></div> : (
+        <div className="dashboard-kpis">
+          {kpiItems.map((item) => <div key={item.key} className="dashboard-kpi" style={{'--kpi-color':item.color,'--kpi-soft':item.soft}} onClick={() => navigate(item.route)}>
+            <div className="dashboard-kpi-top"><div className="dashboard-kpi-icon">{item.icon}</div><RightOutlined style={{color:'#aaa5ba',fontSize:11}} /></div>
+            <div className="dashboard-kpi-number">{istatistik[item.key]}</div><div className="dashboard-kpi-label">{item.label}</div><div className="dashboard-kpi-hint">{item.hint}</div>
+          </div>)}
         </div>
       )}
 
-      <TodayCards navigate={navigate} kresId={kresId} doluluk={doluluk} toplamCocuk={istatistik.cocukSayisi} />
-
+      <div className="dashboard-section-label"><span style={{fontSize:20}}>☀️</span><div><h3>{t('dashboard.dailySummary')}</h3><span>{todayLabel}</span></div></div>
       <DailySummary navigate={navigate} kresId={kresId} />
 
-      <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-        <Col xs={24} sm={12} md={6}>
-          <SummaryPanel
-            title={t('dashboard.recentAnnouncements')}
-            icon={<NotificationOutlined />}
-            color={THEME.red}
-            loading={ozetYukleniyor}
-            emptyText={t('dashboard.noAnnouncements')}
-            onSeeAll={() => navigate('/duyurular')}
-            items={duyurular.map((d) => ({
-              key: d.id,
-              primary: d.title || d.baslik || t('dashboard.announcementFallback'),
-              secondary: [d.senderName, d.createdAt ? new Date(d.createdAt).toLocaleDateString(i18n.language) : ''].filter(Boolean).join(' · '),
-            }))}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <SummaryPanel
-            title={t('dashboard.upcomingEvents')}
-            icon={<CalendarOutlined />}
-            color={THEME.teal}
-            loading={ozetYukleniyor}
-            emptyText={t('dashboard.noUpcomingEvents')}
-            onSeeAll={() => navigate('/etkinlikler')}
-            items={etkinlikler.map((e) => ({
-              key: e.id,
-              primary: e.baslik || t('dashboard.eventFallback'),
-              secondary: `${e.tarih || ''}${e.saat ? ' · ' + e.saat : ''}`,
-            }))}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <SummaryPanel
-            title={t('dashboard.upcomingBirthdays')}
-            icon={<GiftOutlined />}
-            color={THEME.gold}
-            loading={ozetYukleniyor}
-            emptyText={t('dashboard.noUpcomingBirthdays')}
-            onSeeAll={() => navigate('/dogum-gunleri')}
-            items={dogumGunleri.map((c) => ({
-              key: c.id,
-              primary: c.ad || t('dashboard.childFallback'),
-              secondary: c.gunKala === 0 ? t('dashboard.today') : c.gunKala === 1 ? t('dashboard.tomorrow') : t('dashboard.daysLater', { days: c.gunKala }),
-            }))}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <SummaryPanel
-            title={t('dashboard.pendingPayments')}
-            icon={<WalletOutlined />}
-            color={THEME.orange}
-            loading={ozetYukleniyor}
-            emptyText={t('dashboard.noPendingPayments')}
-            onSeeAll={() => navigate('/odemeler')}
-            items={bekleyenOdemeler.map((o) => ({
-              key: o.id,
-              primary: o.cocukAd,
-              secondary: o.tutar,
-              tag: o.durum === 'gecikti'
-                ? { text: t('dashboard.late'), color: THEME.red }
-                : { text: t('dashboard.pending'), color: THEME.orange },
-            }))}
-          />
-        </Col>
-      </Row>
+      <div className="dashboard-section-label"><span style={{fontSize:20}}>⚡</span><div><h3>{t('dashboard.attention')}</h3><span>{t('dashboard.today')}</span></div></div>
+      <div className="dashboard-alert-grid">
+        <div className="dashboard-alert dashboard-alert-red" onClick={() => navigate('/ayarlar/kurum-zili')}><div className="dashboard-alert-icon" style={{background:'#ffe3e8',color:'#e84b63'}}>♧</div><div><div className="dashboard-alert-title">{t('common.quickInstitutionBell')} {unreadMessages > 0 ? '· ' + unreadMessages : ''}</div><div className="dashboard-alert-value">{t('dashboard.noNotificationsToday')}</div></div></div>
+        <div className="dashboard-alert dashboard-alert-gold" onClick={() => navigate('/odemeler')}><div className="dashboard-alert-icon" style={{background:'#ffedc7',color:'#df8a18'}}>₺</div><div><div className="dashboard-alert-title">{t('dashboard.pendingPayments')}</div><div className="dashboard-alert-value">{bekleyenOdemeler.length ? t('dashboard.pendingCount',{count:bekleyenOdemeler.length}) : t('dashboard.noPendingPayments')}</div></div></div>
+        <div className="dashboard-alert dashboard-alert-blue" onClick={() => navigate('/istatistik')}><div className="dashboard-alert-icon" style={{background:'#dfeeff',color:'#2872d7'}}>▥</div><div><div className="dashboard-alert-title">{t('navigation.statistics')}</div><div className="dashboard-alert-value">%{dolulukOrani} {t('common.todayCapacity')}</div></div></div>
+      </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-        <Col xs={24}>
-          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} t={t} />
-        </Col>
-      </Row>
-
-      <Paragraph type="secondary" style={{ marginTop: 20 }}>
-        {kres?.ad ? `${kres.ad} için özet bilgiler yukarıda. ` : ''}
-        Detaylı analiz için sol menüden İstatistik sayfasına göz atabilirsin.
-      </Paragraph>
+      <div className="dashboard-section-label"><span style={{fontSize:20}}>▣</span><div><h3>{t('dashboard.recentAnnouncements')}</h3><span>{t('dashboard.upcomingEvents')}</span></div></div>
+      <div className="dashboard-feed-grid">
+        <div className="dashboard-feed-card"><div className="dashboard-feed-head"><div className="dashboard-feed-title">📣 {t('dashboard.recentAnnouncements')}</div><span className="dashboard-feed-link" onClick={() => navigate('/duyurular')}>{t('common.viewAll')} →</span></div>
+          {ozetYukleniyor ? <div className="dashboard-feed-empty"><Spin size="small" /></div> : duyurular.length ? duyurular.map((d) => <div className="dashboard-feed-item" key={d.id}><span className="dashboard-feed-dot"/><div><div className="dashboard-feed-name">{d.title || d.baslik || t('dashboard.announcementFallback')}</div><div className="dashboard-feed-sub">{d.createdAt ? new Date(d.createdAt).toLocaleDateString(i18n.language) : ''}</div></div></div>) : <div className="dashboard-feed-empty">{t('dashboard.noAnnouncements')}</div>}
+        </div>
+        <div className="dashboard-feed-card"><div className="dashboard-feed-head"><div className="dashboard-feed-title">📅 {t('dashboard.upcomingEvents')}</div><span className="dashboard-feed-link" onClick={() => navigate('/etkinlikler')}>{t('common.viewAll')} →</span></div>
+          {etkinlikler.length ? etkinlikler.map((e) => <div className="dashboard-feed-item" key={e.id}><span className="dashboard-feed-dot" style={{background:'#20b8a0'}}/><div><div className="dashboard-feed-name">{e.baslik || t('dashboard.eventFallback')}</div><div className="dashboard-feed-sub">{e.tarih || ''}{e.saat ? ' · ' + e.saat : ''}</div></div></div>) : <div className="dashboard-feed-empty">{t('dashboard.noUpcomingEvents')}</div>}
+        </div>
+        <div className="dashboard-feed-card"><div className="dashboard-feed-head"><div className="dashboard-feed-title">🎂 {t('dashboard.upcomingBirthdays')}</div><span className="dashboard-feed-link" onClick={() => navigate('/dogum-gunleri')}>{t('common.viewAll')} →</span></div>
+          {dogumGunleri.length ? dogumGunleri.map((c) => <div className="dashboard-feed-item" key={c.id}><span className="dashboard-feed-dot" style={{background:'#e86ac5'}}/><div><div className="dashboard-feed-name">{c.ad || t('dashboard.childFallback')}</div><div className="dashboard-feed-sub">{c.gunKala === 0 ? t('dashboard.today') : c.gunKala === 1 ? t('dashboard.tomorrow') : t('dashboard.daysLater',{days:c.gunKala})}</div></div></div>) : <div className="dashboard-feed-empty">{t('dashboard.noUpcomingBirthdays')}</div>}
+        </div>
+        <div className="dashboard-feed-card"><div className="dashboard-feed-head"><div className="dashboard-feed-title">💳 {t('dashboard.pendingPayments')}</div><span className="dashboard-feed-link" onClick={() => navigate('/odemeler')}>{t('common.viewAll')} →</span></div>
+          {bekleyenOdemeler.length ? bekleyenOdemeler.map((o) => <div className="dashboard-feed-item" key={o.id}><span className="dashboard-feed-dot" style={{background:o.durum==='gecikti'?'#ef536b':'#e7a52a'}}/><div><div className="dashboard-feed-name">{o.cocukAd}</div><div className="dashboard-feed-sub">{o.tutar} · {o.durum==='gecikti'?t('dashboard.late'):t('dashboard.pending')}</div></div></div>) : <div className="dashboard-payment-empty">{t('dashboard.noPendingPayments')}</div>}
+        </div>
+      </div>
     </div>
   );
 }
