@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "اللغة",
+    "logout": "تسجيل الخروج",
+    "institutionProfile": "عرض ملف المؤسسة",
+    "user": "المستخدم",
+    "administrator": "المدير"
+  },
+  "navigation": {
+    "general": "عام",
+    "dashboard": "لوحة التحكم",
+    "statistics": "الإحصائيات",
+    "institutionManagement": "إدارة المؤسسة",
+    "classes": "الفصول",
+    "bulkSetup": "الإعداد الجماعي",
+    "children": "الأطفال",
+    "administrators": "المديرون",
+    "teachers": "المعلمون",
+    "parents": "أولياء الأمور",
+    "communication": "التواصل",
+    "announcements": "الإعلانات",
+    "events": "الفعاليات",
+    "gallery": "المعرض",
+    "polls": "الاستطلاعات",
+    "messages": "الرسائل",
+    "support": "الدعم",
+    "dailyOperations": "العمليات اليومية",
+    "meals": "قائمة الطعام",
+    "schedule": "جدول الدروس",
+    "dutyRoster": "جدول المناوبات",
+    "staffTasks": "مهام الموظفين",
+    "service": "النقل",
+    "birthdays": "أعياد الميلاد",
+    "payments": "المدفوعات",
+    "settings": "الإعدادات",
+    "institutionInfo": "بيانات المؤسسة",
+    "theme": "إعدادات المظهر",
+    "subscription": "الاشتراك",
+    "institutionBell": "جرس المؤسسة",
+    "legalDocuments": "المستندات القانونية",
+    "auditLog": "سجل التدقيق"
+  }
+}
