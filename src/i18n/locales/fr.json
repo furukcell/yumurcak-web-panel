@@ -478,7 +478,8 @@
     "saved": "Événement enregistré",
     "deleted": "Événement supprimé",
     "saveError": "Erreur lors de l’enregistrement",
-    "deleteError": "Erreur lors de la suppression"
+    "deleteError": "Erreur lors de la suppression",
+    "noSelectedClass": "Aucune classe sélectionnée"
   },
   "gallery": {
     "title": "Gallery Management",
