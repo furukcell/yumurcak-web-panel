@@ -144,29 +144,35 @@ function useTodayEvents(kresId) {
 // Kartın üstünde marka rengiyle (THEME.primary) ince bir çizgi + gövdede
 // aynı rengin çok soluk (%5 alfa) tonu ve hafif gölge — tüm kartlarda
 // (Günlük Özet + alttaki özet panelleri) tutarlı tek stil.
-function CardShell({ title, icon, loading, empty, emptyText, onSeeAll, children }) {
+function CardShell({ title, icon, loading, empty, emptyText, onSeeAll, children, tone = 'purple' }) {
   return (
-    <Card
-      size="small"
-      style={{ ...cardStyle(), height: '100%' }}
-      styles={{ body: { padding: 16 } }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: onSeeAll ? 'pointer' : 'default' }} onClick={onSeeAll}>
-        <span style={{ fontSize: 14, color: THEME.primary, display: 'flex' }}>{icon}</span>
-        <Text strong style={{ fontSize: 13 }}>{title}</Text>
+    <div className={`dashboard-daily-card dashboard-daily-card-${tone}`}>
+      <div
+        className="dashboard-daily-card-head"
+        onClick={onSeeAll}
+        role={onSeeAll ? 'button' : undefined}
+        tabIndex={onSeeAll ? 0 : undefined}
+      >
+        <div className="dashboard-daily-card-title">
+          <span className="dashboard-daily-card-icon">{icon}</span>
+          <Text strong>{title}</Text>
+        </div>
+        {onSeeAll && <span className="dashboard-daily-card-arrow">›</span>}
       </div>
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 16 }}><Spin size="small" /></div>
-      ) : empty ? (
-        <Empty
-          description={<Text type="secondary" style={{ fontSize: 12 }}>{emptyText}</Text>}
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          style={{ padding: '8px 0' }}
-        />
-      ) : (
-        children
-      )}
-    </Card>
+      <div className="dashboard-daily-card-body">
+        {loading ? (
+          <div className="dashboard-daily-loading"><Spin size="small" /></div>
+        ) : empty ? (
+          <Empty
+            description={<Text type="secondary" className="dashboard-daily-empty-text">{emptyText}</Text>}
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            className="dashboard-daily-empty"
+          />
+        ) : (
+          children
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -181,38 +187,38 @@ function AttendanceCard({ navigate, kresId }) {
     <CardShell
       title={t('dashboard.attendance')}
       icon={<CheckSquareOutlined />}
-      color={THEME.green}
+      tone="purple"
       loading={loading}
       empty={!total}
       emptyText={t('dashboard.noChildren')}
       onSeeAll={() => navigate('/istatistik')}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <Progress type="circle" percent={rate} size={48} strokeColor={THEME.green} format={() => `${present}/${total}`} />
+      <div className="dashboard-attendance-overview">
+        <Progress type="circle" percent={rate} size={48} strokeColor="#6c3deb" format={() => `${present}/${total}`} />
         <div>
-          <Text strong style={{ fontSize: 14, display: 'block' }}>{present} {t('dashboard.present')}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>{absent} {t('dashboard.absent')}</Text>
+          <Text strong className="dashboard-daily-main-value">{present} {t('dashboard.present')}</Text>
+          <Text type="secondary" className="dashboard-daily-secondary-value">{absent} {t('dashboard.absent')}</Text>
         </div>
       </div>
-      <div>
+      <div className="dashboard-attendance-list">
         {classes.map((group) => {
           const isOpen = openClassId === group.classId;
           return (
-            <div key={group.classId} style={{ borderTop: `1px solid ${THEME.border}`, padding: '8px 0' }}>
+            <div key={group.classId} className="dashboard-attendance-row">
               <div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: group.absentChildren.length ? 'pointer' : 'default' }}
+                className="dashboard-attendance-row-main"
                 onClick={() => group.absentChildren.length && setOpenClassId(isOpen ? null : group.classId)}
               >
-                <Text style={{ fontSize: 12.5, fontWeight: 600 }}>{group.className}</Text>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{group.present}/{group.total} {t('dashboard.present')}</Text>
-                  {group.absentChildren.length > 0 && (isOpen ? <UpOutlined style={{ fontSize: 10, color: THEME.muted }} /> : <DownOutlined style={{ fontSize: 10, color: THEME.muted }} />)}
+                <Text className="dashboard-attendance-class">{group.className}</Text>
+                <div className="dashboard-attendance-count">
+                  <Text type="secondary">{group.present}/{group.total} {t('dashboard.present')}</Text>
+                  {group.absentChildren.length > 0 && (isOpen ? <UpOutlined /> : <DownOutlined />)}
                 </div>
               </div>
               {isOpen && (
-                <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div className="dashboard-attendance-absent">
                   {group.absentChildren.map((child) => (
-                    <Tag key={child.id} color={child.recorded ? THEME.red : undefined} style={{ margin: 0, fontSize: 11 }}>
+                    <Tag key={child.id} color={child.recorded ? THEME.red : undefined}>
                       {child.name}{!child.recorded ? ` · ${t('dashboard.notEntered')}` : ''}
                     </Tag>
                   ))}
@@ -233,18 +239,22 @@ function MealCard({ navigate, kresId }) {
     <CardShell
       title={t('dashboard.meal')}
       icon={<CoffeeOutlined />}
-      color={THEME.orange}
+      tone="orange"
       loading={loading}
       empty={!summary}
       emptyText={t('dashboard.noMeal')}
       onSeeAll={() => navigate('/yemek-listesi')}
     >
-      {summary && summary.map((part) => (
-        <div key={part.label} style={{ marginBottom: 8 }}>
-          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700 }}>{part.label}</Text>
-          <div><Text style={{ fontSize: 12.5 }}>{part.items.join(', ')}</Text></div>
+      {summary && (
+        <div className="dashboard-meal-list">
+          {summary.map((part) => (
+            <div key={part.label} className="dashboard-meal-row">
+              <Text type="secondary">{part.label}</Text>
+              <Text>{part.items.join(', ')}</Text>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </CardShell>
   );
 }
@@ -256,18 +266,23 @@ function EventCard({ navigate, kresId }) {
     <CardShell
       title={t('dashboard.event')}
       icon={<CalendarOutlined />}
-      color={THEME.teal}
+      tone="green"
       loading={loading}
       empty={!events.length}
       emptyText={t('dashboard.noEvent')}
       onSeeAll={() => navigate('/etkinlikler')}
     >
-      {events.map((e) => (
-        <div key={e.id} style={{ marginBottom: 8 }}>
-          <Text strong style={{ fontSize: 12.5, display: 'block' }}>{e.baslik || t('dashboard.eventFallback')}</Text>
-          {e.saat && <Text type="secondary" style={{ fontSize: 11 }}>{e.saat}</Text>}
-        </div>
-      ))}
+      <div className="dashboard-event-list">
+        {events.map((e) => (
+          <div key={e.id} className="dashboard-event-item">
+            <span className="dashboard-event-date">{e.tarih ? String(e.tarih).slice(8, 10) : '—'}</span>
+            <div>
+              <Text strong>{e.baslik || t('dashboard.eventFallback')}</Text>
+              {e.saat && <Text type="secondary">{e.saat}</Text>}
+            </div>
+          </div>
+        ))}
+      </div>
     </CardShell>
   );
 }
@@ -278,15 +293,11 @@ function EventCard({ navigate, kresId }) {
 // sohbette konuşulan sıralama: yoklama en geniş kart, menü ve etkinlik
 // yanında daha küçük ikişer kart.
 export default function DailySummary({ navigate, kresId }) {
-  const { t } = useTranslation();
   return (
-    <div style={{ marginBottom: 20 }}>
-      <Title level={5} style={{ marginBottom: 12 }}>{t('dashboard.dailySummary')}</Title>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-        <AttendanceCard navigate={navigate} kresId={kresId} />
-        <MealCard navigate={navigate} kresId={kresId} />
-        <EventCard navigate={navigate} kresId={kresId} />
-      </div>
+    <div className="dashboard-daily-grid">
+      <AttendanceCard navigate={navigate} kresId={kresId} />
+      <MealCard navigate={navigate} kresId={kresId} />
+      <EventCard navigate={navigate} kresId={kresId} />
     </div>
   );
 }
