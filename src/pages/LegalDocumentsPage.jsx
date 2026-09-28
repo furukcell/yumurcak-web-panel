@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Typography, Card } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import { THEME } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -22,6 +23,7 @@ const LEGAL_DOCS = [
 ];
 
 export default function LegalDocumentsPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKey = searchParams.get('doc');
   const selectedKey = initialKey && LEGAL_DOCS.some((d) => d.key === initialKey) ? initialKey : 'terms';
