@@ -166,7 +166,7 @@ export default function StaffTasksPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
           <Popconfirm title={t('staffTasks.unpublishConfirm')} okText={t('staffTasks.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}{t('staffTasks.unpublish')}</Button>
+            <Button danger size="small" loading={unpublishing}>{t('staffTasks.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
