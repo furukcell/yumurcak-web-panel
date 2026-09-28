@@ -987,5 +987,14 @@
         "badge": "Grande crèche"
       }
     }
+  },
+  "legal": {
+    "title": "Documents juridiques",
+    "subtitle": "Conditions d'utilisation, politique de confidentialité et notice KVKK.",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "kvkk": "Notice KVKK",
+    "updated": "Dernière mise à jour",
+    "legalNote": "Ce texte ne constitue pas un avis juridique."
   }
 }
