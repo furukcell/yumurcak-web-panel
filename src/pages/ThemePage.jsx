@@ -59,7 +59,7 @@ export default function ThemePage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 16, padding: 16, margin: '16px 0 20px' }}>
         <div>
-          <Text strong{t('theme.patternTitle')}</Text>
+          <Text strong>{t('theme.patternTitle')}</Text>
           <div><Text type="secondary" style={{ fontSize: 12 }}>{t('theme.patternSubtitle')}</Text></div>
         </div>
         <Switch checked={patternEnabled} onChange={setPatternEnabled} />
