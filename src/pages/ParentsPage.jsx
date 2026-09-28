@@ -105,7 +105,7 @@ export default function ParentsPage() {
 
             return {
               id,
-              ad: `${v.ad || ''} ${v.soyad || ''}`.trim() || v.kullaniciAdi || 'İsimsiz veli',
+              ad: `${v.ad || ''} ${v.soyad || ''}`.trim() || v.kullaniciAdi || t('parents.unnamed'),
               kullaniciAdi: v.kullaniciAdi || '-',
               telefon: v.telefon || '-',
               cocuklar: bagliCocuklar,
@@ -345,10 +345,10 @@ export default function ParentsPage() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="kullaniciAdi" label={t('parents.username')} rules={[{ required: true, message: t('parents.usernameRequired') }]}>
-            <Input placeholder="Örn: veli1" autoCapitalize="none" />
+            <Input placeholder={t('parents.usernamePlaceholder')} autoCapitalize="none" />
           </Form.Item>
           <Form.Item name="ad" label={t('parents.name')} rules={[{ required: true, message: t('parents.nameRequired') }]}>
-            <Input placeholder="Örn: Mehmet Yılmaz" />
+            <Input placeholder={t('parents.namePlaceholder')} />
           </Form.Item>
           <Form.Item name="telefon" label={t('parents.phone')}>
             <Input placeholder={t('parents.phonePlaceholder')} />
