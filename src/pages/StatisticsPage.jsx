@@ -256,27 +256,28 @@ function GeneralTab({ stats }) {
 }
 
 function TeacherTab({ teachers }) {
+  const { t } = useTranslation();
   if (!teachers.length) {
-    return <EmptyBlock icon="👨‍🏫" title="Öğretmen istatistiği yok" desc="Bu kurum için öğretmen veya öğretmen raporu bulunamadı." />;
+    return <EmptyBlock icon="👨‍🏫" title={t('statistics.noTeacherStats')} desc={t('statistics.noTeacherData')} />;
   }
 
   return (
     <>
-      <SectionTitle>Öğretmen / Sınıf Kullanımı</SectionTitle>
+      <SectionTitle>{t('statistics.teacherClassUsage')}</SectionTitle>
       {teachers.map((teacher) => (
         <Card key={teacher.id} style={{ ...cardStyle(), marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <Text strong>{teacher.name}</Text>
-              <div><Text type="secondary">{teacher.classNames || 'Sınıf bilgisi yok'}</Text></div>
+              <div><Text type="secondary">{teacher.classNames || t('statistics.noClassInfo')}</Text></div>
             </div>
-            <Tag color="purple">{teacher.childCount} çocuk</Tag>
+            <Tag color="purple">{t('statistics.childrenCount', { count: teacher.childCount })}</Tag>
           </div>
-          <ProgressLine label={`Bu ay günlük rapor: ${teacher.reportCount}`} percent={Math.min(100, teacher.reportCount * 5)} color={THEME.primary} />
-          <ProgressLine label={`Yoklama düzeni: %${teacher.attendanceRate}`} percent={teacher.attendanceRate} color={THEME.green} />
-          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Etkinlik kaydı: {teacher.eventCount}</Paragraph>
+          <ProgressLine label={t('statistics.dailyReports', { count: teacher.reportCount })} percent={Math.min(100, teacher.reportCount * 5)} color={THEME.primary} />
+          <ProgressLine label={t('statistics.attendanceRegularity', { rate: teacher.attendanceRate })} percent={teacher.attendanceRate} color={THEME.green} />
+          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{t('statistics.eventRecords', { count: teacher.eventCount })}</Paragraph>
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            Eksik rapor uyarısı: {teacher.reportCount < 5 ? 'Takip edilmeli' : 'Normal görünüyor'}
+            {t('statistics.missingReport', { status: teacher.reportCount < 5 ? t('statistics.followUp') : t('statistics.normal') })}
           </Paragraph>
         </Card>
       ))}
@@ -285,35 +286,36 @@ function TeacherTab({ teachers }) {
 }
 
 function ChildrenTab({ childList }) {
+  const { t } = useTranslation();
   if (!childList.length) {
-    return <EmptyBlock icon="👶" title="Çocuk istatistiği yok" desc="Bu kurum için çocuk kaydı bulunamadı." />;
+    return <EmptyBlock icon="👶" title={t('statistics.noChildStats')} desc={t('statistics.noChildData')} />;
   }
 
   return (
     <>
-      <SectionTitle>Çocuk Bazlı Gelişim ve Risk</SectionTitle>
+      <SectionTitle>{t('statistics.childDevelopmentRisk')}</SectionTitle>
       {childList.map((child) => (
         <Card key={child.id} style={{ ...cardStyle(), marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <Text strong>{child.name}</Text>
-              <div><Text type="secondary">{child.className || 'Sınıf bilgisi yok'}</Text></div>
+              <div><Text type="secondary">{child.className || t('statistics.noClassInfo')}</Text></div>
             </div>
             <RiskBadge riskCount={child.risks.length} />
           </div>
 
-          <ProgressLine label={`Devam oranı: %${child.attendanceRate}`} percent={child.attendanceRate} color={child.attendanceRate < 80 ? THEME.red : THEME.green} />
-          <ProgressLine label={`Yemek iyi: %${child.mealGoodRate}`} percent={child.mealGoodRate} color={child.mealGoodRate < 65 ? THEME.orange : THEME.green} />
-          <ProgressLine label={`Etkinlik katılımı: %${child.eventJoinRate}`} percent={child.eventJoinRate} color={child.eventJoinRate < 70 ? THEME.red : THEME.purple} />
+          <ProgressLine label={t('statistics.attendanceRate', { rate: child.attendanceRate })} percent={child.attendanceRate} color={child.attendanceRate < 80 ? THEME.red : THEME.green} />
+          <ProgressLine label={t('statistics.mealGood', { rate: child.mealGoodRate })} percent={child.mealGoodRate} color={child.mealGoodRate < 65 ? THEME.orange : THEME.green} />
+          <ProgressLine label={t('statistics.eventParticipation', { rate: child.eventJoinRate })} percent={child.eventJoinRate} color={child.eventJoinRate < 70 ? THEME.red : THEME.purple} />
 
-          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Uyku: {child.sleepSummary}</Paragraph>
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>Ruh hali: {child.moodSummary}</Paragraph>
-          <Paragraph type="secondary" style={{ marginBottom: 8 }}>Yorum: {child.comment}</Paragraph>
+          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{t('statistics.sleep')}: {child.sleepSummary}</Paragraph>
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.mood')}: {child.moodSummary}</Paragraph>
+          <Paragraph type="secondary" style={{ marginBottom: 8 }}>{t('statistics.comment')}: {child.comment}</Paragraph>
 
           <div>
             {child.risks.length
               ? child.risks.map((risk) => <Tag color="red" key={risk} style={{ marginBottom: 4 }}>{risk}</Tag>)
-              : <Tag color="green">Belirgin risk yok</Tag>}
+              : <Tag color="green"{t('statistics.noClearRisk')}</Tag>}
           </div>
         </Card>
       ))}
@@ -322,17 +324,18 @@ function ChildrenTab({ childList }) {
 }
 
 function RiskTab({ riskGroups }) {
+  const { t } = useTranslation();
   const groupList = [
-    { key: 'meal', title: '🍽️ Yemek Takibi Gerekenler', empty: 'Yemek tarafında belirgin risk yok.' },
-    { key: 'event', title: '🎨 Etkinlik Katılımı Düşük', empty: 'Etkinlik katılımı genel olarak iyi.' },
-    { key: 'attendance', title: '📅 Devamsızlık Dikkat', empty: 'Devamsızlıkta belirgin risk yok.' },
-    { key: 'mood', title: '😟 Ruh Hali Takibi', empty: 'Ruh hali tarafında belirgin risk yok.' },
-    { key: 'sleep', title: '😴 Uyku Takibi', empty: 'Uyku tarafında belirgin risk yok.' },
+    { key: 'meal', title: t('statistics.mealRisk'), empty: t('statistics.noMealRisk') },
+    { key: 'event', title: t('statistics.eventRisk'), empty: t('statistics.noEventRisk') },
+    { key: 'attendance', title: t('statistics.attendanceRisk'), empty: t('statistics.noAttendanceRisk') },
+    { key: 'mood', title: t('statistics.moodRisk'), empty: t('statistics.noMoodRisk') },
+    { key: 'sleep', title: t('statistics.sleepRisk'), empty: t('statistics.noSleepRisk') },
   ];
 
   return (
     <>
-      <SectionTitle>Risk Listesi</SectionTitle>
+      <SectionTitle>{t('statistics.riskList')}</SectionTitle>
       {groupList.map((group) => (
         <Card key={group.key} style={{ ...cardStyle(), marginBottom: 14 }} title={group.title}>
           {riskGroups[group.key].length ? (
@@ -358,15 +361,16 @@ function RiskTab({ riskGroups }) {
 }
 
 function ActivityTab({ entries }) {
+  const { t } = useTranslation();
   if (!entries.length) {
-    return <EmptyBlock icon="🕓" title="Aktivite kaydı yok" desc="Öğretmenler bilgi girdikçe burada kim, ne zaman, ne girdi görünecek." />;
+    return <EmptyBlock icon="🕓" title={t('statistics.activityNoRecords')} desc={t('statistics.activityNoData')} />;
   }
 
   return (
     <>
-      <SectionTitle>Öğretmen Giriş Kayıtları</SectionTitle>
+      <SectionTitle>{t('statistics.teacherLog')}</SectionTitle>
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-        Hangi öğretmenin hangi bilgiyi hangi saatte girdiğini gösterir (son {entries.length} kayıt).
+        {t('statistics.activityDescription', { count: entries.length })}
       </Paragraph>
       <Card style={cardStyle()}>
         {entries.map((entry, index) => (
@@ -397,8 +401,9 @@ function ActivityTab({ entries }) {
 }
 
 function RiskBadge({ riskCount }) {
+  const { t } = useTranslation();
   const hasRisk = riskCount > 0;
-  return <Tag color={hasRisk ? 'red' : 'green'}>{hasRisk ? `${riskCount} risk` : 'Normal'}</Tag>;
+  return <Tag color={hasRisk ? 'red' : 'green'}>{hasRisk ? t('statistics.riskCount', { count: riskCount }) : t('statistics.normal')}</Tag>;
 }
 
 function EmptyBlock({ icon, title, desc }) {
