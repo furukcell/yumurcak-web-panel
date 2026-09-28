@@ -17,7 +17,7 @@ const { Title, Text } = Typography;
 const NODE_PATH = 'personelGorevListeleri';
 const KAYNAK = 'admin_aylik';
 
-function defaultSections() {
+function defaultSections(t) {
   return [
     { id: generateId(), baslik: t('staffTasks.sections.teachers'), icerik: '' },
     { id: generateId(), baslik: t('staffTasks.sections.kitchen'), icerik: '' },
@@ -40,7 +40,7 @@ export default function StaffTasksPage() {
   const monthLabel = useMemo(() => getMonthLabel(monthDate), [monthDate]);
 
   const [baslik, setBaslik] = useState('');
-  const [bolumler, setBolumler] = useState(defaultSections);
+  const [bolumler, setBolumler] = useState(() => defaultSections(t));
   const [loadingDraft, setLoadingDraft] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
@@ -56,7 +56,7 @@ export default function StaffTasksPage() {
       if (cancelled) return;
       if (record) {
         setBaslik(record.baslik || '');
-        setBolumler(Array.isArray(record.bolumler) && record.bolumler.length > 0 ? record.bolumler.map((s) => ({ id: generateId(), baslik: s.baslik || '', icerik: s.icerik || '' })) : defaultSections());
+        setBolumler(Array.isArray(record.bolumler) && record.bolumler.length > 0 ? record.bolumler.map((s) => ({ id: generateId(), baslik: s.baslik || '', icerik: s.icerik || '' })) : defaultSections(t));
       } else {
         setBaslik('');
         setBolumler(defaultSections());
@@ -178,7 +178,7 @@ export default function StaffTasksPage() {
 
       {!loadingDraft && (
         <>
-          <Text strong{t('staffTasks.headingOptional')}</Text>
+          <Text strong>{t('staffTasks.headingOptional')}</Text>
           <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder={t('staffTasks.defaultTitle', { month: monthLabel })} style={{ marginTop: 6, marginBottom: 18 }} />
 
           {bolumler.map((section) => (
@@ -192,7 +192,7 @@ export default function StaffTasksPage() {
           ))}
           <Button icon={<PlusOutlined />} onClick={addSection} block style={{ marginBottom: 16 }}>{t('staffTasks.addSection')}</Button>
 
-          <Button type="primary" block loading={saving} onClick={doPublish} style={{ height: 46 }}{t('staffTasks.publish', { month: monthLabel })}
+          <Button type="primary" block loading={saving} onClick={doPublish} style={{ height: 46 }}>{t('staffTasks.publish', { month: monthLabel })}</Button>
         </>
       )}
     </div>
