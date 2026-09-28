@@ -478,7 +478,8 @@
     "saved": "Veranstaltung gespeichert",
     "deleted": "Veranstaltung gelöscht",
     "saveError": "Fehler beim Speichern",
-    "deleteError": "Fehler beim Löschen"
+    "deleteError": "Fehler beim Löschen",
+    "noSelectedClass": "Keine Klasse ausgewählt"
   },
   "gallery": {
     "title": "Gallery Management",
