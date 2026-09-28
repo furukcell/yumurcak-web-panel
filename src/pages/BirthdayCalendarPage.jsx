@@ -4,6 +4,7 @@ import { LeftOutlined, RightOutlined, PrinterOutlined } from '@ant-design/icons'
 import { ref, onValue, get, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { getMonthLabel, shiftMonth } from '../services/monthlyDocuments';
 import { fetchInstitutionInfo, buildBirthdayCalendarHtml, printHtmlDocument } from '../services/documentPdf';
@@ -14,6 +15,7 @@ const { Title, Text } = Typography;
 // bir belge DEĞİL, cocuklar.dogumTarihi alanından hesaplanan bir rapor.
 export default function BirthdayCalendarPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [monthDate, setMonthDate] = useState(new Date());
@@ -68,7 +70,7 @@ export default function BirthdayCalendarPage() {
       const html = buildBirthdayCalendarHtml({ kres, monthLabel, records: birthdays });
       printHtmlDocument(html);
     } catch {
-      message.error('Yazdırılacak belge oluşturulamadı.');
+      message.error(t('birthday.printError'));
     } finally {
       setPrinting(false);
     }
@@ -76,17 +78,17 @@ export default function BirthdayCalendarPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Doğum Günü Takvimi</Title>
-      <Text type="secondary">Çocukların kayıtlı doğum tarihinden otomatik hesaplanır</Text>
+      <Title level={3} style={{ marginBottom: 4 }}{t('birthday.title')}</Title>
+      <Text type="secondary">{t('birthday.subtitle')}</Text>
       <div style={{ marginTop: 10 }}>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 16px' }}>
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => setMonthDate((prev) => shiftMonth(prev, -1))} />
         <div style={{ textAlign: 'center' }}>
           <Text style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{monthLabel}</Text>
-          <div><Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12 }}>{birthdays.length} doğum günü</Text></div>
+          <div><Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12 }}>{t('birthday.count', { count: birthdays.length })}</Text></div>
         </div>
         <Button icon={<RightOutlined />} shape="circle" onClick={() => setMonthDate((prev) => shiftMonth(prev, 1))} />
       </div>
@@ -94,7 +96,7 @@ export default function BirthdayCalendarPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
       ) : birthdays.length === 0 ? (
-        <Empty description="Bu ay doğum günü olan çocuk yok" />
+        <Empty description={t('birthday.empty')} />
       ) : (
         <List
           dataSource={birthdays}
@@ -106,7 +108,7 @@ export default function BirthdayCalendarPage() {
                 </div>
                 <div>
                   <Text strong>🎂 {item.ad}</Text>
-                  <div><Text type="secondary" style={{ fontSize: 12 }}>{item.sinifAd} · {item.yasOlacak} yaşına giriyor</Text></div>
+                  <div><Text type="secondary" style={{ fontSize: 12 }}>{item.sinifAd} · {t('birthday.turningAge', { age: item.yasOlacak })}</Text></div>
                 </div>
               </div>
             </List.Item>
