@@ -9,7 +9,7 @@ const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
 
 function nameOf(r) { return r?.ad || r?.adSoyad || r?.isim || r?.kresAdi || r?.kresId || 'İsimsiz kurum'; }
-function planOf(s) { if (!s) return '—'; const tier = s.planTier === 'per_student' ? 'Öğrenci bazlı özel' : getTierById(s.planTier).title; const p = s.planPeriod === 'yillik' ? 'Yıllık' : s.planPeriod === 'aylik' ? 'Aylık' : s.planPeriod || ''; return `${tier}${p ? ` / ${p}` : ''}`; }
+function planOf(s) { if (!s) return '—'; const tier = s.planTier === 'per_student' ? 'Öğrenci bazlı özel' : s.planTier === 'custom' ? `Özel (${s.ogrenciLimiti} öğrenci)` : getTierById(s.planTier).title; const p = s.planPeriod === 'yillik' ? 'Yıllık' : s.planPeriod === 'aylik' ? 'Aylık' : s.planPeriod || ''; return `${tier}${p ? ` / ${p}` : ''}`; }
 function dateOf(v) { return v ? new Date(v).toLocaleDateString('tr-TR') : '—'; }
 
 export default function SuperAdminSubscriptions() {
@@ -126,7 +126,8 @@ export default function SuperAdminSubscriptions() {
 
     <Modal open={modal?.type==='manual'} title={`${modal?.row ? nameOf(modal.row) : ''} — Manuel / IBAN Abonelik`} okText="Aktif Et" cancelText="Vazgeç" confirmLoading={busy} onOk={saveManual} onCancel={()=>!busy&&setModal(null)} destroyOnHidden width={560}>
       <Form form={form} layout="vertical" style={{marginTop:18}}>
-        <Form.Item name="tierId" label="Paket" rules={[{required:true,message:'Paket seç'}]}><Select options={PACKAGE_TIERS.map(t=>({value:t.id,label:`${t.title} — ${t.range} (${formatPrice(t.monthly)}/ay)`}))}/></Form.Item>
+        <Form.Item name="tierId" label="Paket" rules={[{required:true,message:'Paket seç'}]}><Select options={[...PACKAGE_TIERS.map(t=>({value:t.id,label:`${t.title} — ${t.range} (${formatPrice(t.monthly)}/ay)`})),{value:'custom',label:'Özel — öğrenci sayısını ben seçeyim'}]}/></Form.Item>
+        <Form.Item noStyle shouldUpdate={(p,c)=>p.tierId!==c.tierId}>{({getFieldValue})=>getFieldValue('tierId')==='custom'?<Form.Item name="ogrenciLimiti" label="Öğrenci limiti" extra="Kurum bu sayının üstünde öğrenci ekleyemez." rules={[{required:true,message:'Öğrenci sayısı gir'},{validator:(_,val)=>{const mevcut=data.childrenByKres[modal?.row?.id]||0;return val!=null&&val<mevcut?Promise.reject(new Error(`Kurumda şu an ${mevcut} öğrenci var, limit bunun altında olamaz.`)):Promise.resolve();}}]}><InputNumber min={1} precision={0} style={{width:'100%'}}/></Form.Item>:null}</Form.Item>
         <Form.Item name="period" label="Dönem" rules={[{required:true}]}><Select options={[{value:'aylik',label:'Aylık'},{value:'yillik',label:'Yıllık'},{value:'ozel',label:'Özel bitiş tarihi'}]}/></Form.Item>
         <Form.Item noStyle shouldUpdate={(p,c)=>p.period!==c.period}>{({getFieldValue})=>getFieldValue('period')==='ozel'?<Form.Item name="customEndDate" label="Bitiş tarihi" rules={[{required:true,message:'Bitiş tarihi seç'}]}><DatePicker style={{width:'100%'}} format="DD.MM.YYYY"/></Form.Item>:null}</Form.Item>
         <Form.Item name="price" label="Tutar (TL)" extra="Boş bırakırsan paketin standart fiyatı kullanılır."><InputNumber min={0} style={{width:'100%'}}/></Form.Item>
