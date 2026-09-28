@@ -153,7 +153,7 @@ export default function StaffTasksPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}{t('staffTasks.title')}</Title>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('staffTasks.title')}</Title>
       <Text type="secondary">{t('staffTasks.subtitle')}</Text>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 12px' }}>
@@ -172,8 +172,8 @@ export default function StaffTasksPage() {
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('staffTasks.copyPrevious')}</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>{t('staffTasks.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </Space>
 
       {!loadingDraft && (
@@ -190,7 +190,7 @@ export default function StaffTasksPage() {
               <Input.TextArea value={section.icerik} onChange={(e) => updateSection(section.id, 'icerik', e.target.value)} rows={3} placeholder={t('staffTasks.contentPlaceholder')} />
             </div>
           ))}
-          <Button icon={<PlusOutlined />} onClick={addSection} block style={{ marginBottom: 16 }}{t('staffTasks.addSection')}</Button>
+          <Button icon={<PlusOutlined />} onClick={addSection} block style={{ marginBottom: 16 }}>{t('staffTasks.addSection')}</Button>
 
           <Button type="primary" block loading={saving} onClick={doPublish} style={{ height: 46 }}{t('staffTasks.publish', { month: monthLabel })}
         </>
