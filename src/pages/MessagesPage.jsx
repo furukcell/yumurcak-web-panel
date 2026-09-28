@@ -4,6 +4,7 @@ import { SendOutlined } from '@ant-design/icons';
 import { ref, onValue, update, push, get, query, orderByChild, equalTo, limitToLast, endBefore, increment } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import {
   formatMessageTime,
@@ -23,7 +24,7 @@ function getConversationId(adminId, role, userId) {
   return `admin_${adminId}_${role}_${userId}`;
 }
 function getUserName(user) {
-  return `${user?.ad || ''} ${user?.soyad || ''}`.trim() || user?.kullaniciAdi || 'Kullanıcı';
+  return `${user?.ad || ''} ${user?.soyad || ''}`.trim() || user?.kullaniciAdi || t('messages.user');
 }
 function getParentChildrenText(parentId, children, classes) {
   const linked = Object.values(children || {}).filter((child) => child?.veliIds?.includes(parentId));
@@ -45,6 +46,7 @@ function getTeacherClassText(teacherId, classes) {
 // (iki panelli: sol kişi listesi, sağ sohbet).
 export default function MessagesPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const adminId = kullanici?.uid || kullanici?.id;
   const kresId = kullanici?.kresId || 'kres001';
 
@@ -119,19 +121,19 @@ export default function MessagesPage() {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 120px)', gap: 16 }}>
       <div style={{ width: 320, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-        <Title level={4} style={{ marginBottom: 8 }}>💬 Mesajlar</Title>
+        <Title level={4} style={{ marginBottom: 8 }}>💬 {t('messages.title')}</Title>
         <Segmented
           block
           value={tab}
           onChange={setTab}
-          options={[{ label: 'Tümü', value: 'all' }, { label: 'Veliler', value: 'veli' }, { label: 'Öğretmenler', value: 'ogretmen' }]}
+          options={[{ label: t('messages.all'), value: 'all' }, { label: t('messages.parents'), value: 'veli' }, { label: t('messages.teachers'), value: 'ogretmen' }]}
           style={{ marginBottom: 12 }}
         />
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
           ) : contacts.length === 0 ? (
-            <Empty description="Kişi bulunamadı" style={{ marginTop: 40 }} />
+            <Empty description={t('messages.noPeople')} style={{ marginTop: 40 }} />
           ) : (
             contacts.map((contact) => (
               <div
@@ -149,8 +151,8 @@ export default function MessagesPage() {
                     <Text strong ellipsis style={{ maxWidth: 160 }}>{getUserName(contact)}</Text>
                     {contact.unread > 0 && <Tag color="red">{contact.unread > 99 ? '99+' : contact.unread}</Tag>}
                   </div>
-                  <Text type="secondary" style={{ fontSize: 12 }} ellipsis>{contact.childInfo || 'Kurum kullanıcısı'}</Text>
-                  <div><Text type="secondary" style={{ fontSize: 12 }} ellipsis>{contact.sonMesaj || 'Henüz mesaj yok'}</Text></div>
+                  <Text type="secondary" style={{ fontSize: 12 }} ellipsis>{contact.childInfo || t('messages.institutionUser')}</Text>
+                  <div><Text type="secondary" style={{ fontSize: 12 }} ellipsis>{contact.sonMesaj || t('messages.noMessage')}</Text></div>
                 </div>
               </div>
             ))
@@ -163,7 +165,7 @@ export default function MessagesPage() {
           <ChatPanel key={selectedContact.conversationId} contact={selectedContact} adminId={adminId} kullanici={kullanici} kresId={kresId} />
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Empty description="Sohbet etmek için bir kişi seç" />
+            <Empty description={t('messages.selectPerson')} />
           </div>
         )}
       </div>
@@ -267,7 +269,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
     setText('');
     try {
       const now = Date.now();
-      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
+      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('messages.admin');
       const mergedMeta = normalizeConversationMeta({ ...conversationMeta, ...conversation });
       const participants = getParticipantIds(mergedMeta).filter(Boolean);
       if (!participants.includes(currentUserId)) participants.push(currentUserId);
@@ -305,13 +307,13 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
           routeName: 'MessageDetail',
           routeParams: { conversationId },
           createdBy: currentUserId,
-        }).catch((err) => console.warn('Mesaj gönderildi ama bildirim oluşturulamadı:', err));
+        }).catch((err) => console.warn(t('messages.notificationWarning'), err));
       }
 
       setTimeout(() => listRef.current?.scrollTo?.({ top: listRef.current.scrollHeight, behavior: 'smooth' }), 80);
     } catch (err) {
       console.error(err);
-      message.error('Mesaj gönderilemedi.');
+      message.error(t('messages.sendError'));
       setText(clean);
     } finally {
       setSending(false);
@@ -322,7 +324,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
     <>
       <div style={{ padding: '14px 18px', borderBottom: `1px solid ${THEME.border}` }}>
         <Text strong style={{ fontSize: 16 }}>{getUserName(contact)}</Text>
-        <div><Text type="secondary" style={{ fontSize: 12 }}>{contact.role === 'veli' ? `Veli · ${contact.childInfo || ''}` : `Öğretmen · ${contact.childInfo || ''}`}</Text></div>
+        <div><Text type="secondary" style={{ fontSize: 12 }}>{contact.role === 'veli' ? contact.role === 'veli' ? `${t('messages.parent')} · ${contact.childInfo || ''}` : `${t('messages.teacher')} · ${contact.childInfo || ''}`}</Text></div>
       </div>
 
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: 16, background: THEME.bg }}>
@@ -332,14 +334,14 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
           <>
             {hasMore ? (
               <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                <Button size="small" loading={loadingMore} onClick={loadOlderMessages}>Daha fazla mesaj yükle</Button>
+                <Button size="small" loading={loadingMore} onClick={loadOlderMessages}>{t('messages.loadMore')}</Button>
               </div>
             ) : allMessages.length > 0 ? (
-              <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 12, marginBottom: 12 }}>Konuşmanın başlangıcı</Text>
+              <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 12, marginBottom: 12 }}{t('messages.start')}</Text>
             ) : null}
 
             {allMessages.length === 0 ? (
-              <Empty description="Henüz mesaj yok" style={{ marginTop: 40 }} />
+              <Empty description={t('messages.noMessages')} style={{ marginTop: 40 }} />
             ) : (
               allMessages.map((item) => {
                 const mine = item.gonderenId === currentUserId;
@@ -356,7 +358,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
                         <div style={{ color: mine ? '#fff' : THEME.text, fontSize: 14 }}>{item.metin}</div>
                         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                           <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.72)' : THEME.muted }}>{formatMessageTime(item.createdAt)}</Text>
-                          {mine && <Text style={{ fontSize: 10, fontWeight: 700, color: read ? '#BFFFD2' : 'rgba(255,255,255,0.72)' }}>{read ? 'Okundu' : 'Gönderildi'}</Text>}
+                          {mine && <Text style={{ fontSize: 10, fontWeight: 700, color: read ? '#BFFFD2' : 'rgba(255,255,255,0.72)' }}>{read ? t('messages.read') : t('messages.sent')}</Text>}
                         </div>
                       </div>
                     </div>
@@ -372,7 +374,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
         <Input.TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Mesaj yaz..."
+          placeholder={t('messages.writePlaceholder')}
           autoSize={{ minRows: 1, maxRows: 4 }}
           onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); sendMessage(); } }}
           disabled={sending}
