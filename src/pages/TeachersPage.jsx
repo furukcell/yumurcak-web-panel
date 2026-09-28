@@ -72,7 +72,7 @@ export default function TeachersPage() {
 
             return {
               id,
-              ad: adSoyad || u.kullaniciAdi || 't('teachers.unnamed')',
+              ad: adSoyad || u.kullaniciAdi || t('teachers.unnamed'),
               kullaniciAdi: u.kullaniciAdi || '-',
               telefon: u.telefon || u.tel || '-',
               email: u.email || '-',
@@ -147,7 +147,7 @@ export default function TeachersPage() {
       // Auth şifresi değişmez ve öğretmen giriş yapamaz hale gelir. Tutarlılık
       // için web tarafında bu güvenli davranış uygulandı.
       if (editingId && oldTeacher.authUid && (values.sifre || '').trim()) {
-        message.error('t('teachers.authPassword')');
+        message.error(t('teachers.authPassword'));
         setSaving(false);
         return;
       }
@@ -155,7 +155,7 @@ export default function TeachersPage() {
       const kaydedilenSifre = (values.sifre || '').trim() || oldTeacher.sifre || '123456';
 
       if (kaydedilenSifre.length < 6) {
-        message.error('t('teachers.passwordMin')');
+        message.error(t('teachers.passwordMin'));
         setSaving(false);
         return;
       }
@@ -228,20 +228,20 @@ export default function TeachersPage() {
       }
 
       await update(ref(database), updates);
-      message.success(editingId ? 't('teachers.updated')' : 't('teachers.saved')');
+      message.success(editingId ? t('teachers.updated') : t('teachers.saved'));
       setDrawerOpen(false);
 
       denetimKaydiYaz({
         kresId: nextKresId,
         kullanici,
         islem: editingId ? 'guncelle' : 'ekle',
-        modul: 't('teachers.title')',
+        modul: t('teachers.title'),
         hedef: values.ad.trim(),
       });
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
-        message.error('t('teachers.authExists')');
+        message.error(t('teachers.authExists'));
       } else {
         message.error(`Öğretmen kaydedilemedi. ${error?.code || error?.message || ''}`);
       }
@@ -257,8 +257,8 @@ export default function TeachersPage() {
     setDeletingId(record.id);
     try {
       await deleteKullaniciHesabi(record.id);
-      message.success('t('teachers.deleted')');
-      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 't('teachers.title')', hedef: record.ad });
+      message.success(t('teachers.deleted'));
+      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: t('teachers.title'), hedef: record.ad });
     } catch (error) {
       console.error(error);
       message.error(`Öğretmen silinemedi. ${error?.message || ''}`);
@@ -279,9 +279,9 @@ export default function TeachersPage() {
   const columns = [
     { title: t('teachers.name'), dataIndex: 'ad', key: 'ad' },
     { title: t('teachers.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
-    { title: 'Sınıf', key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">{t('teachers.unassigned')}</Text>) },
-    { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
-    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('teachers.active') : t('teachers.inactive')}</Tag> },
+    { title: t('teachers.class'), key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">{t('teachers.unassigned')}</Text>) },
+    { title: t('teachers.phone'), dataIndex: 'telefon', key: 'telefon' },
+    { title: t('teachers.status'), key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('teachers.active') : t('teachers.inactive')}</Tag> },
     {
       title: '',
       key: 'sil',
