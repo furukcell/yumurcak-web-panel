@@ -815,5 +815,28 @@
     "added": "Ajouté",
     "updated": "Mis à jour",
     "deleted": "Supprimé"
+  },
+  "bell": {
+    "title": "Cloche de la crèche",
+    "subtitle": "S’affiche ici lorsque les parents indiquent « J’arrive » ou « Je suis à la porte »",
+    "active": "Actives",
+    "unread": "Non lues",
+    "completed": "Terminées",
+    "empty": "Aucune notification de cloche pour le moment",
+    "read": "Lue",
+    "complete": "Terminée",
+    "delivery": "Remise",
+    "time": "Heure",
+    "noTime": "Heure inconnue",
+    "noDelivery": "Aucune information de remise",
+    "leaving": "🏫 Je dépose",
+    "pickingUp": "👋 Je viens chercher",
+    "atDoor": "📍 Je suis à la porte",
+    "coming": "🚗 J’arrive",
+    "notification": "Notification",
+    "child": "Enfant",
+    "parent": "Parent",
+    "readError": "Impossible de marquer la notification comme lue.",
+    "completeError": "Impossible de terminer la notification."
   }
 }
