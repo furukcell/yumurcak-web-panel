@@ -190,10 +190,10 @@ export default function PollsPage() {
             </Space>
           ))}
         </div>
-        <Button icon={<PlusOutlined />} onClick={addOption} style={{ marginBottom: 16 }}{t('polls.addOption')}</Button>
+        <Button icon={<PlusOutlined />} onClick={addOption} style={{ marginBottom: 16 }}>{t('polls.addOption')}</Button>
 
         <div>
-          <Button type="primary" loading={saving} onClick={createPoll}{t('polls.create')}</Button>
+          <Button type="primary" loading={saving} onClick={createPoll}>{t('polls.create')}</Button>
         </div>
       </Card>
 
