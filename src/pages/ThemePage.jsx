@@ -3,6 +3,7 @@ import { Typography, Button, Switch, Row, Col, Tag, message, Spin } from 'antd';
 import { ref, get, update } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { THEME_LIST, DEFAULT_THEME_ID } from '../theme/themes';
 
@@ -11,6 +12,7 @@ const { Title, Text } = Typography;
 // Mobildeki AdminThemeScreen.js'in web karşılığı.
 export default function ThemePage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || 'kres001';
 
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function ThemePage() {
         setSelectedThemeId(data.temaId || DEFAULT_THEME_ID);
         setPatternEnabled(data.temaAyarlari?.patternEnabled !== false);
       } catch {
-        message.error('Tema bilgisi okunamadı.');
+        message.error(t('theme.loadError'));
       } finally {
         setLoading(false);
       }
@@ -40,9 +42,9 @@ export default function ThemePage() {
         temaId: selectedThemeId,
         temaAyarlari: { temaId: selectedThemeId, patternEnabled, updatedAt: Date.now() },
       });
-      message.success('Kreş teması güncellendi');
+      message.success(t('theme.saved'));
     } catch {
-      message.error('Tema kaydedilemedi.');
+      message.error(t('theme.saveError'));
     } finally {
       setSaving(false);
     }
@@ -52,13 +54,13 @@ export default function ThemePage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Tema Ayarları</Title>
-      <Text type="secondary">Bu seçim web panelinize, veli ve öğretmen ekranlarına uygulanır.</Text>
+      <Title level={3} style={{ marginBottom: 4 }}{t('theme.title')}</Title>
+      <Text type="secondary">{t('theme.subtitle')}</Text>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 16, padding: 16, margin: '16px 0 20px' }}>
         <div>
-          <Text strong>Arka plan figürleri</Text>
-          <div><Text type="secondary" style={{ fontSize: 12 }}>Hayvan ve şekil desenleri ana ekranda hafif görünür.</Text></div>
+          <Text strong{t('theme.patternTitle')}</Text>
+          <div><Text type="secondary" style={{ fontSize: 12 }}>{t('theme.patternSubtitle')}</Text></div>
         </div>
         <Switch checked={patternEnabled} onChange={setPatternEnabled} />
       </div>
@@ -72,7 +74,7 @@ export default function ThemePage() {
                 onClick={() => setSelectedThemeId(item.id)}
                 style={{ cursor: 'pointer', background: item.card, borderRadius: 20, padding: 12, border: `${active ? 2 : 1}px solid ${active ? item.primary : item.border}`, position: 'relative', minHeight: 165 }}
               >
-                {active && <Tag color={item.primary} style={{ position: 'absolute', right: 10, top: 10, border: 'none', color: '#fff', background: item.primary }}>Seçili</Tag>}
+                {active && <Tag color={item.primary} style={{ position: 'absolute', right: 10, top: 10, border: 'none', color: '#fff', background: item.primary }}{t('theme.selected')}</Tag>}
                 <div style={{ height: 78, borderRadius: 16, background: item.primary, padding: 10, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5 }}>
                   <div style={{ height: 26, borderRadius: 10, background: 'rgba(255,255,255,0.85)' }} />
                   <div style={{ display: 'flex', gap: 5 }}>
@@ -89,7 +91,7 @@ export default function ThemePage() {
         })}
       </Row>
 
-      <Button type="primary" block loading={saving} onClick={handleSave} style={{ height: 46, marginTop: 20 }}>Bu Temayı Kullan</Button>
+      <Button type="primary" block loading={saving} onClick={handleSave} style={{ height: 46, marginTop: 20 }}{t('theme.use')}</Button>
     </div>
   );
 }
