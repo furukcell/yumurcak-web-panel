@@ -10,7 +10,7 @@ import { createRoleNotification, createUserNotification } from '../utils/notific
 
 const { Title, Text, Paragraph } = Typography;
 
-const TARGET_OPTIONS = [
+const getTargetOptions = (t) => [
   { key: 'all', label: t('announcements.all'), icon: '🏫' },
   { key: 'veli', label: t('announcements.parents'), icon: '👨‍👩‍👧' },
   { key: 'ogretmen', label: t('announcements.teachers'), icon: '👩‍🏫' },
@@ -32,6 +32,7 @@ export default function AnnouncementsPage() {
   const [targetRole, setTargetRole] = useState('all');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [form] = Form.useForm();
+  const TARGET_OPTIONS = getTargetOptions(t);
 
   useEffect(() => {
     if (!kresId) {
