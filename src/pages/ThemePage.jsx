@@ -54,7 +54,7 @@ export default function ThemePage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}{t('theme.title')}</Title>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('theme.title')}</Title>
       <Text type="secondary">{t('theme.subtitle')}</Text>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 16, padding: 16, margin: '16px 0 20px' }}>
@@ -74,7 +74,7 @@ export default function ThemePage() {
                 onClick={() => setSelectedThemeId(item.id)}
                 style={{ cursor: 'pointer', background: item.card, borderRadius: 20, padding: 12, border: `${active ? 2 : 1}px solid ${active ? item.primary : item.border}`, position: 'relative', minHeight: 165 }}
               >
-                {active && <Tag color={item.primary} style={{ position: 'absolute', right: 10, top: 10, border: 'none', color: '#fff', background: item.primary }}{t('theme.selected')}</Tag>}
+                {active && <Tag color={item.primary} style={{ position: 'absolute', right: 10, top: 10, border: 'none', color: '#fff', background: item.primary }}>{t('theme.selected')}</Tag>}
                 <div style={{ height: 78, borderRadius: 16, background: item.primary, padding: 10, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5 }}>
                   <div style={{ height: 26, borderRadius: 10, background: 'rgba(255,255,255,0.85)' }} />
                   <div style={{ display: 'flex', gap: 5 }}>
@@ -91,7 +91,7 @@ export default function ThemePage() {
         })}
       </Row>
 
-      <Button type="primary" block loading={saving} onClick={handleSave} style={{ height: 46, marginTop: 20 }}{t('theme.use')}</Button>
+      <Button type="primary" block loading={saving} onClick={handleSave} style={{ height: 46, marginTop: 20 }}>{t('theme.use')}</Button>
     </div>
   );
 }
