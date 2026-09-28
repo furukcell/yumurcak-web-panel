@@ -78,10 +78,10 @@ export default function BirthdayCalendarPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}{t('birthday.title')}</Title>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('birthday.title')}</Title>
       <Text type="secondary">{t('birthday.subtitle')}</Text>
       <div style={{ marginTop: 10 }}>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 16px' }}>
