@@ -42,6 +42,7 @@ import { normalizeUsername, usernameToEmail } from '../utils/authHelpers';
 import { getSecondaryAuth, releaseSecondaryAuth } from '../utils/secondaryAuth';
 import { normalizeChildBirthDate } from '../utils/childDates';
 import { addUserIndexUpdates, addChildIndexUpdates, addClassIndexUpdates } from '../utils/firebaseIndexHelpers';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -117,6 +118,7 @@ async function bulOrOlusturKullanici({ ad, kullaniciAdi, rol, kresId, sifre, upd
 
 export default function BulkOnboardingPage() {
   const { kullanici, kres } = useAuth();
+  const { t } = useTranslation();
   const kresId = kres?.id || kullanici?.kresId;
 
   const [siniflar, setSiniflar] = useState([bosSinif()]);
@@ -233,11 +235,11 @@ export default function BulkOnboardingPage() {
 
   const olustur = async () => {
     if (!kresId) {
-      message.error('Kreş bilgisi bulunamadı, lütfen tekrar giriş yapın.');
+      message.error(t('bulkOnboarding.loginAgain'));
       return;
     }
     if (sifre.trim().length < 6) {
-      message.error('Ortak şifre en az 6 karakter olmalı.');
+      message.error(t('bulkOnboarding.passwordTooShort'));
       return;
     }
     const hatalar = dogrula();
@@ -247,7 +249,7 @@ export default function BulkOnboardingPage() {
     }
     if (ogrenciLimiti != null && mevcutOgrenciSayisi + toplamOgrenci > ogrenciLimiti) {
       message.error(
-        `Öğrenci limitiniz yetersiz: mevcut ${mevcutOgrenciSayisi} + eklenecek ${toplamOgrenci} = ${mevcutOgrenciSayisi + toplamOgrenci}, limit ${ogrenciLimiti}.`
+        t('bulkOnboarding.studentLimit', { current: mevcutOgrenciSayisi, limit: ogrenciLimiti, adding: toplamOgrenci })
       );
       return;
     }
@@ -348,7 +350,7 @@ export default function BulkOnboardingPage() {
       ozet.ogretmenler = Array.from(new Map(ozet.ogretmenler.map((o) => [o.kullaniciAdi, o])).values());
       ozet.veliler = Array.from(new Map(ozet.veliler.map((v) => [v.kullaniciAdi, v])).values());
       setSonuc(ozet);
-      message.success(`${ozet.siniflar} sınıf, ${ozet.ogrenciler} öğrenci oluşturuldu.`);
+      message.success(t('bulkOnboarding.success', { classes: ozet.siniflar, students: ozet.ogrenciler }));
       setSiniflar([bosSinif()]);
     } finally {
       setSaving(false);
@@ -358,7 +360,7 @@ export default function BulkOnboardingPage() {
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>Toplu Kurulum</Title>
+        <Title level={3} style={{ margin: 0 }}>{t('bulkOnboarding.title')}</Title>
         <Text type="secondary">Sınıf ekle, içine öğretmen ve öğrenci/veli kartlarını doldur.</Text>
       </div>
 
@@ -367,16 +369,16 @@ export default function BulkOnboardingPage() {
           style={{ marginBottom: 16 }}
           type={mevcutOgrenciSayisi >= ogrenciLimiti ? 'error' : 'info'}
           showIcon
-          message={`Öğrenci limiti: ${mevcutOgrenciSayisi} / ${ogrenciLimiti} (bu formla eklenecek: ${toplamOgrenci})`}
+          message={t('bulkOnboarding.studentLimit', { current: mevcutOgrenciSayisi, limit: ogrenciLimiti, adding: toplamOgrenci })}
         />
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <Text strong>Ortak Şifre</Text>
+        <Text strong>{t('bulkOnboarding.sharedPassword')}</Text>
         <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
-          Oluşturulacak tüm öğretmen ve veli hesapları bu şifreyle açılır.
+          {t('bulkOnboarding.passwordHint')}
         </Paragraph>
-        <Input style={{ maxWidth: 280 }} value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder="en az 6 karakter" />
+        <Input style={{ maxWidth: 280 }} value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder={t('bulkOnboarding.minPassword')} />
       </Card>
 
       <Collapse
@@ -385,7 +387,7 @@ export default function BulkOnboardingPage() {
         style={{ marginBottom: 16 }}
         items={siniflar.map((sinifData) => ({
           key: sinifData.key,
-          label: sinifData.ad ? `${sinifData.ad} — ${sinifData.ogrenciler.filter((o) => o.ad.trim()).length} öğrenci` : 'Yeni Sınıf',
+          label: sinifData.ad ? `${sinifData.ad} — ${sinifData.ogrenciler.filter((o) => o.ad.trim()).length} ${t('bulkOnboarding.studentCount', { count: '' }).trim()}` : t('bulkOnboarding.newClass'),
           extra: (
             <Button
               danger
@@ -403,58 +405,58 @@ export default function BulkOnboardingPage() {
             <div>
               <Space wrap size="middle" style={{ marginBottom: 16 }}>
                 <Input
-                  placeholder="Sınıf Adı (örn: Kelebekler)"
+                  placeholder={t('bulkOnboarding.classNamePlaceholder')}
                   style={{ width: 220 }}
                   value={sinifData.ad}
                   onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ad', e.target.value)}
                 />
                 <Select
-                  placeholder="Yaş Grubu"
+                  placeholder={t('bulkOnboarding.ageGroup')}
                   style={{ width: 200 }}
                   value={sinifData.yasGrubu}
                   onChange={(v) => sinifAlanGuncelle(sinifData.key, 'yasGrubu', v)}
                   options={YAS_GRUPLARI.map((g) => ({ value: g.label, label: g.label }))}
                 />
                 <Input
-                  placeholder="Öğretmen Adı (opsiyonel)"
+                  placeholder={t('bulkOnboarding.teacherNameOptional')}
                   style={{ width: 200 }}
                   value={sinifData.ogretmenAd}
                   onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ogretmenAd', e.target.value)}
                 />
                 <Input
-                  placeholder="Öğretmen Kullanıcı Adı"
+                  placeholder={t('bulkOnboarding.teacherUsername')}
                   style={{ width: 200 }}
                   value={sinifData.ogretmenKullaniciAdi}
                   onChange={(e) => sinifAlanGuncelle(sinifData.key, 'ogretmenKullaniciAdi', e.target.value)}
                 />
               </Space>
 
-              <Divider orientation="left" plain style={{ margin: '8px 0 12px' }}>Öğrenciler</Divider>
+              <Divider orientation="left" plain style={{ margin: '8px 0 12px' }}>{t('bulkOnboarding.students')}</Divider>
 
               <Space direction="vertical" style={{ width: '100%' }} size="small">
                 {sinifData.ogrenciler.map((ogrenci) => (
                   <Card key={ogrenci.key} size="small" style={{ background: '#FAFAFA' }}>
                     <Space wrap size="middle" align="start">
                       <Input
-                        placeholder="Öğrenci Adı"
+                        placeholder={t('bulkOnboarding.studentName')}
                         style={{ width: 180 }}
                         value={ogrenci.ad}
                         onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'ad', e.target.value)}
                       />
                       <Input
-                        placeholder="Doğum Tarihi (15.05.2022)"
+                        placeholder={t('bulkOnboarding.birthDate')}
                         style={{ width: 170 }}
                         value={ogrenci.dogumTarihi}
                         onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'dogumTarihi', e.target.value)}
                       />
                       <Input
-                        placeholder="Veli Adı"
+                        placeholder={t('bulkOnboarding.parentName')}
                         style={{ width: 170 }}
                         value={ogrenci.veliAd}
                         onChange={(e) => ogrenciAlanGuncelle(sinifData.key, ogrenci.key, 'veliAd', e.target.value)}
                       />
                       <AutoComplete
-                        placeholder="Veli Kullanıcı Adı"
+                        placeholder={t('bulkOnboarding.parentUsername')}
                         style={{ width: 190 }}
                         value={ogrenci.veliKullaniciAdi}
                         options={veliOnerileri}
@@ -497,16 +499,16 @@ export default function BulkOnboardingPage() {
       </Button>
 
       {sonuc && (
-        <Card style={{ marginTop: 16 }} title="Sonuç">
-          <Paragraph>✅ {sonuc.siniflar} sınıf, {sonuc.ogrenciler} öğrenci oluşturuldu.</Paragraph>
+        <Card style={{ marginTop: 16 }} title={t('bulkOnboarding.result')}>
+          <Paragraph>✅ {t('bulkOnboarding.success', { classes: sonuc.siniflar, students: sonuc.ogrenciler })}</Paragraph>
 
           {sonuc.ogretmenler.length > 0 && (
             <>
-              <Divider orientation="left" plain>Öğretmenler</Divider>
+              <Divider orientation="left" plain>{t('bulkOnboarding.teachers')}</Divider>
               <Space direction="vertical">
                 {sonuc.ogretmenler.map((o, i) => (
                   <Text key={i}>
-                    <Tag color={o.yeniMi ? THEME.green : 'default'}>{o.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
+                    <Tag color={o.yeniMi ? THEME.green : 'default'}>{o.yeniMi ? t('bulkOnboarding.new') : t('bulkOnboarding.existing')}</Tag>
                     {o.kullaniciAdi} / {sifre}
                   </Text>
                 ))}
@@ -516,11 +518,11 @@ export default function BulkOnboardingPage() {
 
           {sonuc.veliler.length > 0 && (
             <>
-              <Divider orientation="left" plain>Veliler</Divider>
+              <Divider orientation="left" plain>{t('bulkOnboarding.parents')}</Divider>
               <Space direction="vertical">
                 {sonuc.veliler.map((v, i) => (
                   <Text key={i}>
-                    <Tag color={v.yeniMi ? THEME.green : 'default'}>{v.yeniMi ? 'Yeni' : 'Mevcut'}</Tag>
+                    <Tag color={v.yeniMi ? THEME.green : 'default'}>{v.yeniMi ? t('bulkOnboarding.new') : t('bulkOnboarding.existing')}</Tag>
                     {v.kullaniciAdi} / {sifre}
                   </Text>
                 ))}
@@ -530,7 +532,7 @@ export default function BulkOnboardingPage() {
 
           {sonuc.hatalar.length > 0 && (
             <>
-              <Divider orientation="left" plain>Hatalar</Divider>
+              <Divider orientation="left" plain>{t('bulkOnboarding.errors')}</Divider>
               <Space direction="vertical">
                 {sonuc.hatalar.map((h, i) => (
                   <Text key={i} type="danger">❌ {h}</Text>
@@ -540,12 +542,12 @@ export default function BulkOnboardingPage() {
           )}
 
           <Paragraph type="secondary" style={{ marginTop: 12, fontSize: 12 }}>
-            "Yeni" = az önce açılan hesap. "Mevcut" = zaten var olan hesaba bağlandı (ör. kardeş öğrenci, aynı öğretmen).
+            {t('bulkOnboarding.resultHint')}
           </Paragraph>
         </Card>
       )}
 
-      {siniflar.length === 0 && <Empty description="Henüz sınıf eklenmedi" />}
+      {siniflar.length === 0 && <Empty description={t('bulkOnboarding.noClass')} />}
     </div>
   );
 }
