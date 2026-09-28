@@ -34,7 +34,7 @@ export default class ErrorBoundary extends React.Component {
         <Result
           status="error"
           title={i18n.t('common.unexpectedError')}
-          subTitle="Sayfayı yenilemeyi deneyebilir ya da başka bir menüye geçebilirsin."
+          subTitle={i18n.t('common.unexpectedErrorHint')}
           extra={
             <Button type="primary" onClick={() => window.location.reload()}>
               Sayfayı Yenile
