@@ -3,7 +3,7 @@ import { Alert, Button, Card, Col, DatePicker, Form, Input, InputNumber, Modal, 
 import { CheckOutlined, CloseOutlined, CreditCardOutlined, CrownOutlined, EditOutlined, LockOutlined, ReloadOutlined, StopOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useAuth } from '../src/context/AuthContext';
 import { getPlatformSnapshot } from './superadminService';
-import { activateManualSubscription, approveManualRequest, confirmManualPayment, endSubscription, formatPrice, getTierById, getSuggestedTier, PACKAGE_TIERS, rejectManualRequest, setManualAccessRestriction, subscribeManualRequests, subscriptionStatus, updateSubscriptionDetails } from './superadminSubscriptionService';
+import { activateManualSubscription, approveManualRequest, confirmManualPayment, CURRENCIES, endSubscription, formatPrice, getTierById, getSuggestedTier, PACKAGE_TIERS, rejectManualRequest, setManualAccessRestriction, subscribeManualRequests, subscriptionStatus, updateSubscriptionDetails } from './superadminSubscriptionService';
 
 const { Title, Text } = Typography;
 const card = { borderRadius: 16, border: '1px solid #ECECF2', boxShadow: '0 8px 24px rgba(26,20,56,.05)' };
@@ -37,7 +37,7 @@ export default function SuperAdminSubscriptions() {
   const manualRows = rows.filter((r) => r.subscription?.kaynak === 'manuel_iban');
   const pending = requests.filter((r) => r.durum === 'bekliyor');
 
-  const openManual = (row) => { form.resetFields(); form.setFieldsValue({ period:'aylik', tierId:getSuggestedTier(data.childrenByKres[row.id] || 0).id }); setModal({ type:'manual', row }); };
+  const openManual = (row) => { form.resetFields(); form.setFieldsValue({ period:'aylik', paraBirimi:'TRY', tierId:getSuggestedTier(data.childrenByKres[row.id] || 0).id }); setModal({ type:'manual', row }); };
   const saveManual = async () => { try { const v = await form.validateFields(); setBusy(true); await activateManualSubscription({ kresId:modal.row.id, ...v, customEndDate:v.customEndDate?.format('YYYY-MM-DD'), tanimlayanUid:kullanici?.uid || kullanici?.id || '', existingSubscription:modal.row.subscription }); message.success('Manuel / IBAN abonelik aktif edildi.'); setModal(null); await load(); } catch(e) { if (e?.errorFields) return; message.error(e?.message || 'Abonelik tanımlanamadı.'); } finally { setBusy(false); } };
   const approve = async (r) => { Modal.confirm({ title:'Talebi onayla', content:`${r.kresAdi || r.kresId} — ${r.ogrenciSayisi} öğrenci × ${formatPrice(r.birimFiyat)} = ${formatPrice(r.hesaplananTutar)}`, okText:'Onayla', cancelText:'Vazgeç', onOk:async()=>{ setBusy(true); try { await approveManualRequest({ kresId:r.kresId, talepId:r.talepId, tanimlayanUid:kullanici?.uid || kullanici?.id || '', existingSubscription:data.subscriptionsByKres[r.kresId] || null }); message.success('Abonelik aktif edildi.'); await load(); } catch(e){ message.error(e?.message || 'Talep onaylanamadı.'); } finally{setBusy(false);} } }); };
   const reject = async (r) => { Modal.confirm({ title:'Talebi reddet', content:'Bu talep reddedilecek.', okText:'Reddet', okButtonProps:{danger:true}, cancelText:'Vazgeç', onOk:async()=>{ setBusy(true); try { await rejectManualRequest({ kresId:r.kresId, talepId:r.talepId, redNotu:'Web SuperAdmin tarafından reddedildi.', tanimlayanUid:kullanici?.uid || kullanici?.id || '' }); message.success('Talep reddedildi.'); } catch(e){message.error(e?.message || 'Talep reddedilemedi.');} finally{setBusy(false);} } }); };
@@ -50,6 +50,7 @@ export default function SuperAdminSubscriptions() {
     editForm.resetFields();
     editForm.setFieldsValue({
       fiyat: row.subscription?.fiyat ?? null,
+      paraBirimi: row.subscription?.paraBirimi || 'TRY',
       bitisTarihi: row.subscription?.bitisTarihi || '',
     });
     setModal({ type:'edit', row });
@@ -58,7 +59,7 @@ export default function SuperAdminSubscriptions() {
     try {
       const v = await editForm.validateFields();
       setBusy(true);
-      await updateSubscriptionDetails({ kresId:modal.row.id, fiyat:v.fiyat, bitisTarihi:v.bitisTarihi, tanimlayanUid:kullanici?.uid || kullanici?.id || '' });
+      await updateSubscriptionDetails({ kresId:modal.row.id, fiyat:v.fiyat, paraBirimi:v.paraBirimi, bitisTarihi:v.bitisTarihi, tanimlayanUid:kullanici?.uid || kullanici?.id || '' });
       message.success('Abonelik güncellendi.');
       setModal(null);
       await load();
@@ -76,7 +77,7 @@ export default function SuperAdminSubscriptions() {
     { title:'Kaynak', key:'source', render:(_,r)=>r.subscription?.kaynak === 'revenuecat' ? <Tag color="blue">Google Play / RevenueCat</Tag> : <Tag color="gold">Manuel / IBAN</Tag> },
     { title:'Durum', key:'status', render:(_,r)=>{const s=subscriptionStatus(r.subscription); return <Tag color={s.color}>{s.label}</Tag>;} },
     { title:'Bitiş', key:'end', render:(_,r)=>dateOf(r.subscription?.bitisTarihi) },
-    { title:'Tutar', key:'price', align:'right', render:(_,r)=>formatPrice(r.subscription?.fiyat) },
+    { title:'Tutar', key:'price', align:'right', render:(_,r)=>formatPrice(r.subscription?.fiyat, r.subscription?.paraBirimi) },
   ];
 
   const commonActions = (r) => [
@@ -130,7 +131,8 @@ export default function SuperAdminSubscriptions() {
         <Form.Item noStyle shouldUpdate={(p,c)=>p.tierId!==c.tierId}>{({getFieldValue})=>getFieldValue('tierId')==='custom'?<Form.Item name="ogrenciLimiti" label="Öğrenci limiti" extra="Kurum bu sayının üstünde öğrenci ekleyemez." rules={[{required:true,message:'Öğrenci sayısı gir'},{validator:(_,val)=>{const mevcut=data.childrenByKres[modal?.row?.id]||0;return val!=null&&val<mevcut?Promise.reject(new Error(`Kurumda şu an ${mevcut} öğrenci var, limit bunun altında olamaz.`)):Promise.resolve();}}]}><InputNumber min={1} precision={0} style={{width:'100%'}}/></Form.Item>:null}</Form.Item>
         <Form.Item name="period" label="Dönem" rules={[{required:true}]}><Select options={[{value:'aylik',label:'Aylık'},{value:'yillik',label:'Yıllık'},{value:'ozel',label:'Özel bitiş tarihi'}]}/></Form.Item>
         <Form.Item noStyle shouldUpdate={(p,c)=>p.period!==c.period}>{({getFieldValue})=>getFieldValue('period')==='ozel'?<Form.Item name="customEndDate" label="Bitiş tarihi" rules={[{required:true,message:'Bitiş tarihi seç'}]}><DatePicker style={{width:'100%'}} format="DD.MM.YYYY"/></Form.Item>:null}</Form.Item>
-        <Form.Item name="price" label="Tutar (TL)" extra="Boş bırakırsan paketin standart fiyatı kullanılır."><InputNumber min={0} style={{width:'100%'}}/></Form.Item>
+        <Form.Item name="paraBirimi" label="Para birimi" rules={[{required:true}]}><Select options={CURRENCIES.map(c=>({value:c.value,label:c.label}))}/></Form.Item>
+        <Form.Item noStyle shouldUpdate={(p,c)=>p.paraBirimi!==c.paraBirimi}>{({getFieldValue})=>{const cur=getFieldValue('paraBirimi')||'TRY';const tl=cur==='TRY';return <Form.Item name="price" label={`Tutar (${CURRENCIES.find(c=>c.value===cur)?.symbol||'₺'})`} extra={tl?'Boş bırakırsan paketin standart fiyatı kullanılır.':'Dolar / Euro için tutarı elle gir (paket fiyatları TL).'} rules={tl?[]:[{required:true,message:'Tutar gir'}]}><InputNumber min={0} style={{width:'100%'}}/></Form.Item>;}}</Form.Item>
         <Form.Item name="odemeReferansi" label="Ödeme / Dekont referansı"><Input placeholder="Opsiyonel"/></Form.Item>
         <Form.Item name="manuelNot" label="Not"><Input.TextArea rows={3} placeholder="Opsiyonel SuperAdmin notu"/></Form.Item>
       </Form>
@@ -138,7 +140,8 @@ export default function SuperAdminSubscriptions() {
 
     <Modal open={modal?.type==='edit'} title={`${modal?.row ? nameOf(modal.row) : ''} — Abonelik Düzenle`} okText="Kaydet" cancelText="Vazgeç" confirmLoading={busy} onOk={saveEdit} onCancel={()=>!busy&&setModal(null)} destroyOnHidden width={480}>
       <Form form={editForm} layout="vertical" style={{marginTop:18}}>
-        <Form.Item name="fiyat" label="Tutar (TL)"><InputNumber min={0} style={{width:'100%'}}/></Form.Item>
+        <Form.Item name="paraBirimi" label="Para birimi"><Select options={CURRENCIES.map(c=>({value:c.value,label:c.label}))}/></Form.Item>
+        <Form.Item name="fiyat" label="Tutar"><InputNumber min={0} style={{width:'100%'}}/></Form.Item>
         <Form.Item name="bitisTarihi" label="Bitiş Tarihi" extra="YYYY-AA-GG formatında, örn. 2026-12-31"><Input type="date" /></Form.Item>
       </Form>
     </Modal>
