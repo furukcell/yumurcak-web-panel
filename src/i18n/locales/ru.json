@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "Язык",
+    "logout": "Выйти",
+    "institutionProfile": "Открыть профиль учреждения",
+    "user": "Пользователь",
+    "administrator": "Администратор"
+  },
+  "navigation": {
+    "general": "Общее",
+    "dashboard": "Панель управления",
+    "statistics": "Статистика",
+    "institutionManagement": "Управление учреждением",
+    "classes": "Группы",
+    "bulkSetup": "Массовая настройка",
+    "children": "Дети",
+    "administrators": "Администраторы",
+    "teachers": "Учителя",
+    "parents": "Родители",
+    "communication": "Связь",
+    "announcements": "Объявления",
+    "events": "Мероприятия",
+    "gallery": "Галерея",
+    "polls": "Опросы",
+    "messages": "Сообщения",
+    "support": "Поддержка",
+    "dailyOperations": "Ежедневные операции",
+    "meals": "Меню",
+    "schedule": "Расписание занятий",
+    "dutyRoster": "График дежурств",
+    "staffTasks": "Задачи персонала",
+    "service": "Сервис",
+    "birthdays": "Дни рождения",
+    "payments": "Платежи",
+    "settings": "Настройки",
+    "institutionInfo": "Данные учреждения",
+    "theme": "Настройки темы",
+    "subscription": "Подписка",
+    "institutionBell": "Звонок учреждения",
+    "legalDocuments": "Юридические документы",
+    "auditLog": "Журнал аудита"
+  }
+}
