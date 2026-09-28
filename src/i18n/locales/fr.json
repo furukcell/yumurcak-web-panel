@@ -798,5 +798,22 @@
     "loadError": "Theme information could not be loaded.",
     "saved": "Nursery theme updated",
     "saveError": "Theme could not be saved."
+  },
+  "auditLog": {
+    "title": "Journal d’activité",
+    "subtitle": "Historique des ajouts, modifications et suppressions effectués dans le panneau · {{count}} derniers enregistrements",
+    "searchPlaceholder": "Rechercher par nom d’enregistrement ou personne",
+    "allModules": "Tous les modules",
+    "allActions": "Toutes les actions",
+    "date": "Date",
+    "action": "Action",
+    "module": "Module",
+    "record": "Enregistrement",
+    "performedBy": "Effectué par",
+    "details": "Détails",
+    "empty": "Aucun enregistrement pour le moment",
+    "added": "Ajouté",
+    "updated": "Mis à jour",
+    "deleted": "Supprimé"
   }
 }
