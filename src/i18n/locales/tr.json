@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "Hızlı İşlemler",
+    "viewAll": "Tümünü Gör"
   },
   "navigation": {
     "general": "Genel",
@@ -118,7 +120,14 @@
     "classless": "Sınıfsız",
     "breakfast": "Kahvaltı",
     "lunch": "Öğle",
-    "snack": "Ara Öğün"
+    "snack": "Ara Öğün",
+    "kpiClassesHint": "Bu dönem aktif",
+    "kpiChildrenHint": "Kayıtlı çocuk",
+    "kpiTeachersHint": "Aktif öğretmen",
+    "kpiParentsHint": "Aktif veli",
+    "attention": "Dikkat Gerektirenler",
+    "noNotificationsToday": "Bugün bekleyen bildirim yok",
+    "pendingCount": "{{count}} ödeme bekliyor"
   },
   "statistics": {
     "title": "📊 Kurum İstatistikleri",
