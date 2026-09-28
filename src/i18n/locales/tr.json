@@ -798,5 +798,22 @@
     "loadError": "Theme information could not be loaded.",
     "saved": "Nursery theme updated",
     "saveError": "Theme could not be saved."
+  },
+  "auditLog": {
+    "title": "Denetim Kaydı",
+    "subtitle": "Panelde yapılan ekleme, güncelleme ve silme işlemlerinin geçmişi · son {{count}} kayıt",
+    "searchPlaceholder": "Kayıt adı veya yapan kişiye göre ara",
+    "allModules": "Tüm modüller",
+    "allActions": "Tüm işlemler",
+    "date": "Tarih",
+    "action": "İşlem",
+    "module": "Modül",
+    "record": "Kayıt",
+    "performedBy": "Yapan",
+    "details": "Detay",
+    "empty": "Henüz denetim kaydı yok",
+    "added": "Eklendi",
+    "updated": "Güncellendi",
+    "deleted": "Silindi"
   }
 }
