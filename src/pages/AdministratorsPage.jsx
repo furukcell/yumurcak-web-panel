@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, Table, Button, Drawer, Form, Input, Tag, message, Empty, Switch, Space, Popconfirm } from 'antd';
 import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, CrownOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
@@ -21,6 +22,7 @@ const { Title, Text } = Typography;
 // yoktu). Yeni hesap oluştururken ikincil Firebase App instance'ı
 // kullanılır ki mevcut adminin oturumu düşmesin (bkz. secondaryAuth.js).
 export default function AdministratorsPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
 
@@ -104,13 +106,13 @@ export default function AdministratorsPage() {
 
     const isSelf = editingId === (kullanici?.uid || kullanici?.id);
     if (isSelf && values.aktif === false) {
-      message.error('Kendi hesabını pasif yapamazsın.');
+      message.error(t('administrators.selfDeactivate'));
       return;
     }
     if (editingId && values.aktif === false) {
       const kalanAktif = yoneticiler.filter((y) => y.id !== editingId && y.aktif).length;
       if (kalanAktif === 0) {
-        message.error('En az bir aktif yönetici hesabı kalmalı.');
+        message.error(t('administrators.lastActive'));
         return;
       }
     }
@@ -125,14 +127,14 @@ export default function AdministratorsPage() {
       // NOT: TeachersPage.jsx'teki aynı güvenlik kısıtı — mevcut bir
       // Firebase Auth hesabının şifresi bu ekrandan değiştirilemez.
       if (editingId && oldAdmin.authUid && (values.sifre || '').trim()) {
-        message.error('Bu yönetici Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
+        message.error(t('administrators.authPassword'));
         setSaving(false);
         return;
       }
 
       const kaydedilenSifre = (values.sifre || '').trim() || oldAdmin.sifre || '123456';
       if (kaydedilenSifre.length < 6) {
-        message.error('Şifre en az 6 karakter olmalı');
+        message.error(t('administrators.passwordMin'));
         setSaving(false);
         return;
       }
@@ -181,22 +183,22 @@ export default function AdministratorsPage() {
       if (cleanOldUsername && cleanOldUsername !== cleanNewUsername) updates[`kullaniciAdiIndex/${cleanOldUsername}`] = null;
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Yönetici güncellendi' : 'Yönetici oluşturuldu');
+      message.success(editingId ? t('administrators.updated') : t('administrators.saved'));
       setDrawerOpen(false);
 
       denetimKaydiYaz({
         kresId: nextKresId,
         kullanici,
         islem: editingId ? 'guncelle' : 'ekle',
-        modul: 'Yöneticiler',
+        modul: t('administrators.title'),
         hedef: `${values.ad.trim()} ${values.soyad.trim()}`.trim(),
       });
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
-        message.error('Bu kullanıcı adı için Firebase Auth hesabı zaten var. Farklı kullanıcı adı dene.');
+        message.error(t('administrators.authExists'));
       } else {
-        message.error(`Yönetici kaydedilemedi. ${error?.code || error?.message || ''}`);
+        message.error(`${t('administrators.saveError')} ${error?.code || error?.message || ''}`);
       }
     } finally {
       setSaving(false);
@@ -205,7 +207,7 @@ export default function AdministratorsPage() {
 
   const handleDelete = async (record) => {
     if (record.id === (kullanici?.uid || kullanici?.id)) {
-      message.error('Kendi hesabını silemezsin.');
+      message.error(t('administrators.selfDeactivate'));
       return;
     }
     const kalanAktif = yoneticiler.filter((y) => y.id !== record.id && y.aktif).length;
@@ -216,11 +218,11 @@ export default function AdministratorsPage() {
     setDeletingId(record.id);
     try {
       await deleteKullaniciHesabi(record.id);
-      message.success('Yönetici silindi');
-      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 'Yöneticiler', hedef: record.adSoyad });
+      message.success(t('administrators.deleted'));
+      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: t('administrators.title'), hedef: record.adSoyad });
     } catch (error) {
       console.error(error);
-      message.error(`Yönetici silinemedi. ${error?.message || ''}`);
+      message.error(`${t('administrators.deleteError')} ${error?.message || ''}`);
     } finally {
       setDeletingId(null);
     }
@@ -242,24 +244,24 @@ export default function AdministratorsPage() {
       render: (v, r) => (
         <Space size={6}>
           <Text strong>{v}</Text>
-          {r.id === (kullanici?.uid || kullanici?.id) && <Tag color="purple" style={{ marginInlineEnd: 0 }}>Sen</Tag>}
+          {r.id === (kullanici?.uid || kullanici?.id) && <Tag color="purple" style={{ marginInlineEnd: 0 }}>{t('administrators.you')}</Tag>}
         </Space>
       ),
     },
-    { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
+    { title: t('administrators.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
     { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
-    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 'Aktif' : 'Pasif'}</Tag> },
+    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('administrators.active') : t('administrators.inactive')}</Tag> },
     {
       title: '',
       key: 'sil',
       width: 48,
       render: (_, r) => (
         <Popconfirm
-          title="Yönetici silinsin mi?"
-          description="Bu işlem geri alınamaz: hesap ve Firebase Auth girişi tamamen silinir."
-          okText="Sil"
+          title={t('administrators.deleteTitle')}
+          description={t('administrators.deleteDesc')}
+          okText={t('administrators.delete')}
           okButtonProps={{ danger: true }}
-          cancelText="Vazgeç"
+          cancelText={t('administrators.cancel')}
           onConfirm={(e) => {
             e?.stopPropagation();
             handleDelete(r);
@@ -292,15 +294,15 @@ export default function AdministratorsPage() {
             >
               <CrownOutlined />
             </div>
-            <Title level={3} style={{ margin: 0 }}>Yöneticiler</Title>
+            <Title level={3} style={{ margin: 0 }}>{t('administrators.title')}</Title>
           </div>
-          <Text type="secondary">{yoneticiler.length} yönetici · {aktifSayisi} aktif</Text>
+          <Text type="secondary">{t('administrators.summary', { total: yoneticiler.length, active: aktifSayisi })}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Yönetici Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('administrators.add')}</Button>
       </div>
 
       <Input.Search
-        placeholder="Yönetici, kullanıcı adı veya telefona göre ara"
+        placeholder={t('administrators.search')}
         allowClear
         style={{ width: 300, marginBottom: 12 }}
         value={aramaMetni}
@@ -313,40 +315,40 @@ export default function AdministratorsPage() {
         columns={columns}
         dataSource={gorunenYoneticiler}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
-        locale={{ emptyText: <Empty description="Henüz kayıtlı yönetici yok" /> }}
+        locale={{ emptyText: <Empty description={t('administrators.empty')} /> }}
         pagination={{ pageSize: 10 }}
       />
 
       <Drawer
-        title={editingId ? 'Yöneticiyi Düzenle' : 'Yeni Yönetici'}
+        title={editingId ? t('administrators.edit') : t('administrators.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={420}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('administrators.update') : t('administrators.create')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Kullanıcı adı zorunlu' }]}>
+          <Form.Item name="kullaniciAdi" label={t('administrators.username')} rules={[{ required: true, message: t('administrators.usernameRequired') }]}>
             <Input placeholder="Örn: yonetici2" autoCapitalize="none" />
           </Form.Item>
-          <Form.Item name="ad" label="Ad" rules={[{ required: true, message: 'Ad zorunlu' }]}>
-            <Input placeholder="Örn: Ayşe" />
+          <Form.Item name="ad" label={t('administrators.firstName')} rules={[{ required: true, message: t('administrators.firstNameRequired') }]}>
+            <Input placeholder={t('administrators.namePlaceholder')} />
           </Form.Item>
-          <Form.Item name="soyad" label="Soyad" rules={[{ required: true, message: 'Soyad zorunlu' }]}>
-            <Input placeholder="Örn: Yılmaz" />
+          <Form.Item name="soyad" label={t('administrators.lastName')} rules={[{ required: true, message: t('administrators.lastNameRequired') }]}>
+            <Input placeholder={t('administrators.surnamePlaceholder')} />
           </Form.Item>
-          <Form.Item name="telefon" label="Telefon (opsiyonel)">
-            <Input placeholder="Örn: 0555 000 00 00" />
+          <Form.Item name="telefon" label={t('administrators.phone')}>
+            <Input placeholder={t('administrators.phonePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="sifre"
-            label="Şifre"
-            extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}
+            label={t('administrators.password')}
+            extra={editingId ? t('administrators.passwordKeep') : t('administrators.passwordDefault')}
           >
-            <Input.Password placeholder={editingId ? 'Boş bırakılırsa değişmez' : 'Boş bırakılırsa: 123456'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
+            <Input.Password placeholder={editingId ? t('administrators.passwordUnchanged') : t('administrators.passwordDefaultShort')} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
           {editingId && (
-            <Form.Item name="aktif" label="Hesap Durumu" valuePropName="checked">
-              <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
+            <Form.Item name="aktif" label={t('administrators.status')} valuePropName="checked">
+              <Switch checkedChildren={t('administrators.active')} unCheckedChildren={t('administrators.inactive')} />
             </Form.Item>
           )}
         </Form>
