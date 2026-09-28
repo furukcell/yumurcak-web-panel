@@ -92,7 +92,7 @@ function VehiclesTab() {
       const oldServisci = oldServisciSnap?.exists?.() ? oldServisciSnap.val() : null;
 
       if (editingId && oldServisci?.authUid && (values.sifre || '').trim()) {
-        message.error('{t('service.authPasswordError')}');
+        message.error(t('service.authPasswordError'));
         setSaving(false);
         return;
       }
@@ -100,7 +100,7 @@ function VehiclesTab() {
       const servisciId = oldServisciId || generateId();
       const now = Date.now();
       const kaydedilenSifre = (values.sifre || '').trim() || oldServisci?.sifre || '123456';
-      if (kaydedilenSifre.length < 6) { message.error('{t('service.passwordLength')}'); setSaving(false); return; }
+      if (kaydedilenSifre.length < 6) { message.error(t('service.passwordLength')); setSaving(false); return; }
 
       const email = oldServisci?.email || usernameToEmail(values.kullaniciAdi.trim());
       let authUid = oldServisci?.authUid || null;
@@ -140,7 +140,7 @@ function VehiclesTab() {
   const handleDelete = async (vehicle) => {
     try {
       await remove(ref(database, `servisler/${vehicle.id}`));
-      message.success('{t('service.vehicleDeleted')}');
+      message.success(t('service.vehicleDeleted'));
       setDrawerOpen(false);
     } catch {
       message.error(t('service.vehicleDeleteError'));
