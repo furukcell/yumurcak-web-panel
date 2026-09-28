@@ -815,5 +815,28 @@
     "added": "Hinzugefügt",
     "updated": "Aktualisiert",
     "deleted": "Gelöscht"
+  },
+  "bell": {
+    "title": "Klingel der Einrichtung",
+    "subtitle": "Hier erscheinen Meldungen, wenn Eltern „Ich komme“ oder „Ich bin an der Tür“ sagen",
+    "active": "Aktiv",
+    "unread": "Ungelesen",
+    "completed": "Abgeschlossen",
+    "empty": "Noch keine Klingelbenachrichtigungen",
+    "read": "Gelesen",
+    "complete": "Abgeschlossen",
+    "delivery": "Übergabe",
+    "time": "Uhrzeit",
+    "noTime": "Keine Uhrzeit",
+    "noDelivery": "Keine Übergabeinformation",
+    "leaving": "🏫 Ich bringe",
+    "pickingUp": "👋 Ich hole ab",
+    "atDoor": "📍 Ich bin an der Tür",
+    "coming": "🚗 Ich komme",
+    "notification": "Benachrichtigung",
+    "child": "Kind",
+    "parent": "Elternteil",
+    "readError": "Benachrichtigung konnte nicht als gelesen markiert werden.",
+    "completeError": "Benachrichtigung konnte nicht abgeschlossen werden."
   }
 }
