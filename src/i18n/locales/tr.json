@@ -989,12 +989,12 @@
     }
   },
   "legal": {
-    "title": "Yasal Belgeler",
+    "title": "Yasal Metinler",
     "subtitle": "Kullanım şartları, gizlilik politikası ve KVKK aydınlatma metni.",
     "terms": "Kullanım Şartları",
     "privacy": "Gizlilik Politikası",
     "kvkk": "KVKK Aydınlatma Metni",
     "updated": "Son Güncelleme",
-    "legalNote": "Bu metin hukuki danışmanlık niteliğinde değildir."
+    "legalNote": "Bu metin hukuki danışmanlık niteliği taşımaz."
   }
 }
