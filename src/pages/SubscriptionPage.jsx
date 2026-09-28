@@ -5,6 +5,7 @@ import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { getSubscriptionStatus, getSubscriptionEndDate } from '../utils/subscriptionStatus';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -21,12 +22,12 @@ function formatPrice(value) { return `${Number(value || 0).toLocaleString('tr-TR
 function getTierById(id) { return PACKAGE_TIERS.find((t) => t.id === id) || PACKAGE_TIERS[0]; }
 function getSuggestedTier(count) { return PACKAGE_TIERS.find((t) => count <= t.maxStudent) || null; }
 function getPlanLabel(subscription) {
-  if (!subscription?.planTier && !subscription?.plan) return 'Henüz yok';
+  if (!subscription?.planTier && !subscription?.plan) return t('subscription.noSub');
   const tier = getTierById(subscription.planTier || String(subscription.plan || '').split('_')[0]);
   const plan = String(subscription.plan || '');
   const period = subscription.planPeriod || (plan.includes('yillik') ? 'yillik' : plan.includes('aylik') ? 'aylik' : '');
-  if (!period || period === 'demo') return subscription.plan === 'demo' ? `${tier.title} / Demo` : (subscription.plan || tier.title);
-  return `${tier.title} / ${period === 'yillik' ? 'Yıllık' : 'Aylık'}`;
+  if (!period || period === 'demo') return subscription.plan === 'demo' ? `${t(`subscription.tiers.${tier.id}.title`)} / Demo` : (subscription.plan || tier.title);
+  return `${t(`subscription.tiers.${tier.id}.title`)} / ${period === 'yillik' ? t('subscription.yearly') : t('subscription.monthly')}`;
 }
 function addMonths(date, months) { const next = new Date(date); next.setMonth(next.getMonth() + months); return next; }
 function toDateStr(date) { const pad = (v) => String(v).padStart(2, '0'); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
@@ -45,6 +46,7 @@ function getStatusColor(status) {
 // üzerinden yapılmalı.
 export default function SubscriptionPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || 'kres001';
 
   const [loading, setLoading] = useState(true);
@@ -81,15 +83,15 @@ export default function SubscriptionPage() {
   };
 
   const startTrial = async () => {
-    if (subscription?.durum === 'aktif' || subscription?.durum === 'demo') { message.info('Bu kreşte zaten aktif/demo abonelik var.'); return; }
+    if (subscription?.durum === 'aktif' || subscription?.durum === 'demo') { message.info(t('subscription.already')); return; }
     setSaving(true);
     try {
       const now = new Date();
       const tier = suggestedTier || PACKAGE_TIERS[0];
       await writeSubscription({ tier, selectedPeriod: 'demo', durum: 'demo', source: 'ilk_1_ay_ucretsiz', endDate: toDateStr(addMonths(now, 1)), price: 0 });
-      message.success('İlk 1 ay ücretsiz demo başlatıldı.');
+      message.success(t('subscription.trialStarted'));
     } catch {
-      message.error('Demo başlatılamadı.');
+      message.error(t('subscription.trialError'));
     } finally {
       setSaving(false);
     }
@@ -97,18 +99,18 @@ export default function SubscriptionPage() {
 
   const applyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
-    if (!code) { message.error('Promosyon kodu gir.'); return; }
+    if (!code) { message.error(t('subscription.promoRequired')); return; }
     setSaving(true);
     try {
       const usageKey = `${kresId}_${code}`;
       const usageSnap = await get(ref(database, `promosyonKullanimlari/${usageKey}`));
-      if (usageSnap.exists()) { message.warning('Bu promosyon kodu bu kreş için daha önce kullanılmış.'); setSaving(false); return; }
+      if (usageSnap.exists()) { message.warning(t('subscription.promoUsed')); setSaving(false); return; }
 
       let promo = BUILT_IN_PROMOS[code] || null;
       // NOT: promosyonKodlari node'u sadece süper admin tarafından okunabiliyor
       // (bkz. database.rules.json) — bu yüzden kayıtlı kodlar sadece
       // BUILT_IN_PROMOS listesinden kontrol edilebiliyor, mobille aynı kısıt.
-      if (!promo || promo.aktif === false) { message.error('Promosyon kodu bulunamadı veya aktif değil.'); setSaving(false); return; }
+      if (!promo || promo.aktif === false) { message.error(t('subscription.promoInvalid')); setSaving(false); return; }
 
       const months = Math.min(Number(promo.sureAy || 1), 1);
       const now = new Date();
@@ -120,10 +122,10 @@ export default function SubscriptionPage() {
       await writeSubscription({ tier, selectedPeriod: 'demo', durum: 'demo', source: `promo_${code}`, endDate: toDateStr(end), price: 0 });
       await set(ref(database, `promosyonKullanimlari/${usageKey}`), { kresId, kod: code, kullaniciId: kullanici?.uid || kullanici?.id || '', kullanildiAt: Date.now(), verilenAy: months });
 
-      message.success(`Promosyon uygulandı: +${months} ay`);
+      message.success(t('subscription.promoApplied', { months }));
       setPromoCode('');
     } catch {
-      message.error('Promosyon kodu uygulanamadı.');
+      message.error(t('subscription.promoError'));
     } finally {
       setSaving(false);
     }
@@ -133,59 +135,59 @@ export default function SubscriptionPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Abonelik</Title>
-      <Text type="secondary">Öğrenci sayısına göre paket ve ödeme durumu</Text>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('subscription.title')}</Title>
+      <Text type="secondary">{t('subscription.subtitle')}</Text>
 
       <Alert
         type="info"
         showIcon
         style={{ margin: '16px 0' }}
-        message="Ücretli plan satın alma mobil uygulama üzerinden yapılır"
-        description="Google Play / App Store ödeme altyapısı (RevenueCat) sadece mobil tarafta çalışır. Buradan durum görüntüleyebilir, ücretsiz deneme başlatabilir veya promosyon kodu uygulayabilirsin."
+        message={t('subscription.mobilePurchase')}
+        description={t('subscription.mobileDesc')}
       />
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <Text type="secondary" style={{ fontSize: 12 }}>Mevcut Plan</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}{t('subscription.current')}</Text>
             <div><Text strong style={{ fontSize: 18 }}>{getPlanLabel(subscription)}</Text></div>
           </div>
           <Tag color={getStatusColor(status)}>{status.label}</Tag>
         </div>
-        <Paragraph type="secondary" style={{ marginBottom: 8 }}>{status.message}</Paragraph>
-        {status.remainingDays != null && <Text type="secondary">Kalan gün: {status.remainingDays}</Text>}
+        <Paragraph type="secondary" style={{ marginBottom: 8 }}>{status.key === 'expiring_soon' ? t('subscription.statusMsg.expiring_soon') : t(`subscription.statusMsg.${status.key}`)}</Paragraph>
+        {status.remainingDays != null && <Text type="secondary"{t('subscription.remaining', { days: status.remainingDays })}</Text>}
 
         <div style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={{ fontWeight: 700, fontSize: 13 }}>Öğrenci Kullanımı</Text>
+            <Text style={{ fontWeight: 700, fontSize: 13 }}{t('subscription.usage')}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>{studentCount} / {activeLimit || '-'}</Text>
           </div>
           <Progress percent={getUsagePercent(studentCount, activeLimit)} showInfo={false} strokeColor={overLimit ? THEME.red : THEME.primary} />
-          {overLimit && <Text type="danger" style={{ fontSize: 12 }}>⚠️ Öğrenci sayısı paket limitini aşıyor, yükseltme gerekebilir.</Text>}
+          {overLimit && <Text type="danger" style={{ fontSize: 12 }}{t('subscription.overLimit')}</Text>}
         </div>
 
         {status.key === 'none' && (
-          <Button type="primary" block loading={saving} onClick={startTrial} style={{ marginTop: 16 }}>İlk 1 Ay Ücretsiz Denemeyi Başlat</Button>
+          <Button type="primary" block loading={saving} onClick={startTrial} style={{ marginTop: 16 }}{t('subscription.trial')}</Button>
         )}
       </Card>
 
-      <Card style={{ marginBottom: 16, borderColor: THEME.border }} title="Promosyon Kodu">
+      <Card style={{ marginBottom: 16, borderColor: THEME.border }} title={t('subscription.promo')}>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Örn: PILOT1AY" style={{ flex: 1 }} />
-          <Button type="primary" loading={saving} onClick={applyPromo}>Uygula</Button>
+          <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder={t('subscription.promoPlaceholder') } style={{ flex: 1 }} />
+          <Button type="primary" loading={saving} onClick={applyPromo}{t('subscription.apply')}</Button>
         </div>
       </Card>
 
-      <Title level={5} style={{ marginBottom: 12 }}>Paketler</Title>
+      <Title level={5} style={{ marginBottom: 12 }}{t('subscription.packages')}</Title>
       <Row gutter={[12, 12]}>
         {PACKAGE_TIERS.map((tier) => (
           <Col xs={24} md={8} key={tier.id}>
             <Card style={{ borderColor: tier.featured ? tier.color : THEME.border, borderWidth: tier.featured ? 2 : 1 }}>
-              <Tag color={tier.color}>{tier.badge}</Tag>
+              <Tag color={tier.color}>{t(`subscription.tiers.${tier.id}.badge`)}</Tag>
               <Title level={4} style={{ margin: '8px 0 0' }}>{tier.title}</Title>
-              <Text type="secondary">{tier.range}</Text>
-              <Paragraph style={{ marginTop: 8, marginBottom: 8 }}>{tier.desc}</Paragraph>
-              <Text strong style={{ fontSize: 16 }}>{formatPrice(tier.monthly)} / ay</Text>
+              <Text type="secondary">{t(`subscription.tiers.${tier.id}.range`)}</Text>
+              <Paragraph style={{ marginTop: 8, marginBottom: 8 }}>{t(`subscription.tiers.${tier.id}.desc`)}</Paragraph>
+              <Text strong style={{ fontSize: 16 }}>{formatPrice(tier.monthly)} / {t('subscription.month')}</Text>
               <div><Text type="secondary" style={{ fontSize: 12 }}>{formatPrice(tier.yearly)} / yıl</Text></div>
             </Card>
           </Col>
