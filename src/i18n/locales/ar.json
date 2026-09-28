@@ -798,5 +798,22 @@
     "loadError": "Theme information could not be loaded.",
     "saved": "Nursery theme updated",
     "saveError": "Theme could not be saved."
+  },
+  "auditLog": {
+    "title": "سجل التدقيق",
+    "subtitle": "سجل الإضافات والتحديثات وعمليات الحذف التي تمت في اللوحة · آخر {{count}} سجلات",
+    "searchPlaceholder": "البحث باسم السجل أو بالشخص المنفذ",
+    "allModules": "جميع الوحدات",
+    "allActions": "جميع الإجراءات",
+    "date": "التاريخ",
+    "action": "الإجراء",
+    "module": "الوحدة",
+    "record": "السجل",
+    "performedBy": "بواسطة",
+    "details": "التفاصيل",
+    "empty": "لا توجد سجلات تدقيق بعد",
+    "added": "تمت الإضافة",
+    "updated": "تم التحديث",
+    "deleted": "تم الحذف"
   }
 }
