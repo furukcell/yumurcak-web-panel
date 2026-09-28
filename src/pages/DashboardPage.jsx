@@ -15,6 +15,7 @@ import { getSubscriptionStatus } from '../utils/subscriptionStatus';
 import QuickActions from '../components/QuickActions';
 import TodayCards from '../components/TodayCards';
 import DailySummary from '../components/DailySummary';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -38,7 +39,7 @@ function normalizeDurum(item = {}) {
   return 'bekliyor';
 }
 function getChildName(cocuk = {}, odeme = {}) {
-  return `${cocuk.ad || ''} ${cocuk.soyad || ''}`.trim() || cocuk.adSoyad || cocuk.isim || odeme.cocukAd || odeme.cocukAdi || odeme.childName || 'Çocuk';
+  return `${cocuk.ad || ''} ${cocuk.soyad || ''}`.trim() || cocuk.adSoyad || cocuk.isim || odeme.cocukAd || odeme.cocukAdi || odeme.childName || t('dashboard.childFallback');
 }
 function getMonthKey(o = {}) {
   if (o.tarih && String(o.tarih).length >= 7) return String(o.tarih).slice(0, 7);
@@ -49,10 +50,10 @@ function getMonthKey(o = {}) {
 }
 
 const OZET_ITEMS = [
-  { key: 'sinifSayisi', label: 'Sınıf', icon: <ReadOutlined />, color: THEME.blue, route: '/siniflar' },
-  { key: 'cocukSayisi', label: 'Çocuk', icon: <SmileOutlined />, color: THEME.orange, route: '/cocuklar' },
-  { key: 'ogretmenSayisi', label: 'Öğretmen', icon: <TeamOutlined />, color: THEME.primary, route: '/ogretmenler' },
-  { key: 'veliSayisi', label: 'Veli', icon: <ContactsOutlined />, color: THEME.green, route: '/veliler' },
+  { key: 'sinifSayisi', labelKey: 'classes', icon: <ReadOutlined />, color: THEME.blue, route: '/siniflar' },
+  { key: 'cocukSayisi', labelKey: 'children', icon: <SmileOutlined />, color: THEME.orange, route: '/cocuklar' },
+  { key: 'ogretmenSayisi', labelKey: 'teachers', icon: <TeamOutlined />, color: THEME.primary, route: '/ogretmenler' },
+  { key: 'veliSayisi', labelKey: 'parents', icon: <ContactsOutlined />, color: THEME.green, route: '/veliler' },
 ];
 
 const EMPTY_STATS = {
@@ -85,19 +86,19 @@ function normalizeStats(data = {}) {
 
 // utils/subscriptionStatus.js'deki getSubscriptionStatus()'un ürettiği
 // remainingDays'i banner metnine ekleyen web'e özgü küçük yardımcı.
-function getSubscriptionBannerText(sub, status) {
-  if (!sub) return 'İlk 1 ay ücretsiz deneme';
-  if (status.key === 'expired') return 'Abonelik süresi doldu';
+function getSubscriptionBannerText(sub, status, t) {
+  if (!sub) return t('dashboard.freeTrial');
+  if (status.key === 'expired') return t('dashboard.subscriptionExpired');
 
   const isDemo = String(sub.durum || sub.status || '').toLowerCase().includes('demo');
   if (isDemo) {
-    return status.remainingDays != null ? `Demo aktif · ${status.remainingDays} gün kaldı` : 'Demo aktif';
+    return status.remainingDays != null ? t('dashboard.demoDays', { days: status.remainingDays }) : t('dashboard.demoActive');
   }
   if (status.aktif) {
-    const planText = sub.plan === 'yillik' ? 'Yıllık abonelik aktif' : 'Aylık abonelik aktif';
-    return status.remainingDays != null ? `${planText} · ${status.remainingDays} gün kaldı` : planText;
+    const planText = sub.plan === 'yillik' ? t('dashboard.annualActive') : t('dashboard.monthlyActive');
+    return status.remainingDays != null ? t('dashboard.subscriptionDays', { plan: planText, days: status.remainingDays }) : planText;
   }
-  return status.message || 'Abonelik durumu kontrol edilmeli';
+  return status.message || t('dashboard.subscriptionCheck');
 }
 
 // Mobildeki DashboardScreen.js'deki özet kart mantığının web karşılığı:
@@ -106,6 +107,7 @@ function getSubscriptionBannerText(sub, status) {
 // (kresSiniflari, kresCocuklari, kresKullanicilari/...) sayılır.
 export default function DashboardPage() {
   const { kullanici, kres } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || 'kres001';
   const navigate = useNavigate();
   const unreadMessages = useUnreadMessagesCount(kullanici?.uid || kullanici?.id);
@@ -328,7 +330,7 @@ export default function DashboardPage() {
     return () => unsub();
   }, [kresId]);
 
-  const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
+  const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('common.administrator');
   const subStatus = getSubscriptionStatus(abonelik);
   const subUrgent = subStatus.key === 'expiring_soon' || subStatus.key === 'expired';
 
@@ -348,7 +350,7 @@ export default function DashboardPage() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <Text style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 13 }}>Hoş geldiniz</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 13 }}>{t('dashboard.welcome')}</Text>
             <Title level={3} style={{ color: '#fff', margin: '2px 0 0' }}>{adSoyad}</Title>
           </div>
           <div
@@ -366,8 +368,8 @@ export default function DashboardPage() {
             <CrownOutlined style={{ color: '#FFD97A', fontSize: 14 }} />
             <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: 700 }}>
               {subUrgent
-                ? (subStatus.key === 'expired' ? 'Abonelik yenilenmeli' : `${subStatus.remainingDays} gün kaldı, yenile`)
-                : getSubscriptionBannerText(abonelik, subStatus)}
+                ? (subStatus.key === 'expired' ? t('dashboard.subscriptionRenew') : t('dashboard.renewDays', { days: subStatus.remainingDays }))
+                : getSubscriptionBannerText(abonelik, subStatus, t)}
             </Text>
           </div>
         </div>
@@ -414,7 +416,7 @@ export default function DashboardPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                 <span style={{ fontSize: 13, color: item.color }}>{item.icon}</span>
-                <Text type="secondary" style={{ fontSize: 12.5, fontWeight: 600 }}>{item.label}</Text>
+                <Text type="secondary" style={{ fontSize: 12.5, fontWeight: 600 }}>{t(`navigation.${item.labelKey}`)}</Text>
               </div>
               <Text style={{ fontSize: 26, fontWeight: 800, color: THEME.text, lineHeight: 1 }}>
                 {istatistik[item.key]}
@@ -431,64 +433,64 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24} sm={12} md={6}>
           <SummaryPanel
-            title="Son Duyurular"
+            title={t('dashboard.recentAnnouncements')}
             icon={<NotificationOutlined />}
             color={THEME.red}
             loading={ozetYukleniyor}
-            emptyText="Henüz duyuru yok"
+            emptyText={t('dashboard.noAnnouncements')}
             onSeeAll={() => navigate('/duyurular')}
             items={duyurular.map((d) => ({
               key: d.id,
-              primary: d.title || d.baslik || 'Duyuru',
+              primary: d.title || d.baslik || t('dashboard.announcementFallback'),
               secondary: [d.senderName, d.createdAt ? new Date(d.createdAt).toLocaleDateString('tr-TR') : ''].filter(Boolean).join(' · '),
             }))}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <SummaryPanel
-            title="Yaklaşan Etkinlikler"
+            title={t('dashboard.upcomingEvents')}
             icon={<CalendarOutlined />}
             color={THEME.teal}
             loading={ozetYukleniyor}
-            emptyText="Yaklaşan etkinlik yok"
+            emptyText={t('dashboard.noUpcomingEvents')}
             onSeeAll={() => navigate('/etkinlikler')}
             items={etkinlikler.map((e) => ({
               key: e.id,
-              primary: e.baslik || 'Etkinlik',
+              primary: e.baslik || t('dashboard.eventFallback'),
               secondary: `${e.tarih || ''}${e.saat ? ' · ' + e.saat : ''}`,
             }))}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <SummaryPanel
-            title="Yaklaşan Doğum Günleri"
+            title={t('dashboard.upcomingBirthdays')}
             icon={<GiftOutlined />}
             color={THEME.gold}
             loading={ozetYukleniyor}
-            emptyText="Yaklaşan doğum günü yok"
+            emptyText={t('dashboard.noUpcomingBirthdays')}
             onSeeAll={() => navigate('/dogum-gunleri')}
             items={dogumGunleri.map((c) => ({
               key: c.id,
-              primary: c.ad || 'Çocuk',
-              secondary: c.gunKala === 0 ? 'Bugün 🎉' : c.gunKala === 1 ? 'Yarın' : `${c.gunKala} gün sonra`,
+              primary: c.ad || t('dashboard.childFallback'),
+              secondary: c.gunKala === 0 ? t('dashboard.today') : c.gunKala === 1 ? t('dashboard.tomorrow') : t('dashboard.daysLater', { days: c.gunKala }),
             }))}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <SummaryPanel
-            title="Bekleyen Ödemeler"
+            title={t('dashboard.pendingPayments')}
             icon={<WalletOutlined />}
             color={THEME.orange}
             loading={ozetYukleniyor}
-            emptyText="Bekleyen ödeme yok 🎉"
+            emptyText={t('dashboard.noPendingPayments')}
             onSeeAll={() => navigate('/odemeler')}
             items={bekleyenOdemeler.map((o) => ({
               key: o.id,
               primary: o.cocukAd,
               secondary: o.tutar,
               tag: o.durum === 'gecikti'
-                ? { text: 'Gecikti', color: THEME.red }
-                : { text: 'Bekliyor', color: THEME.orange },
+                ? { text: t('dashboard.late'), color: THEME.red }
+                : { text: t('dashboard.pending'), color: THEME.orange },
             }))}
           />
         </Col>
@@ -496,7 +498,7 @@ export default function DashboardPage() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24}>
-          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} />
+          <RevenueTrendCard trend={gelirTrendi} onClick={() => navigate('/odemeler')} t={t} />
         </Col>
       </Row>
 
@@ -513,7 +515,7 @@ export default function DashboardPage() {
 // Aylık gelir trendi: son 6 ayda tahsil edilmiş (durum='odendi') ödeme
 // tutarlarının toplamı, basit dikey çubuk grafik — ekstra kütüphane
 // gerekmesin diye salt div/CSS ile çizildi.
-function RevenueTrendCard({ trend, onClick }) {
+function RevenueTrendCard({ trend, onClick, t }) {
   const maxTutar = Math.max(1, ...trend.map((t) => t.tutar));
   const buAy = trend[trend.length - 1]?.tutar || 0;
   const oncekiAy = trend[trend.length - 2]?.tutar || 0;
@@ -522,9 +524,9 @@ function RevenueTrendCard({ trend, onClick }) {
   return (
     <Card style={{ ...cardStyle(THEME.gold), height: '100%', cursor: 'pointer' }} onClick={onClick}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-        <Text strong style={{ fontSize: 13 }}>💰 Aylık Gelir Trendi</Text>
+        <Text strong style={{ fontSize: 13 }}>{t('dashboard.monthlyRevenue')}</Text>
         {fark !== null && (
-          <Tag color={fark >= 0 ? 'green' : 'red'}>{fark >= 0 ? '▲' : '▼'} %{Math.abs(fark)} geçen aya göre</Tag>
+          <Tag color={fark >= 0 ? 'green' : 'red'}>{fark >= 0 ? '▲' : '▼'} %{Math.abs(fark)} {t('dashboard.vsLastMonth')}</Tag>
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 90 }}>
