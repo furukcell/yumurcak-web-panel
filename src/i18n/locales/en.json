@@ -478,7 +478,8 @@
     "saved": "Event saved",
     "deleted": "Event deleted",
     "saveError": "A problem occurred while saving",
-    "deleteError": "A problem occurred while deleting"
+    "deleteError": "A problem occurred while deleting",
+    "noSelectedClass": "No class selected"
   },
   "gallery": {
     "title": "Gallery Management",
