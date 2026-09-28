@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "Langue",
+    "logout": "Se déconnecter",
+    "institutionProfile": "Voir le profil de l’établissement",
+    "user": "Utilisateur",
+    "administrator": "Administrateur"
+  },
+  "navigation": {
+    "general": "Général",
+    "dashboard": "Tableau de bord",
+    "statistics": "Statistiques",
+    "institutionManagement": "Gestion de l’établissement",
+    "classes": "Classes",
+    "bulkSetup": "Configuration en masse",
+    "children": "Enfants",
+    "administrators": "Administrateurs",
+    "teachers": "Enseignants",
+    "parents": "Parents",
+    "communication": "Communication",
+    "announcements": "Annonces",
+    "events": "Événements",
+    "gallery": "Galerie",
+    "polls": "Sondages",
+    "messages": "Messages",
+    "support": "Assistance",
+    "dailyOperations": "Opérations quotidiennes",
+    "meals": "Menu",
+    "schedule": "Emploi du temps",
+    "dutyRoster": "Planning de permanence",
+    "staffTasks": "Tâches du personnel",
+    "service": "Transport",
+    "birthdays": "Anniversaires",
+    "payments": "Paiements",
+    "settings": "Paramètres",
+    "institutionInfo": "Informations de l’établissement",
+    "theme": "Paramètres du thème",
+    "subscription": "Abonnement",
+    "institutionBell": "Cloche de l’établissement",
+    "legalDocuments": "Documents juridiques",
+    "auditLog": "Journal d’audit"
+  }
+}
