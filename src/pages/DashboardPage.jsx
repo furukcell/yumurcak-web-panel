@@ -38,7 +38,7 @@ function normalizeDurum(item = {}) {
   if (due && Date.parse(due) < Date.now()) return 'gecikti';
   return 'bekliyor';
 }
-function getChildName(cocuk = {}, odeme = {}) {
+function getChildName(cocuk = {}, odeme = {}, t) {
   return `${cocuk.ad || ''} ${cocuk.soyad || ''}`.trim() || cocuk.adSoyad || cocuk.isim || odeme.cocukAd || odeme.cocukAdi || odeme.childName || t('dashboard.childFallback');
 }
 function getMonthKey(o = {}) {
@@ -269,7 +269,7 @@ export default function DashboardPage() {
           return {
             id: o.id,
             durum: normalizeDurum(o),
-            cocukAd: getChildName(cocuk, o),
+            cocukAd: getChildName(cocuk, o, t),
             tutar: formatMoney(o.tutar || o.amount, i18n.language),
             monthKey: getMonthKey(o),
           };
