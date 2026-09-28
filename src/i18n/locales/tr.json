@@ -95,6 +95,20 @@
     "annualActive": "Yıllık abonelik aktif",
     "monthlyActive": "Aylık abonelik aktif",
     "subscriptionDays": "{{plan}} · {{days}} gün kaldı",
-    "subscriptionCheck": "Abonelik durumu kontrol edilmeli"
+    "subscriptionCheck": "Abonelik durumu kontrol edilmeli",
+    "dailySummary": "Günlük Özet",
+    "attendance": "Bugünkü Yoklama",
+    "noChildren": "Kayıtlı çocuk yok",
+    "present": "geldi",
+    "absent": "gelmedi",
+    "notEntered": "girilmedi",
+    "meal": "Bugünkü Menü",
+    "noMeal": "Bugün için menü girilmedi",
+    "event": "Bugünkü Etkinlik",
+    "noEvent": "Bugün planlı etkinlik yok",
+    "classless": "Sınıfsız",
+    "breakfast": "Kahvaltı",
+    "lunch": "Öğle",
+    "snack": "Ara Öğün"
   }
 }
