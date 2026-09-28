@@ -339,7 +339,7 @@ export default function ChildrenPage() {
 
   const columns = [
     { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
-    { title: t('children.class'), dataIndex: 'sinifAd', key: 'sinifAd', render: (v) => v || <Text type="secondary"{t('children.notSpecified')}</Text> },
+    { title: t('children.class'), dataIndex: 'sinifAd', key: 'sinifAd', render: (v) => v || <Text type="secondary">{t('children.notSpecified')}</Text> },
     { title: 'Yaş', dataIndex: 'yas', key: 'yas' },
     { title: 'Öğretmen', dataIndex: 'ogretmenAd', key: 'ogretmenAd', render: (v) => v || <Text type="secondary">Atanmamış</Text> },
     {
@@ -357,7 +357,7 @@ export default function ChildrenPage() {
       key: 'durum',
       render: (_, r) => (r.durum === 'ayrildi'
         ? <Tag color="red">Ayrıldı{r.ayrilmaTarihi ? ` · ${formatChildBirthDate(r.ayrilmaTarihi)}` : ''}</Tag>
-        : <Tag color="green"{t('children.active')}</Tag>),
+        : <Tag color="green">{t('children.active')}</Tag>),
     },
     {
       title: '',
@@ -481,7 +481,7 @@ export default function ChildrenPage() {
                 {editingId && (
                   <Radio.Group value={uyumDurumu} onChange={(e) => setUyumDurumu(e.target.value)} optionType="button" buttonStyle="solid">
                     <Radio.Button value="aktif">Aktif</Radio.Button>
-                    <Radio.Button value="tamamlandi"{t('children.completed')}</Radio.Button>
+                    <Radio.Button value="tamamlandi">{t('children.completed')}</Radio.Button>
                   </Radio.Group>
                 )}
               </div>
