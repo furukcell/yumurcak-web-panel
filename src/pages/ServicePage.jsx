@@ -33,7 +33,7 @@ export default function ServicePage() {
   ];
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}{t('service.title')}</Title>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('service.title')}</Title>
       <Text type="secondary">{t('service.subtitle')}</Text>
       <Tabs items={items} style={{ marginTop: 16 }} />
     </div>
@@ -127,11 +127,11 @@ function VehiclesTab() {
       updates[`servisler/${id}`] = { ...oldVehicle, plaka: values.plaka.trim(), ad: values.ad.trim(), servisciId, kresId: kresIdFinal, createdAt: oldVehicle?.createdAt || now, updatedAt: now };
 
       await update(ref(database), updates);
-      message.success(editingId ? '{t('service.vehicleUpdated')}' : '{t('service.vehicleCreated')}');
+      message.success(editingId ? t('service.vehicleUpdated') : t('service.vehicleCreated'));
       setDrawerOpen(false);
     } catch (error) {
-      if (error?.code === 'auth/email-already-in-use') message.error('{t('service.authExists')}');
-      else message.error('{t('service.vehicleSaveError')}');
+      if (error?.code === 'auth/email-already-in-use') message.error(t('service.authExists'));
+      else message.error(t('service.vehicleSaveError'));
     } finally {
       setSaving(false);
     }
@@ -143,14 +143,14 @@ function VehiclesTab() {
       message.success('{t('service.vehicleDeleted')}');
       setDrawerOpen(false);
     } catch {
-      message.error('{t('service.vehicleDeleteError')}');
+      message.error(t('service.vehicleDeleteError'));
     }
   };
 
   const columns = [
-    { title: '{t('service.vehicleName')}', dataIndex: 'ad', key: 'ad', render: (v) => v || '{t('service.unnamedVehicle')}' },
+    { title: t('service.vehicleName'), dataIndex: 'ad', key: 'ad', render: (v) => v || t('service.unnamedVehicle') },
     { title: 'Plaka', dataIndex: 'plaka', key: 'plaka', render: (v) => v || <Text type="secondary">{t('service.notEntered')}</Text> },
-    { title: '{t('service.driver')}', key: 'servisci', render: (_, r) => { const s = servisciMap[r.servisciId]; return s ? `👤 ${s.ad || s.kullaniciAdi}` : <Text type="danger">{t('service.accountMissing')}</Text>; } },
+    { title: t('service.driver'), key: 'servisci', render: (_, r) => { const s = servisciMap[r.servisciId]; return s ? `👤 ${s.ad || s.kullaniciAdi}` : <Text type="danger">{t('service.accountMissing')}</Text>; } },
   ];
 
   return (
@@ -158,7 +158,7 @@ function VehiclesTab() {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('service.newVehicle')}</Button>
       </div>
-      <Table rowKey="id" loading={loading} columns={columns} dataSource={vehicles} onRow={(r) => ({ onClick: () => openEdit(r), style: { cursor: 'pointer' } })} locale={{ emptyText: <Empty description="{t('service.noVehicles')}" /> }} pagination={{ pageSize: 10 }} />
+      <Table rowKey="id" loading={loading} columns={columns} dataSource={vehicles} onRow={(r) => ({ onClick: () => openEdit(r), style: { cursor: 'pointer' } })} locale={{ emptyText: <Empty description={t('service.noVehicles')} /> }} pagination={{ pageSize: 10 }} />
 
       <Drawer title={editingId ? '{t('service.editVehicle')}' : '{t('service.newVehicle')}'} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={420} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? '{t('common.update')}' : '{t('common.create')}'}</Button>}>
         <Form form={form} layout="vertical">
@@ -239,7 +239,7 @@ function AssignmentsTab() {
     const next = {};
     children.forEach((child) => {
       const info = serviceMap[child.id] || {};
-      next[child.id] = { servisKullaniyor: info.servisKullaniyor || false, servisId: info.servisId || '', alisSaati: info.alisSaati || '', birakisSaati: info.birakisSaati || '', servis{t('service.note')}u: info.servis{t('service.note')}u || '' };
+      next[child.id] = { servisKullaniyor: info.servisKullaniyor || false, servisId: info.servisId || '', alisSaati: info.alisSaati || '', birakisSaati: info.birakisSaati || '', servisNotu: info.servisNotu || '' };
     });
     setDrafts(next);
   }, [children, serviceMap]);
@@ -253,7 +253,7 @@ function AssignmentsTab() {
     if (!draft) return;
     setSavingId(childId);
     try {
-      await update(ref(database, `servisBilgileri/${childId}`), { kresId, servisKullaniyor: !!draft.servisKullaniyor, servisId: draft.servisId || '', alisSaati: draft.alisSaati.trim(), birakisSaati: draft.birakisSaati.trim(), servis{t('service.note')}u: draft.servis{t('service.note')}u.trim(), updatedAt: Date.now() });
+      await update(ref(database, `servisBilgileri/${childId}`), { kresId, servisKullaniyor: !!draft.servisKullaniyor, servisId: draft.servisId || '', alisSaati: draft.alisSaati.trim(), birakisSaati: draft.birakisSaati.trim(), servisNotu: draft.servisNotu.trim(), updatedAt: Date.now() });
       message.success('{t('service.saved')}');
     } catch {
       message.error('{t('service.saveError')}');
@@ -266,7 +266,7 @@ function AssignmentsTab() {
 
   async function doPrint() {
     const serviceChildren = children.filter((c) => drafts[c.id]?.servisKullaniyor);
-    if (serviceChildren.length === 0) { message.warning('{t('service.noServiceChildren')}'); return; }
+    if (serviceChildren.length === 0) { message.warning(t('service.noServiceChildren')); return; }
     setPrinting(true);
     try {
       const kres = await fetchInstitutionInfo(kresId);
@@ -279,7 +279,7 @@ function AssignmentsTab() {
           servisAd: vehicle ? (vehicle.ad || vehicle.plaka || '') : '',
           alisSaati: draft.alisSaati || '',
           birakisSaati: draft.birakisSaati || '',
-          servis{t('service.note')}u: draft.servis{t('service.note')}u || '',
+          servisNotu: draft.servisNotu || '',
         };
       });
       const html = buildServiceListHtml({ kres, records });
@@ -299,8 +299,8 @@ function AssignmentsTab() {
         <Text type="secondary">{serviceChildCount} {t('service.childrenUsing')}</Text>
         <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </div>
-      {children.length === 0 ? <Empty description="{t('service.noChildren')}" /> : children.map((child) => {
-        const draft = drafts[child.id] || { servisKullaniyor: false, servisId: '', alisSaati: '', birakisSaati: '', servis{t('service.note')}u: '' };
+      {children.length === 0 ? <Empty description={t('service.noChildren')} /> : children.map((child) => {
+        const draft = drafts[child.id] || { servisKullaniyor: false, servisId: '', alisSaati: '', birakisSaati: '', servisNotu: '' };
         return (
           <div key={child.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -325,10 +325,10 @@ function AssignmentsTab() {
                   </Space>
                 )}
                 <Space style={{ width: '100%', marginBottom: 8 }}>
-                  <Input value={draft.alisSaati} onChange={(e) => updateDraft(child.id, 'alisSaati', e.target.value)} placeholder="{t('service.pickupPlaceholder')}" style={{ width: 160 }} />
-                  <Input value={draft.birakisSaati} onChange={(e) => updateDraft(child.id, 'birakisSaati', e.target.value)} placeholder="{t('service.dropoffPlaceholder')}" style={{ width: 160 }} />
+                  <Input value={draft.alisSaati} onChange={(e) => updateDraft(child.id, 'alisSaati', e.target.value)} placeholder={t('service.pickupPlaceholder')} style={{ width: 160 }} />
+                  <Input value={draft.birakisSaati} onChange={(e) => updateDraft(child.id, 'birakisSaati', e.target.value)} placeholder={t('service.dropoffPlaceholder')} style={{ width: 160 }} />
                 </Space>
-                <Input value={draft.servis{t('service.note')}u} onChange={(e) => updateDraft(child.id, 'servis{t('service.note')}u', e.target.value)} placeholder="{t('service.note')}" style={{ marginBottom: 8 }} />
+                <Input value={draft.servisNotu} onChange={(e) => updateDraft(child.id, 'servisNotu', e.target.value)} placeholder={t('service.note')} style={{ marginBottom: 8 }} />
               </>
             )}
 
@@ -405,7 +405,7 @@ function DailyTrackingTab() {
   const formatDateLabel = () => {
     if (isToday) return '{t('service.today')}';
     const dun = new Date(); dun.setDate(dun.getDate() - 1);
-    if (dateKey === toDateKey(dun)) return '{t('service.yesterday')}';
+    if (dateKey === toDateKey(dun)) return t('service.yesterday');
     return selectedDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
   };
 
@@ -415,7 +415,7 @@ function DailyTrackingTab() {
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => shiftDay(-1)} />
         <div style={{ textAlign: 'center' }}>
           <Text strong style={{ fontSize: 16 }}>{formatDateLabel()}</Text>
-          {!isToday && <div><a onClick={() => setSelectedDate(new Date())}>{t('service.today')}e dön</a></div>}
+          {!isToday && <div><a onClick={() => setSelectedDate(new Date())}>{t('service.backToday')}</a></div>}
         </div>
         <Button icon={<RightOutlined />} shape="circle" disabled={isToday} onClick={() => !isToday && shiftDay(1)} />
       </div>
@@ -436,7 +436,7 @@ function DailyTrackingTab() {
           )}
 
           {vehicles.length === 0 ? (
-            <Empty description="{t('service.noVehicles')}" />
+            <Empty description={t('service.noVehicles')} />
           ) : (
             vehicles.map((vehicle) => {
               const durum = gunlukDurum[vehicle.id] || {};
@@ -446,7 +446,7 @@ function DailyTrackingTab() {
                 <div key={vehicle.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <Text strong>{vehicle.ad || vehicle.plaka}</Text>
-                    <Tag color={varmaSaat ? 'green' : 'orange'}>{varmaSaat ? `✅ Vardı ${varmaSaat}` : '⏳ {t('service.notArrived')}'}</Tag>
+                    <Tag color={varmaSaat ? 'green' : 'orange'}>{varmaSaat ? `✅ Vardı ${varmaSaat}` : `⏳ ${t('service.notArrived')}`}</Tag>
                   </div>
                   {cocuklar.length === 0 ? (
                     <Text type="secondary">{t('service.noAssignedChildren')}</Text>
