@@ -798,5 +798,22 @@
     "loadError": "Theme information could not be loaded.",
     "saved": "Nursery theme updated",
     "saveError": "Theme could not be saved."
+  },
+  "auditLog": {
+    "title": "Журнал действий",
+    "subtitle": "История добавлений, изменений и удалений в панели · последние {{count}} записей",
+    "searchPlaceholder": "Поиск по названию записи или исполнителю",
+    "allModules": "Все модули",
+    "allActions": "Все действия",
+    "date": "Дата",
+    "action": "Действие",
+    "module": "Модуль",
+    "record": "Запись",
+    "performedBy": "Выполнил",
+    "details": "Подробности",
+    "empty": "Записей пока нет",
+    "added": "Добавлено",
+    "updated": "Обновлено",
+    "deleted": "Удалено"
   }
 }
