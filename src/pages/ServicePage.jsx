@@ -43,7 +43,6 @@ export default function ServicePage() {
 function VehiclesTab() {
   const { kullanici } = useAuth();
   const { t } = useTranslation();
-  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [vehicles, setVehicles] = useState([]);
@@ -160,25 +159,25 @@ function VehiclesTab() {
       </div>
       <Table rowKey="id" loading={loading} columns={columns} dataSource={vehicles} onRow={(r) => ({ onClick: () => openEdit(r), style: { cursor: 'pointer' } })} locale={{ emptyText: <Empty description={t('service.noVehicles')} /> }} pagination={{ pageSize: 10 }} />
 
-      <Drawer title={editingId ? '{t('service.editVehicle')}' : '{t('service.newVehicle')}'} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={420} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? '{t('common.update')}' : '{t('common.create')}'}</Button>}>
+      <Drawer title={editingId ? t('service.editVehicle') : t('service.newVehicle')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={420} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('common.update') : t('common.create')}</Button>}>
         <Form form={form} layout="vertical">
           <Text strong>{t('service.vehicleInfo')}</Text>
-          <Form.Item name="ad" label="{t('service.vehicleName')}" rules={[{ required: true, message: '{t('common.required')}' }]} style={{ marginTop: 10 }}>
+          <Form.Item name="ad" label={t('service.vehicleName')} rules={[{ required: true, message: t('common.required') }]} style={{ marginTop: 10 }}>
             <Input placeholder="Örn: 1 Nolu Servis / Sabah Turu" />
           </Form.Item>
-          <Form.Item name="plaka" label="Plaka" rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="plaka" label={t('service.plate')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: 48 AB 123" />
           </Form.Item>
 
           <Text strong>Servis {t('service.driver')}si</Text>
           <Text type="secondary" style={{ display: 'block', fontSize: 12, marginTop: 4, marginBottom: 10 }}>Bu araca atanan görevli, kendi hesabıyla giriş yapıp çocukları alındı/bırakıldı işaretleyebilir.</Text>
-          <Form.Item name="kullaniciAdi" label="{t('service.username')}" rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="kullaniciAdi" label={t('service.username')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: servis1" />
           </Form.Item>
-          <Form.Item name="servisciAd" label="{t('service.fullName')}" rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="servisciAd" label={t('service.fullName')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: Ayşe Yılmaz" />
           </Form.Item>
-          <Form.Item name="sifre" label="{t('common.password')}" extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}>
+          <Form.Item name="sifre" label={t('common.password')} extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}>
             <Input.Password iconRender={(v) => (v ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
         </Form>
@@ -254,9 +253,9 @@ function AssignmentsTab() {
     setSavingId(childId);
     try {
       await update(ref(database, `servisBilgileri/${childId}`), { kresId, servisKullaniyor: !!draft.servisKullaniyor, servisId: draft.servisId || '', alisSaati: draft.alisSaati.trim(), birakisSaati: draft.birakisSaati.trim(), servisNotu: draft.servisNotu.trim(), updatedAt: Date.now() });
-      message.success('{t('service.saved')}');
+      message.success(t('service.saved'));
     } catch {
-      message.error('{t('service.saveError')}');
+      message.error(t('service.saveError'));
     } finally {
       setSavingId(null);
     }
@@ -285,7 +284,7 @@ function AssignmentsTab() {
       const html = buildServiceListHtml({ kres, records });
       printHtmlDocument(html);
     } catch {
-      message.error('{t('service.printError')}');
+      message.error(t('service.printError'));
     } finally {
       setPrinting(false);
     }
@@ -306,7 +305,7 @@ function AssignmentsTab() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
                 <Text strong>{child.ad} {child.soyad}</Text>
-                <div><Text type="secondary" style={{ fontSize: 12 }}>{sinifMap[child.sinifId] || '{t('service.noClass')}'}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12 }}>{sinifMap[child.sinifId] || t('service.noClass')}</Text></div>
               </div>
               <Switch checked={!!draft.servisKullaniyor} onChange={(v) => updateDraft(child.id, 'servisKullaniyor', v)} />
             </div>
@@ -403,7 +402,7 @@ function DailyTrackingTab() {
   }
 
   const formatDateLabel = () => {
-    if (isToday) return '{t('service.today')}';
+    if (isToday) return t('service.today');
     const dun = new Date(); dun.setDate(dun.getDate() - 1);
     if (dateKey === toDateKey(dun)) return t('service.yesterday');
     return selectedDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
