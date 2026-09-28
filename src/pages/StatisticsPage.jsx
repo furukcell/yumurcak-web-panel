@@ -15,7 +15,6 @@ import {
   formatDateTimeTr,
 } from '../utils/statisticsHelpers';
 import { exportStatisticsToExcel } from '../utils/statisticsExport';
-import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
