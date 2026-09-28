@@ -9,7 +9,17 @@ export const PACKAGE_TIERS = [
 export const PER_STUDENT_PRICE = 48;
 export const MANUAL_SOURCE = 'manuel_iban';
 
-export const formatPrice = (v) => `${Number(v || 0).toLocaleString('tr-TR')} TL`;
+export const CURRENCIES = [
+  { value: 'TRY', label: 'TL (₺)', symbol: '₺', suffix: 'TL' },
+  { value: 'USD', label: 'Dolar ($)', symbol: '$' },
+  { value: 'EUR', label: 'Euro (€)', symbol: '€' },
+];
+export const getCurrency = (code) => CURRENCIES.find((c) => c.value === code) || CURRENCIES[0];
+export const formatPrice = (v, currency = 'TRY') => {
+  const c = getCurrency(currency);
+  const n = Number(v || 0).toLocaleString('tr-TR');
+  return c.suffix ? `${n} ${c.suffix}` : `${c.symbol}${n}`;
+};
 export const addMonths = (date, months) => { const d = new Date(date); d.setMonth(d.getMonth() + months); return d; };
 export const toDateStr = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 export const getTierById = (id) => PACKAGE_TIERS.find((x) => x.id === id) || PACKAGE_TIERS[0];
@@ -37,15 +47,17 @@ export function subscribeManualRequests(callback) {
   });
 }
 
-export async function activateManualSubscription({ kresId, tierId, period, customEndDate, price, ogrenciLimiti, manuelNot, odemeReferansi, tanimlayanUid, existingSubscription }) {
+export async function activateManualSubscription({ kresId, tierId, period, customEndDate, price, paraBirimi = 'TRY', ogrenciLimiti, manuelNot, odemeReferansi, tanimlayanUid, existingSubscription }) {
   const tier = getTierById(tierId);
+  const currency = getCurrency(paraBirimi).value;
+  if (currency !== 'TRY' && (price === '' || price == null || !(Number(price) > 0))) throw new Error('Dolar / Euro aboneliklerde tutarı elle girmelisin (paket fiyatları TL).');
   const customLimit = Number(ogrenciLimiti);
   const finalLimit = Number.isFinite(customLimit) && customLimit > 0 ? Math.floor(customLimit) : tier.maxStudent;
   const finalPrice = price === '' || price == null ? (tierId === 'custom' ? computePerStudentPrice(finalLimit, period === 'yillik' ? 'yillik' : 'aylik') : (period === 'yillik' ? tier.yearly : tier.monthly)) : Number(price);
   const endDate = period === 'ozel' && customEndDate ? customEndDate : toDateStr(addMonths(new Date(), period === 'yillik' ? 12 : 1));
-  const record = { kresId, plan: tierId === 'custom' ? `ozel_${period}` : `${tier.id}_${period}`, planTier:tierId === 'custom' ? 'custom' : tier.id, planPeriod:period, ogrenciLimiti:finalLimit, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:'TRY', kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', erisimKisitli:false, createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
+  const record = { kresId, plan: tierId === 'custom' ? `ozel_${period}` : `${tier.id}_${period}`, planTier:tierId === 'custom' ? 'custom' : tier.id, planPeriod:period, ogrenciLimiti:finalLimit, durum:'aktif', baslangicTarihi:existingSubscription?.baslangicTarihi || toDateStr(new Date()), bitisTarihi:endDate, demoBitisTarihi:'', fiyat:finalPrice, paraBirimi:currency, kaynak:MANUAL_SOURCE, manuelNot:manuelNot || '', odemeReferansi:odemeReferansi || '', tanimlayanUid:tanimlayanUid || '', erisimKisitli:false, createdAt:existingSubscription?.createdAt || Date.now(), updatedAt:Date.now() };
   await set(ref(database, `abonelikler/${kresId}`), record);
-  if (finalPrice > 0) await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:record.planTier, tierTitle:tierId === 'custom' ? `${finalLimit} Öğrenci Özel Limit` : tier.title, period, ogrenciLimiti:finalLimit, fiyat:finalPrice, paraBirimi:'TRY', odemeReferansi:odemeReferansi || '', manuelNot:manuelNot || '', tanimlayanUid:tanimlayanUid || '', tarih:toDateStr(new Date()), createdAt:Date.now() });
+  if (finalPrice > 0) await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:record.planTier, tierTitle:tierId === 'custom' ? `${finalLimit} Öğrenci Özel Limit` : tier.title, period, ogrenciLimiti:finalLimit, fiyat:finalPrice, paraBirimi:currency, odemeReferansi:odemeReferansi || '', manuelNot:manuelNot || '', tanimlayanUid:tanimlayanUid || '', tarih:toDateStr(new Date()), createdAt:Date.now() });
 }
 
 export async function setManualAccessRestriction({ kresId, restricted, tanimlayanUid='' }) {
@@ -64,10 +76,11 @@ export async function endSubscription({ kresId, tanimlayanUid='' }) {
   });
 }
 
-export async function updateSubscriptionDetails({ kresId, fiyat, bitisTarihi, tanimlayanUid='' }) {
+export async function updateSubscriptionDetails({ kresId, fiyat, paraBirimi, bitisTarihi, tanimlayanUid='' }) {
   if (!kresId) throw new Error('Kreş ID bulunamadı.');
   const updates = { updatedAt: Date.now(), duzenleyenUid: tanimlayanUid };
   if (fiyat !== undefined && fiyat !== null && fiyat !== '') updates.fiyat = Number(fiyat);
+  if (paraBirimi) updates.paraBirimi = getCurrency(paraBirimi).value;
   if (bitisTarihi) updates.bitisTarihi = bitisTarihi;
   await update(ref(database, `abonelikler/${kresId}`), updates);
 }
@@ -79,7 +92,7 @@ export async function confirmManualPayment({ kresId, subscription, tanimlayanUid
   const end = toDateStr(addMonths(base, period === 'yillik' ? 12 : 1));
   const tier = getTierById(subscription?.planTier);
   await update(ref(database, `abonelikler/${kresId}`), { durum:'aktif', bitisTarihi:end, erisimKisitli:false, updatedAt:Date.now() });
-  await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:tier.id, tierTitle:tier.title, period, fiyat:Number(subscription?.fiyat || 0), paraBirimi:'TRY', tanimlayanUid, tarih:toDateStr(new Date()), createdAt:Date.now() });
+  await push(ref(database, `odemeGecmisi/${kresId}`), { kresId, kaynak:MANUAL_SOURCE, tierId:tier.id, tierTitle:tier.title, period, fiyat:Number(subscription?.fiyat || 0), paraBirimi:subscription?.paraBirimi || 'TRY', tanimlayanUid, tarih:toDateStr(new Date()), createdAt:Date.now() });
 }
 
 export async function approveManualRequest({ kresId, talepId, tanimlayanUid='', existingSubscription=null }) {
