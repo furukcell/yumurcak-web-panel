@@ -921,5 +921,71 @@
     "newPaymentNotification": "💳 Nouveau paiement",
     "markedPaid": "Marqué comme payé",
     "period": "Période non indiquée"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "subtitle": "État du forfait et des paiements selon le nombre d'enfants",
+    "mobilePurchase": "Les forfaits payants sont achetés via l'application mobile",
+    "mobileDesc": "La facturation Google Play / App Store (RevenueCat) fonctionne uniquement sur mobile. Vous pouvez consulter le statut, démarrer l'essai gratuit ou appliquer un code promotionnel ici.",
+    "current": "Forfait actuel",
+    "remaining": "Jours restants : {{days}}",
+    "usage": "Utilisation des places",
+    "overLimit": "⚠️ Le nombre d'enfants dépasse la limite du forfait ; une mise à niveau peut être nécessaire.",
+    "trial": "Démarrer l'essai gratuit d'un mois",
+    "promo": "Code promotionnel",
+    "promoPlaceholder": "Ex. PILOT1AY",
+    "apply": "Appliquer",
+    "packages": "Forfaits",
+    "month": "mois",
+    "year": "an",
+    "already": "Cet établissement dispose déjà d'un abonnement actif/de démonstration.",
+    "trialStarted": "L'essai gratuit d'un mois a commencé.",
+    "trialError": "Impossible de démarrer l'essai.",
+    "promoRequired": "Saisissez un code promotionnel.",
+    "promoUsed": "Ce code promotionnel a déjà été utilisé pour cet établissement.",
+    "promoInvalid": "Code promotionnel introuvable ou inactif.",
+    "promoApplied": "Promotion appliquée : +{{months}} mois",
+    "promoError": "Impossible d'appliquer le code promotionnel.",
+    "noSub": "Pas encore",
+    "active": "Actif",
+    "demo": "Démo",
+    "yearly": "Annuel",
+    "monthly": "Mensuel",
+    "status": {
+      "none": "Aucun abonnement",
+      "expired": "Abonnement terminé",
+      "expiring_soon": "{{days}} jours restants",
+      "demo": "Démo active",
+      "active": "Actif",
+      "passive": "Abonnement inactif"
+    },
+    "statusMsg": {
+      "none": "Aucun abonnement actif n'a été trouvé pour cet établissement.",
+      "expired": "L'abonnement de l'établissement est terminé. Renouvelez-le pour continuer à utiliser le service.",
+      "expiring_soon": "L'abonnement expirera bientôt.",
+      "demo": "L'abonnement de démonstration est actif.",
+      "active": "L'abonnement est actif.",
+      "passive": "L'abonnement de cet établissement semble inactif."
+    },
+    "tiers": {
+      "baslangic": {
+        "title": "Départ",
+        "range": "0–30 enfants",
+        "desc": "Forfait de départ idéal pour les petites crèches.",
+        "badge": "Économique"
+      },
+      "profesyonel": {
+        "title": "Professionnel",
+        "range": "31–50 enfants",
+        "desc": "Forfait équilibré pour les établissements en croissance.",
+        "badge": "Recommandé"
+      },
+      "kurum": {
+        "title": "Établissement",
+        "range": "51–100 enfants",
+        "desc": "Pour les grandes crèches à forte utilisation.",
+        "badge": "Grande crèche"
+      }
+    }
   }
 }
