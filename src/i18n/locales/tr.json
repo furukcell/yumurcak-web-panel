@@ -815,5 +815,28 @@
     "added": "Eklendi",
     "updated": "Güncellendi",
     "deleted": "Silindi"
+  },
+  "bell": {
+    "title": "Kurum Zili",
+    "subtitle": "Veliler \"Geliyorum\" veya \"Kapıdayım\" dediğinde burada görünür",
+    "active": "Aktif",
+    "unread": "Okunmamış",
+    "completed": "Tamamlanan",
+    "empty": "Henüz kurum zili bildirimi yok",
+    "read": "Okundu",
+    "complete": "Tamamlandı",
+    "delivery": "Teslim",
+    "time": "Saat",
+    "noTime": "Saat yok",
+    "noDelivery": "Teslim bilgisi yok",
+    "leaving": "🏫 Bırakacağım",
+    "pickingUp": "👋 Alacağım",
+    "atDoor": "📍 Kapıdayım",
+    "coming": "🚗 Geliyorum",
+    "notification": "Bildirim",
+    "child": "Çocuk",
+    "parent": "Veli",
+    "readError": "Bildirim okundu yapılamadı.",
+    "completeError": "Bildirim tamamlandı yapılamadı."
   }
 }
