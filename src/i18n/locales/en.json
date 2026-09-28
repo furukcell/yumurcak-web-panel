@@ -921,5 +921,71 @@
     "newPaymentNotification": "💳 New payment record",
     "markedPaid": "Marked as paid",
     "period": "No period"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "subtitle": "Plan and payment status based on student count",
+    "mobilePurchase": "Paid plan purchases are made through the mobile app",
+    "mobileDesc": "Google Play / App Store billing (RevenueCat) works only on mobile. You can view status, start the free trial, or apply a promo code here.",
+    "current": "Current Plan",
+    "remaining": "Days remaining: {{days}}",
+    "usage": "Student Usage",
+    "overLimit": "⚠️ Student count exceeds the plan limit; an upgrade may be required.",
+    "trial": "Start 1-Month Free Trial",
+    "promo": "Promo Code",
+    "promoPlaceholder": "E.g. PILOT1AY",
+    "apply": "Apply",
+    "packages": "Plans",
+    "month": "month",
+    "year": "year",
+    "already": "This institution already has an active/demo subscription.",
+    "trialStarted": "1-month free trial started.",
+    "trialError": "Could not start the trial.",
+    "promoRequired": "Enter a promo code.",
+    "promoUsed": "This promo code has already been used for this institution.",
+    "promoInvalid": "Promo code not found or inactive.",
+    "promoApplied": "Promo applied: +{{months}} months",
+    "promoError": "Could not apply promo code.",
+    "noSub": "Not yet",
+    "active": "Active",
+    "demo": "Demo",
+    "yearly": "Yearly",
+    "monthly": "Monthly",
+    "status": {
+      "none": "No Subscription",
+      "expired": "Subscription Ended",
+      "expiring_soon": "{{days}} Days Left",
+      "demo": "Demo Active",
+      "active": "Active",
+      "passive": "Subscription Inactive"
+    },
+    "statusMsg": {
+      "none": "No active subscription was found for this institution.",
+      "expired": "The institution subscription has ended. Renew it to continue using the service.",
+      "expiring_soon": "The subscription will expire soon.",
+      "demo": "Demo subscription is active.",
+      "active": "Subscription is active.",
+      "passive": "This institution's subscription appears inactive."
+    },
+    "tiers": {
+      "baslangic": {
+        "title": "Starter",
+        "range": "0 - 30 students",
+        "desc": "Ideal starter plan for small nurseries.",
+        "badge": "Economy"
+      },
+      "profesyonel": {
+        "title": "Professional",
+        "range": "31 - 50 students",
+        "desc": "Balanced plan for growing institutions.",
+        "badge": "Recommended"
+      },
+      "kurum": {
+        "title": "Institution",
+        "range": "51 - 100 students",
+        "desc": "For larger, high-volume nurseries.",
+        "badge": "Large Nursery"
+      }
+    }
   }
 }
