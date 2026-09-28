@@ -95,6 +95,20 @@
     "annualActive": "Annual subscription active",
     "monthlyActive": "Monthly subscription active",
     "subscriptionDays": "{{plan}} · {{days}} days left",
-    "subscriptionCheck": "Subscription status should be checked"
+    "subscriptionCheck": "Subscription status should be checked",
+    "dailySummary": "Daily Summary",
+    "attendance": "Today's Attendance",
+    "noChildren": "No registered children",
+    "present": "present",
+    "absent": "absent",
+    "notEntered": "not entered",
+    "meal": "Today's Menu",
+    "noMeal": "No menu entered for today",
+    "event": "Today's Event",
+    "noEvent": "No event planned for today",
+    "classless": "Unassigned",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "snack": "Snack"
   }
 }
