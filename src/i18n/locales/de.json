@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "Sprache",
+    "logout": "Abmelden",
+    "institutionProfile": "Institutionsprofil anzeigen",
+    "user": "Benutzer",
+    "administrator": "Administrator"
+  },
+  "navigation": {
+    "general": "Allgemein",
+    "dashboard": "Dashboard",
+    "statistics": "Statistik",
+    "institutionManagement": "Einrichtungsverwaltung",
+    "classes": "Gruppen",
+    "bulkSetup": "Massenkonfiguration",
+    "children": "Kinder",
+    "administrators": "Administratoren",
+    "teachers": "Lehrkräfte",
+    "parents": "Eltern",
+    "communication": "Kommunikation",
+    "announcements": "Ankündigungen",
+    "events": "Veranstaltungen",
+    "gallery": "Galerie",
+    "polls": "Umfragen",
+    "messages": "Nachrichten",
+    "support": "Support",
+    "dailyOperations": "Täglicher Betrieb",
+    "meals": "Speiseplan",
+    "schedule": "Stundenplan",
+    "dutyRoster": "Dienstplan",
+    "staffTasks": "Personalaufgaben",
+    "service": "Fahrdienst",
+    "birthdays": "Geburtstage",
+    "payments": "Zahlungen",
+    "settings": "Einstellungen",
+    "institutionInfo": "Einrichtungsdaten",
+    "theme": "Themeinstellungen",
+    "subscription": "Abonnement",
+    "institutionBell": "Einrichtungsglocke",
+    "legalDocuments": "Rechtsdokumente",
+    "auditLog": "Audit-Protokoll"
+  }
+}
