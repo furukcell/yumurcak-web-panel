@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "Language",
+    "logout": "Sign Out",
+    "institutionProfile": "View institution profile",
+    "user": "User",
+    "administrator": "Administrator"
+  },
+  "navigation": {
+    "general": "General",
+    "dashboard": "Dashboard",
+    "statistics": "Statistics",
+    "institutionManagement": "Institution Management",
+    "classes": "Classes",
+    "bulkSetup": "Bulk Setup",
+    "children": "Children",
+    "administrators": "Administrators",
+    "teachers": "Teachers",
+    "parents": "Parents",
+    "communication": "Communication",
+    "announcements": "Announcements",
+    "events": "Events",
+    "gallery": "Gallery",
+    "polls": "Polls",
+    "messages": "Messages",
+    "support": "Support",
+    "dailyOperations": "Daily Operations",
+    "meals": "Meal List",
+    "schedule": "Class Schedule",
+    "dutyRoster": "Duty Roster",
+    "staffTasks": "Staff Tasks",
+    "service": "Transportation",
+    "birthdays": "Birthdays",
+    "payments": "Payments",
+    "settings": "Settings",
+    "institutionInfo": "Institution Info",
+    "theme": "Theme Settings",
+    "subscription": "Subscription",
+    "institutionBell": "Institution Bell",
+    "legalDocuments": "Legal Documents",
+    "auditLog": "Audit Log"
+  }
+}
