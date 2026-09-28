@@ -243,7 +243,7 @@ export default function TeachersPage() {
       if (error?.code === 'auth/email-already-in-use') {
         message.error(t('teachers.authExists'));
       } else {
-        message.error(`Öğretmen kaydedilemedi. ${error?.code || error?.message || ''}`);
+        message.error(`${t('teachers.saveError')} ${error?.code || error?.message || ''}`);
       }
     } finally {
       setSaving(false);
@@ -261,7 +261,7 @@ export default function TeachersPage() {
       denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: t('teachers.title'), hedef: record.ad });
     } catch (error) {
       console.error(error);
-      message.error(`Öğretmen silinemedi. ${error?.message || ''}`);
+      message.error(`${t('teachers.deleteError')} ${error?.message || ''}`);
     } finally {
       setDeletingId(null);
     }
