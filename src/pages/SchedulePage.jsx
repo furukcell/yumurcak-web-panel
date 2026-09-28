@@ -250,14 +250,14 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
           <Popconfirm title={t('schedule.unpublishConfirm')} okText={t('schedule.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}{t('schedule.unpublish')}</Button>
+            <Button danger size="small" loading={unpublishing}>{t('schedule.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('schedule.copyPrevious')}</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>{t('schedule.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </Space>
 
       <List
@@ -268,7 +268,7 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
             <List.Item onClick={() => setSelectedDateKey(day.dateKey)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <Text strong style={{ width: 90 }}>{day.label}</Text>
-                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}{t('common.empty')}</Text>}
+                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}>{t('common.empty')}</Text>}
               </div>
             </List.Item>
           );
@@ -299,7 +299,7 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
             <Input.TextArea value={item.aciklama} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, aciklama: e.target.value }; updateDayItems(selectedDateKey, next); }} rows={2} placeholder={t('schedule.descriptionPlaceholder')} />
           </div>
         ))}
-        <Button icon={<PlusOutlined />} block onClick={() => updateDayItems(selectedDateKey, [...selectedItems, emptyActivityItem()])}{t('schedule.addActivity')}</Button>
+        <Button icon={<PlusOutlined />} block onClick={() => updateDayItems(selectedDateKey, [...selectedItems, emptyActivityItem()])}>{t('schedule.addActivity')}</Button>
       </Drawer>
     </div>
   );
