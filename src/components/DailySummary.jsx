@@ -278,6 +278,7 @@ function EventCard({ navigate, kresId }) {
 // sohbette konuşulan sıralama: yoklama en geniş kart, menü ve etkinlik
 // yanında daha küçük ikişer kart.
 export default function DailySummary({ navigate, kresId }) {
+  const { t } = useTranslation();
   return (
     <div style={{ marginBottom: 20 }}>
       <Title level={5} style={{ marginBottom: 12 }}>{t('dashboard.dailySummary')}</Title>
