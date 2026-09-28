@@ -100,7 +100,7 @@ export default function AuditLogPage() {
             </div>
             <Title level={3} style={{ margin: 0 }}>{t('auditLog.title')}</Title>
           </div>
-          <Text type="secondary"{t('auditLog.subtitle', { count: kayitlar.length })}</Text>
+          <Text type="secondary">{t('auditLog.subtitle', { count: kayitlar.length })}</Text>
         </div>
       </div>
 
