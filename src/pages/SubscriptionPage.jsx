@@ -21,7 +21,7 @@ const BUILT_IN_PROMOS = { PILOT1AY: { kod: 'PILOT1AY', tip: 'demo', sureAy: 1, a
 function formatPrice(value) { return `${Number(value || 0).toLocaleString('tr-TR')} TL`; }
 function getTierById(id) { return PACKAGE_TIERS.find((t) => t.id === id) || PACKAGE_TIERS[0]; }
 function getSuggestedTier(count) { return PACKAGE_TIERS.find((t) => count <= t.maxStudent) || null; }
-function getPlanLabel(subscription) {
+function getPlanLabel(subscription, t) {
   if (!subscription?.planTier && !subscription?.plan) return t('subscription.noSub');
   const tier = getTierById(subscription.planTier || String(subscription.plan || '').split('_')[0]);
   const plan = String(subscription.plan || '');
@@ -150,7 +150,7 @@ export default function SubscriptionPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
             <Text type="secondary" style={{ fontSize: 12 }}>{t('subscription.current')}</Text>
-            <div><Text strong style={{ fontSize: 18 }}>{getPlanLabel(subscription)}</Text></div>
+            <div><Text strong style={{ fontSize: 18 }}>{getPlanLabel(subscription, t)}</Text></div>
           </div>
           <Tag color={getStatusColor(status)}>{t(`subscription.status.${status.key}`, { days: status.remainingDays })}</Tag>
         </div>
