@@ -95,6 +95,20 @@
     "annualActive": "الاشتراك السنوي فعال",
     "monthlyActive": "الاشتراك الشهري فعال",
     "subscriptionDays": "{{plan}} · متبقي {{days}} يوم",
-    "subscriptionCheck": "يجب التحقق من حالة الاشتراك"
+    "subscriptionCheck": "يجب التحقق من حالة الاشتراك",
+    "dailySummary": "الملخص اليومي",
+    "attendance": "حضور اليوم",
+    "noChildren": "لا يوجد أطفال مسجلون",
+    "present": "حضر",
+    "absent": "غائب",
+    "notEntered": "لم يُدخل",
+    "meal": "قائمة اليوم",
+    "noMeal": "لم يتم إدخال قائمة لليوم",
+    "event": "فعالية اليوم",
+    "noEvent": "لا توجد فعالية مخططة اليوم",
+    "classless": "بدون فصل",
+    "breakfast": "الإفطار",
+    "lunch": "الغداء",
+    "snack": "وجبة خفيفة"
   }
 }
