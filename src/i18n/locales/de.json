@@ -921,5 +921,71 @@
     "newPaymentNotification": "💳 Neuer Zahlungseintrag",
     "markedPaid": "Als bezahlt markiert",
     "period": "Kein Zeitraum"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "subtitle": "Plan- und Zahlungsstatus nach Kinderzahl",
+    "mobilePurchase": "Kostenpflichtige Pläne werden über die mobile App gekauft",
+    "mobileDesc": "Die Abrechnung über Google Play / App Store (RevenueCat) funktioniert nur mobil. Hier können Sie den Status ansehen, die kostenlose Testphase starten oder einen Promo-Code anwenden.",
+    "current": "Aktueller Plan",
+    "remaining": "Verbleibende Tage: {{days}}",
+    "usage": "Kinder-Nutzung",
+    "overLimit": "⚠️ Die Kinderzahl überschreitet das Planlimit; ein Upgrade kann erforderlich sein.",
+    "trial": "1-monatige kostenlose Testphase starten",
+    "promo": "Promo-Code",
+    "promoPlaceholder": "z. B. PILOT1AY",
+    "apply": "Anwenden",
+    "packages": "Pläne",
+    "month": "Monat",
+    "year": "Jahr",
+    "already": "Diese Einrichtung hat bereits ein aktives/Demo-Abonnement.",
+    "trialStarted": "1-monatige kostenlose Testphase gestartet.",
+    "trialError": "Testphase konnte nicht gestartet werden.",
+    "promoRequired": "Bitte Promo-Code eingeben.",
+    "promoUsed": "Dieser Promo-Code wurde für diese Einrichtung bereits verwendet.",
+    "promoInvalid": "Promo-Code nicht gefunden oder inaktiv.",
+    "promoApplied": "Promo angewendet: +{{months}} Monate",
+    "promoError": "Promo-Code konnte nicht angewendet werden.",
+    "noSub": "Noch nicht",
+    "active": "Aktiv",
+    "demo": "Demo",
+    "yearly": "Jährlich",
+    "monthly": "Monatlich",
+    "status": {
+      "none": "Kein Abonnement",
+      "expired": "Abonnement beendet",
+      "expiring_soon": "{{days}} Tage verbleibend",
+      "demo": "Demo aktiv",
+      "active": "Aktiv",
+      "passive": "Abonnement inaktiv"
+    },
+    "statusMsg": {
+      "none": "Für diese Einrichtung wurde kein aktives Abonnement gefunden.",
+      "expired": "Das Abonnement der Einrichtung ist beendet. Verlängern Sie es, um den Dienst weiter zu nutzen.",
+      "expiring_soon": "Das Abonnement läuft bald ab.",
+      "demo": "Das Demo-Abonnement ist aktiv.",
+      "active": "Das Abonnement ist aktiv.",
+      "passive": "Das Abonnement dieser Einrichtung scheint inaktiv zu sein."
+    },
+    "tiers": {
+      "baslangic": {
+        "title": "Starter",
+        "range": "0–30 Kinder",
+        "desc": "Idealer Einstiegsplan für kleine Kindergärten.",
+        "badge": "Economy"
+      },
+      "profesyonel": {
+        "title": "Professional",
+        "range": "31–50 Kinder",
+        "desc": "Ausgewogener Plan für wachsende Einrichtungen.",
+        "badge": "Empfohlen"
+      },
+      "kurum": {
+        "title": "Einrichtung",
+        "range": "51–100 Kinder",
+        "desc": "Für größere Kindergärten mit hoher Auslastung.",
+        "badge": "Großer Kindergarten"
+      }
+    }
   }
 }
