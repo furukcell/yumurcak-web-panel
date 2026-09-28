@@ -1,13 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './index.css';
 
-// ConfigProvider (antd tema token'ları) artık burada değil, App.jsx
-// içindeki ThemedApp'te — kres'in seçtiği pastel temaya göre canlı
-// güncellenmesi gerektiği için AuthContext'e erişimi olan bir yere taşındı.
+// Root seviyesinde de hata sınırı: App/Auth/i18n başlangıcında oluşan
+// render hatalarının beyaz ekran olarak kalmasını engeller.
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
