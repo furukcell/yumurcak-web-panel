@@ -57,7 +57,7 @@ export default function AdministratorsPage() {
             id,
             ad: u.ad || '',
             soyad: u.soyad || '',
-            adSoyad: `${u.ad || ''} ${u.soyad || ''}`.trim() || u.kullaniciAdi || 'İsimsiz yönetici',
+            adSoyad: `${u.ad || ''} ${u.soyad || ''}`.trim() || u.kullaniciAdi || t('administrators.unnamed'),
             kullaniciAdi: u.kullaniciAdi || '-',
             telefon: u.telefon || u.tel || '-',
             email: u.email || '-',
@@ -212,7 +212,7 @@ export default function AdministratorsPage() {
     }
     const kalanAktif = yoneticiler.filter((y) => y.id !== record.id && y.aktif).length;
     if (record.aktif && kalanAktif === 0) {
-      message.error('En az bir aktif yönetici hesabı kalmalı.');
+      message.error(t('administrators.lastActive'));
       return;
     }
     setDeletingId(record.id);
@@ -250,7 +250,7 @@ export default function AdministratorsPage() {
     },
     { title: t('administrators.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
     { title: t('administrators.phoneCol'), dataIndex: 'telefon', key: 'telefon' },
-    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('administrators.active') : t('administrators.inactive')}</Tag> },
+    { title: t('administrators.status'), key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('administrators.active') : t('administrators.inactive')}</Tag> },
     {
       title: '',
       key: 'sil',
