@@ -17,12 +17,7 @@ export const SUPPORTED_LANGUAGES = [
 ];
 
 const savedLanguage = localStorage.getItem('yumurcak_language');
-const browserLanguage = (navigator.language || 'tr').split('-')[0];
-const initialLanguage = SUPPORTED_LANGUAGES.some((x) => x.code === savedLanguage)
-  ? savedLanguage
-  : SUPPORTED_LANGUAGES.some((x) => x.code === browserLanguage)
-    ? browserLanguage
-    : 'tr';
+const initialLanguage = SUPPORTED_LANGUAGES.some((x) => x.code === savedLanguage) ? savedLanguage : 'tr';
 
 i18n
   .use(initReactI18next)
