@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, message, Empty, Space, Popconfirm } from 'antd';
 import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update, query, orderByChild, equalTo } from 'firebase/database';
@@ -16,6 +17,7 @@ const { Title, Text } = Typography;
 
 // Mobildeki TeacherListScreen.js + TeacherFormScreen.js'in web karşılığı.
 export default function TeachersPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
 
@@ -70,7 +72,7 @@ export default function TeachersPage() {
 
             return {
               id,
-              ad: adSoyad || u.kullaniciAdi || 'İsimsiz öğretmen',
+              ad: adSoyad || u.kullaniciAdi || 't('teachers.unnamed')',
               kullaniciAdi: u.kullaniciAdi || '-',
               telefon: u.telefon || u.tel || '-',
               email: u.email || '-',
@@ -145,7 +147,7 @@ export default function TeachersPage() {
       // Auth şifresi değişmez ve öğretmen giriş yapamaz hale gelir. Tutarlılık
       // için web tarafında bu güvenli davranış uygulandı.
       if (editingId && oldTeacher.authUid && (values.sifre || '').trim()) {
-        message.error('Bu öğretmen Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
+        message.error('t('teachers.authPassword')');
         setSaving(false);
         return;
       }
@@ -153,7 +155,7 @@ export default function TeachersPage() {
       const kaydedilenSifre = (values.sifre || '').trim() || oldTeacher.sifre || '123456';
 
       if (kaydedilenSifre.length < 6) {
-        message.error('Şifre en az 6 karakter olmalı');
+        message.error('t('teachers.passwordMin')');
         setSaving(false);
         return;
       }
@@ -226,20 +228,20 @@ export default function TeachersPage() {
       }
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Öğretmen güncellendi' : 'Öğretmen kaydedildi');
+      message.success(editingId ? 't('teachers.updated')' : 't('teachers.saved')');
       setDrawerOpen(false);
 
       denetimKaydiYaz({
         kresId: nextKresId,
         kullanici,
         islem: editingId ? 'guncelle' : 'ekle',
-        modul: 'Öğretmenler',
+        modul: 't('teachers.title')',
         hedef: values.ad.trim(),
       });
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
-        message.error('Bu kullanıcı adı için Firebase Auth hesabı zaten var. Farklı kullanıcı adı dene.');
+        message.error('t('teachers.authExists')');
       } else {
         message.error(`Öğretmen kaydedilemedi. ${error?.code || error?.message || ''}`);
       }
@@ -255,8 +257,8 @@ export default function TeachersPage() {
     setDeletingId(record.id);
     try {
       await deleteKullaniciHesabi(record.id);
-      message.success('Öğretmen silindi');
-      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 'Öğretmenler', hedef: record.ad });
+      message.success('t('teachers.deleted')');
+      denetimKaydiYaz({ kresId, kullanici, islem: 'sil', modul: 't('teachers.title')', hedef: record.ad });
     } catch (error) {
       console.error(error);
       message.error(`Öğretmen silinemedi. ${error?.message || ''}`);
@@ -275,22 +277,22 @@ export default function TeachersPage() {
   });
 
   const columns = [
-    { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
-    { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
+    { title: 't('teachers.name')', dataIndex: 'ad', key: 'ad' },
+    { title: 't('teachers.username')', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
     { title: 'Sınıf', key: 'sinif', render: (_, r) => (r.sinifAdlari.length ? r.sinifAdlari.join(', ') : <Text type="secondary">Atanmamış</Text>) },
     { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
-    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 'Aktif' : 'Pasif'}</Tag> },
+    { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? 't('teachers.active')' : 't('teachers.inactive')'}</Tag> },
     {
       title: '',
       key: 'sil',
       width: 48,
       render: (_, r) => (
         <Popconfirm
-          title="Öğretmen silinsin mi?"
-          description="Bu işlem geri alınamaz: hesap ve Firebase Auth girişi tamamen silinir."
-          okText="Sil"
+          title={t('teachers.deleteTitle')}
+          description={t('teachers.deleteDesc')}
+          okText={t('teachers.delete')}
           okButtonProps={{ danger: true }}
-          cancelText="Vazgeç"
+          cancelText={t('teachers.cancel')}
           onConfirm={(e) => {
             e?.stopPropagation();
             handleDelete(r);
@@ -314,13 +316,13 @@ export default function TeachersPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <Title level={3} style={{ margin: 0 }}>Öğretmenler</Title>
-          <Text type="secondary">{teachers.length} öğretmen · {aktifSayisi} aktif · {atanmisSayisi} sınıfa atanmış</Text>
+          <Text type="secondary">{t('teachers.summary', { total: teachers.length, active: aktifSayisi, assigned: atanmisSayisi })}</Text>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Öğretmen Ekle</Button>
       </div>
 
       <Input.Search
-        placeholder="Öğretmen, kullanıcı adı, telefon veya sınıfa göre ara"
+        placeholder={t('teachers.search')}
         allowClear
         style={{ width: 300, marginBottom: 12 }}
         value={aramaMetni}
@@ -333,35 +335,35 @@ export default function TeachersPage() {
         columns={columns}
         dataSource={gorunenOgretmenler}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
-        locale={{ emptyText: <Empty description="Henüz kayıtlı öğretmen yok" /> }}
+        locale={{ emptyText: <Empty description={t('teachers.empty')} /> }}
         pagination={{ pageSize: 10 }}
       />
 
       <Drawer
-        title={editingId ? 'Öğretmeni Düzenle' : 'Yeni Öğretmen'}
+        title={editingId ? 't('teachers.edit')' : 't('teachers.new')'}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={420}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 't('teachers.update')' : 't('teachers.create')'}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Kullanıcı adı zorunlu' }]}>
+          <Form.Item name="kullaniciAdi" label={t('teachers.username')} rules={[{ required: true, message: 't('teachers.usernameRequired')' }]}>
             <Input placeholder="Örn: ogretmen1" autoCapitalize="none" />
           </Form.Item>
-          <Form.Item name="ad" label="Ad Soyad" rules={[{ required: true, message: 'Ad soyad zorunlu' }]}>
+          <Form.Item name="ad" label={t('teachers.name')} rules={[{ required: true, message: 't('teachers.nameRequired')' }]}>
             <Input placeholder="Örn: Ayşe Yılmaz" />
           </Form.Item>
           <Form.Item
             name="sifre"
-            label="Şifre"
-            extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}
+            label={t('teachers.password')}
+            extra={editingId ? 't('teachers.passwordKeep')' : 't('teachers.passwordDefault')'}
           >
-            <Input.Password placeholder={editingId ? 'Boş bırakılırsa değişmez' : 'Boş bırakılırsa: 123456'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
+            <Input.Password placeholder={editingId ? 't('teachers.passwordUnchanged')' : 't('teachers.passwordDefaultShort')'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
-          <Form.Item name="sinifId" label="Sınıf Ata (opsiyonel)">
+          <Form.Item name="sinifId" label={t('teachers.classAssign')}>
             <Select
               allowClear
-              placeholder={siniflar.length === 0 ? 'Önce sınıf oluşturun' : 'Sınıf seçin'}
+              placeholder={siniflar.length === 0 ? 't('teachers.createClassFirst')' : 't('teachers.selectClass')'}
               disabled={siniflar.length === 0}
               options={siniflar.map((s) => ({ value: s.id, label: `${s.ad} — ${s.yasGrubu}` }))}
             />
