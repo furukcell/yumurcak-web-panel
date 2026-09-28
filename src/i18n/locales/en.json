@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "Quick actions",
+    "viewAll": "View all"
   },
   "navigation": {
     "general": "General",
@@ -118,7 +120,14 @@
     "classless": "Unassigned",
     "breakfast": "Breakfast",
     "lunch": "Lunch",
-    "snack": "Snack"
+    "snack": "Snack",
+    "kpiClassesHint": "Active this term",
+    "kpiChildrenHint": "Registered children",
+    "kpiTeachersHint": "Active teachers",
+    "kpiParentsHint": "Active parents",
+    "attention": "Needs attention",
+    "noNotificationsToday": "No pending notifications today",
+    "pendingCount": "{{count}} payments pending"
   },
   "statistics": {
     "title": "📊 Institution Statistics",
