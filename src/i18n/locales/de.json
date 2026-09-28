@@ -326,7 +326,10 @@
     "passwordMin": "Das Passwort muss mindestens 6 Zeichen enthalten",
     "authPassword": "Diese Lehrkraft ist mit einem Firebase-Auth-Konto verknüpft. Das Passwort kann hier nicht geändert werden.",
     "authExists": "Für diesen Benutzernamen existiert bereits ein Firebase-Auth-Konto.",
-    "unnamed": "Lehrkraft ohne Namen"
+    "unnamed": "Lehrkraft ohne Namen",
+    "class": "Klasse",
+    "phone": "Telefon",
+    "status": "Status"
   },
   "administrators": {
     "title": "Administrators",
