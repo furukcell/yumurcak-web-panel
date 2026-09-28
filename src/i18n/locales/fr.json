@@ -95,6 +95,20 @@
     "annualActive": "Abonnement annuel actif",
     "monthlyActive": "Abonnement mensuel actif",
     "subscriptionDays": "{{plan}} · {{days}} jours restants",
-    "subscriptionCheck": "Vérifiez l’état de l’abonnement"
+    "subscriptionCheck": "Vérifiez l’état de l’abonnement",
+    "dailySummary": "Résumé du jour",
+    "attendance": "Présences du jour",
+    "noChildren": "Aucun enfant enregistré",
+    "present": "présents",
+    "absent": "absents",
+    "notEntered": "non renseigné",
+    "meal": "Menu du jour",
+    "noMeal": "Aucun menu renseigné pour aujourd’hui",
+    "event": "Événement du jour",
+    "noEvent": "Aucun événement prévu aujourd’hui",
+    "classless": "Sans groupe",
+    "breakfast": "Petit-déjeuner",
+    "lunch": "Déjeuner",
+    "snack": "Goûter"
   }
 }
