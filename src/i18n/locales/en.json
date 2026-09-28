@@ -326,7 +326,10 @@
     "passwordMin": "Password must be at least 6 characters",
     "authPassword": "This teacher is linked to a Firebase Auth account. The current user's password cannot be changed from this screen.",
     "authExists": "A Firebase Auth account already exists for this username. Try a different username.",
-    "unnamed": "Unnamed teacher"
+    "unnamed": "Unnamed teacher",
+    "class": "Class",
+    "phone": "Phone",
+    "status": "Status"
   },
   "administrators": {
     "title": "Administrators",
