@@ -26,9 +26,9 @@ function toNumber(value) {
   const number = Number(clean);
   return Number.isFinite(number) ? number : 0;
 }
-function formatMoney(value) {
+function formatMoney(value, locale = 'tr-TR') {
   const number = toNumber(value);
-  return number > 0 ? `${number.toLocaleString('tr-TR')} ₺` : '-';
+  return number > 0 ? `${number.toLocaleString(locale)} ₺` : '-';
 }
 function normalizeDurum(item = {}) {
   const v = String(item.durum || item.status || '').toLowerCase().trim();
@@ -107,7 +107,7 @@ function getSubscriptionBannerText(sub, status, t) {
 // (kresSiniflari, kresCocuklari, kresKullanicilari/...) sayılır.
 export default function DashboardPage() {
   const { kullanici, kres } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const kresId = kullanici?.kresId || 'kres001';
   const navigate = useNavigate();
   const unreadMessages = useUnreadMessagesCount(kullanici?.uid || kullanici?.id);
@@ -270,7 +270,7 @@ export default function DashboardPage() {
             id: o.id,
             durum: normalizeDurum(o),
             cocukAd: getChildName(cocuk, o),
-            tutar: formatMoney(o.tutar || o.amount),
+            tutar: formatMoney(o.tutar || o.amount, i18n.language),
             monthKey: getMonthKey(o),
           };
         })
@@ -281,10 +281,9 @@ export default function DashboardPage() {
       // Aylık gelir trendi: son 6 ay, sadece durum='odendi' olan ödemelerin
       // toplamı (ay = ödemenin ait olduğu dönem, `tarih`/`ay`+`yil` alanı).
       const now = new Date();
-      const ayEtiketleri = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
       const aylar = Array.from({ length: 6 }, (_, i) => {
         const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-        return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: ayEtiketleri[d.getMonth()] };
+        return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString(i18n.language, { month: 'short' }) };
       });
       const odenenler = Object.values(odemelerData)
         .map((o) => safeObject(o))
@@ -328,7 +327,7 @@ export default function DashboardPage() {
       () => setDoluluk({ toplamKapasite: 0, kapasiteGirilenSinif: 0 })
     );
     return () => unsub();
-  }, [kresId]);
+  }, [kresId, i18n.language]);
 
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('common.administrator');
   const subStatus = getSubscriptionStatus(abonelik);
@@ -442,7 +441,7 @@ export default function DashboardPage() {
             items={duyurular.map((d) => ({
               key: d.id,
               primary: d.title || d.baslik || t('dashboard.announcementFallback'),
-              secondary: [d.senderName, d.createdAt ? new Date(d.createdAt).toLocaleDateString('tr-TR') : ''].filter(Boolean).join(' · '),
+              secondary: [d.senderName, d.createdAt ? new Date(d.createdAt).toLocaleDateString(i18n.language) : ''].filter(Boolean).join(' · '),
             }))}
           />
         </Col>
