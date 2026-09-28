@@ -113,7 +113,7 @@ export default function SchedulePage() {
                 <Text strong>🏫 {item.ad}</Text>
                 {item.yasGrubu && <div><Text type="secondary" style={{ fontSize: 12 }}>{item.yasGrubu}</Text></div>}
               </div>
-              <Tag color={item.programVarMi ? 'green' : 'orange'}>{item.programVarMi ? '{t('schedule.hasProgram')}' : '{t('schedule.noProgram')}'}</Tag>
+              <Tag color={item.programVarMi ? 'green' : 'orange'}>{item.programVarMi ? t('schedule.hasProgram') : t('schedule.noProgram')}</Tag>
             </div>
           </List.Item>
         )}
