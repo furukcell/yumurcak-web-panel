@@ -162,7 +162,7 @@ export default function MealsPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}{t('meals.title')}</Title>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('meals.title')}</Title>
       <Text type="secondary">{t('meals.subtitle')}</Text>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 12px' }}>
