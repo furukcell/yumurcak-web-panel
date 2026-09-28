@@ -47,7 +47,7 @@ export default function LegalDocumentsPage() {
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, background: active ? THEME.primarySoft : '#fff', border: `1px solid ${active ? THEME.primary : THEME.border}`, borderRadius: 16, padding: 13 }}
             >
               <span style={{ fontSize: 20 }}>{doc.icon}</span>
-              <Text strong style={{ color: active ? THEME.primaryDark : THEME.text }}>{doc.title}</Text>
+              <Text strong style={{ color: active ? THEME.primaryDark : THEME.text }}>{t(`legal.${doc.key}`)}</Text>
             </div>
           );
         })}
@@ -55,7 +55,7 @@ export default function LegalDocumentsPage() {
 
       <Card style={{ borderColor: THEME.border }}>
         <div style={{ fontSize: 34, marginBottom: 8 }}>{selectedDoc.icon}</div>
-        <Title level={3} style={{ margin: 0 }}>{selectedDoc.title}</Title>
+        <Title level={3} style={{ margin: 0 }}>{t(`legal.${selectedDoc.key}`)}</Title>
         <Text type="secondary">{selectedDoc.subtitle}</Text>
         <div>
           <Text style={{ display: 'inline-block', marginTop: 12, marginBottom: 14, background: THEME.primarySoft, color: THEME.primaryDark, borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 900 }}>
