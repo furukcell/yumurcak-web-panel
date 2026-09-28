@@ -4,6 +4,7 @@ import { LeftOutlined, RightOutlined, CopyOutlined, PlusOutlined, DeleteOutlined
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { createNotification } from '../utils/notificationCenter';
@@ -61,6 +62,7 @@ function schedulePreview(value) {
 // Mobildeki LessonScheduleListScreen.js + AdminMonthlyScheduleScreen.js'in web karşılığı.
 export default function SchedulePage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [siniflar, setSiniflar] = useState([]);
@@ -76,7 +78,7 @@ export default function SchedulePage() {
       if (!sinifLoaded || !programLoaded) return;
       const currentMonthKey = getMonthKey(new Date());
       const liste = Object.entries(sinifData).map(([id, s]) => ({
-        id, ad: s?.ad || 'İsimsiz Sınıf', yasGrubu: s?.yasGrubu || null,
+        id, ad: s?.ad || t('schedule.unnamedClass'), yasGrubu: s?.yasGrubu || null,
         programVarMi: Object.values(program).some((item) => item?.sinifId === id && item?.ayKey === currentMonthKey && item?.kaynak === KAYNAK && item?.aktif !== false),
       }));
       setSiniflar(liste);
@@ -97,13 +99,13 @@ export default function SchedulePage() {
   return (
     <div>
       <Title level={3} style={{ marginBottom: 4 }}>Ders Programı</Title>
-      <Text type="secondary">Sınıf bazlı, ay + gün bazlı program</Text>
+      <Text type="secondary">{t('schedule.subtitle')}</Text>
 
       <List
         style={{ marginTop: 16 }}
         loading={loading}
         dataSource={siniflar}
-        locale={{ emptyText: <Empty description="Henüz sınıf eklenmemiş" /> }}
+        locale={{ emptyText: <Empty description={t('schedule.noClasses')} /> }}
         renderItem={(item) => (
           <List.Item onClick={() => setSelectedSinif(item)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
@@ -111,7 +113,7 @@ export default function SchedulePage() {
                 <Text strong>🏫 {item.ad}</Text>
                 {item.yasGrubu && <div><Text type="secondary" style={{ fontSize: 12 }}>{item.yasGrubu}</Text></div>}
               </div>
-              <Tag color={item.programVarMi ? 'green' : 'orange'}>{item.programVarMi ? 'Program Var' : 'Program Yok'}</Tag>
+              <Tag color={item.programVarMi ? 'green' : 'orange'}>{item.programVarMi ? '{t('schedule.hasProgram')}' : '{t('schedule.noProgram')}'}</Tag>
             </div>
           </List.Item>
         )}
@@ -180,24 +182,24 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
       setValues((prev) => { const next = { ...prev }; Object.entries(copiedValues).forEach(([k, v]) => { if (v) next[k] = v; }); return next; });
       message.success(`${found} günlük program geçen aydan kopyalandı.`);
     } catch {
-      message.error('Geçen ay kopyalanamadı.');
+      message.error(t('schedule.copyError'));
     } finally {
       setCopying(false);
     }
   }
 
   async function doPublish() {
-    if (!hasAny) { message.warning('Yayınlamak için en az bir güne etkinlik gir.'); return; }
+    if (!hasAny) { message.warning(t('schedule.publishRequired')); return; }
     setSaving(true);
     try {
       await publishMonth({
         nodePath: NODE_PATH, kresId, monthKey, monthLabel, kaynak: KAYNAK, days, values, hasContent: hasScheduleContent,
         buildRecord: (args) => buildScheduleRecord({ ...args, sinifId }), matchExtra: forClass(sinifId),
       });
-      await createNotification({ kresId, hedefRoller: ['veli'], baslik: '📚 Ders programı güncellendi', mesaj: `${sinif.ad} sınıfı ${monthLabel} programı yayınlandı.`, tip: 'ders_programi', routeName: 'ParentSchedule', createdBy: adminId || '' });
-      message.success(`${monthLabel} programı yayınlandı`);
+      await createNotification({ kresId, hedefRoller: ['veli'], baslik: t('schedule.notificationTitle'), mesaj: t('schedule.notificationMessage', { className: sinif.ad, month: monthLabel }), tip: 'ders_programi', routeName: 'ParentSchedule', createdBy: adminId || '' });
+      message.success(t('schedule.published', { month: monthLabel }));
     } catch {
-      message.error('Program yayınlanamadı.');
+      message.error(t('schedule.publishError'));
     } finally {
       setSaving(false);
     }
@@ -207,9 +209,9 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
     setUnpublishing(true);
     try {
       await unpublishMonth({ nodePath: NODE_PATH, kresId, monthKey, kaynak: KAYNAK, matchExtra: forClass(sinifId) });
-      message.success('Yayından kaldırıldı');
+      message.success(t('schedule.unpublished'));
     } catch {
-      message.error('Yayından kaldırılamadı.');
+      message.error(t('schedule.unpublishError'));
     } finally {
       setUnpublishing(false);
     }
@@ -226,7 +228,7 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
       const html = buildMonthlyDocumentHtml({ docType: 'ders', kres, monthLabel, sinifAd: sinif.ad, records });
       printHtmlDocument(html);
     } catch {
-      message.error('Yazdırılacak belge oluşturulamadı.');
+      message.error(t('schedule.printError'));
     } finally {
       setPrinting(false);
     }
@@ -234,8 +236,8 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
 
   return (
     <div>
-      <Button onClick={onBack} style={{ marginBottom: 12 }}>‹ Sınıflara Dön</Button>
-      <Title level={3} style={{ marginBottom: 4 }}>{sinif.ad} — Ders Programı</Title>
+      <Button onClick={onBack} style={{ marginBottom: 12 }}>{t('schedule.backToClasses')}</Button>
+      <Title level={3} style={{ marginBottom: 4 }}>{sinif.ad} — {t('schedule.title')}</Title>
       <Text type="secondary">{sinif.yasGrubu}</Text>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 12px' }}>
@@ -247,15 +249,15 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
       {publishedCount > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
-          <Popconfirm title="Yayından kaldırılsın mı?" okText="Kaldır" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}>Yayından Kaldır</Button>
+          <Popconfirm title={t('schedule.unpublishConfirm')} okText={t('schedule.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
+            <Button danger size="small" loading={unpublishing}{t('schedule.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('schedule.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
       </Space>
 
       <List
@@ -266,7 +268,7 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
             <List.Item onClick={() => setSelectedDateKey(day.dateKey)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <Text strong style={{ width: 90 }}>{day.label}</Text>
-                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}>Boş</Text>}
+                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}{t('common.empty')}</Text>}
               </div>
             </List.Item>
           );
@@ -274,30 +276,30 @@ function ClassScheduleEditor({ sinif, kresId, onBack }) {
       />
 
       <Button type="primary" block loading={saving} onClick={doPublish} style={{ marginTop: 16, height: 46 }}>
-        {monthLabel} Programını Yayınla
+        {t('schedule.publish', { month: monthLabel })}
       </Button>
 
       <Drawer title={selectedDay?.label || ''} open={!!selectedDay} onClose={() => setSelectedDateKey('')} width={440}>
         {selectedItems.map((item, index) => (
           <div key={item.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 12, marginBottom: 10 }}>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <Input value={item.etkinlik} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, etkinlik: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder="Etkinlik adı" style={{ flex: 1 }} />
+              <Input value={item.etkinlik} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, etkinlik: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder={t('schedule.activityPlaceholder')} style={{ flex: 1 }} />
               <Button danger icon={<DeleteOutlined />} onClick={() => updateDayItems(selectedDateKey, selectedItems.filter((_, i) => i !== index))} />
             </div>
             <Select
-              allowClear placeholder="Kategori" style={{ width: '100%', marginBottom: 8 }}
+              allowClear placeholder={t('schedule.categoryPlaceholder')} style={{ width: '100%', marginBottom: 8 }}
               value={item.kategori || undefined}
               onChange={(v) => { const next = [...selectedItems]; next[index] = { ...item, kategori: v || '' }; updateDayItems(selectedDateKey, next); }}
               options={KATEGORILER.map((k) => ({ value: k.key, label: `${k.emoji} ${k.label}` }))}
             />
             <Space style={{ width: '100%', marginBottom: 8 }}>
-              <Input value={item.baslangicSaati} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, baslangicSaati: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder="Başlangıç (09:00)" style={{ width: 150 }} />
-              <Input value={item.bitisSaati} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, bitisSaati: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder="Bitiş (10:00)" style={{ width: 150 }} />
+              <Input value={item.baslangicSaati} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, baslangicSaati: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder={t('schedule.startPlaceholder')} style={{ width: 150 }} />
+              <Input value={item.bitisSaati} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, bitisSaati: e.target.value }; updateDayItems(selectedDateKey, next); }} placeholder={t('schedule.endPlaceholder')} style={{ width: 150 }} />
             </Space>
-            <Input.TextArea value={item.aciklama} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, aciklama: e.target.value }; updateDayItems(selectedDateKey, next); }} rows={2} placeholder="Açıklama (opsiyonel)" />
+            <Input.TextArea value={item.aciklama} onChange={(e) => { const next = [...selectedItems]; next[index] = { ...item, aciklama: e.target.value }; updateDayItems(selectedDateKey, next); }} rows={2} placeholder={t('schedule.descriptionPlaceholder')} />
           </div>
         ))}
-        <Button icon={<PlusOutlined />} block onClick={() => updateDayItems(selectedDateKey, [...selectedItems, emptyActivityItem()])}>Etkinlik Ekle</Button>
+        <Button icon={<PlusOutlined />} block onClick={() => updateDayItems(selectedDateKey, [...selectedItems, emptyActivityItem()])}{t('schedule.addActivity')}</Button>
       </Drawer>
     </div>
   );
