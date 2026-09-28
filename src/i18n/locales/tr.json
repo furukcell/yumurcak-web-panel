@@ -921,5 +921,71 @@
     "newPaymentNotification": "💳 Yeni ödeme kaydı",
     "markedPaid": "Ödendi olarak işaretlendi",
     "period": "Dönem yok"
+  },
+  "subscription": {
+    "title": "Abonelik",
+    "subtitle": "Öğrenci sayısına göre paket ve ödeme durumu",
+    "mobilePurchase": "Ücretli plan satın alma mobil uygulama üzerinden yapılır",
+    "mobileDesc": "Google Play / App Store ödeme altyapısı (RevenueCat) sadece mobil tarafta çalışır. Buradan durum görüntüleyebilir, ücretsiz deneme başlatabilir veya promosyon kodu uygulayabilirsin.",
+    "current": "Mevcut Plan",
+    "remaining": "Kalan gün: {{days}}",
+    "usage": "Öğrenci Kullanımı",
+    "overLimit": "⚠️ Öğrenci sayısı paket limitini aşıyor, yükseltme gerekebilir.",
+    "trial": "İlk 1 Ay Ücretsiz Denemeyi Başlat",
+    "promo": "Promosyon Kodu",
+    "promoPlaceholder": "Örn: PILOT1AY",
+    "apply": "Uygula",
+    "packages": "Paketler",
+    "month": "ay",
+    "year": "yıl",
+    "already": "Bu kreşte zaten aktif/demo abonelik var.",
+    "trialStarted": "İlk 1 ay ücretsiz demo başlatıldı.",
+    "trialError": "Demo başlatılamadı.",
+    "promoRequired": "Promosyon kodu gir.",
+    "promoUsed": "Bu promosyon kodu bu kreş için daha önce kullanılmış.",
+    "promoInvalid": "Promosyon kodu bulunamadı veya aktif değil.",
+    "promoApplied": "+{{months}} ay promosyon uygulandı",
+    "promoError": "Promosyon kodu uygulanamadı.",
+    "noSub": "Henüz yok",
+    "active": "Aktif",
+    "demo": "Demo",
+    "yearly": "Yıllık",
+    "monthly": "Aylık",
+    "status": {
+      "none": "Abonelik Yok",
+      "expired": "Abonelik Bitti",
+      "expiring_soon": "{{days}} Gün Kaldı",
+      "demo": "Demo Aktif",
+      "active": "Aktif",
+      "passive": "Abonelik Pasif"
+    },
+    "statusMsg": {
+      "none": "Bu kurum için aktif abonelik bulunamadı.",
+      "expired": "Kurum aboneliği sona erdi. Kullanıma devam etmek için aboneliğin yenilenmesi gerekir.",
+      "expiring_soon": "Abonelik yakında sona erecek.",
+      "demo": "Demo abonelik aktif.",
+      "active": "Abonelik aktif.",
+      "passive": "Bu kurumun abonelik durumu pasif görünüyor."
+    },
+    "tiers": {
+      "baslangic": {
+        "title": "Başlangıç",
+        "range": "0 - 30 öğrenci",
+        "desc": "Küçük kreşler için ideal başlangıç paketi.",
+        "badge": "Ekonomik"
+      },
+      "profesyonel": {
+        "title": "Profesyonel",
+        "range": "31 - 50 öğrenci",
+        "desc": "Büyüyen kurumlar için dengeli paket.",
+        "badge": "Önerilen"
+      },
+      "kurum": {
+        "title": "Kurum",
+        "range": "51 - 100 öğrenci",
+        "desc": "Yoğun kullanımlı büyük kreşler için.",
+        "badge": "Büyük Kreş"
+      }
+    }
   }
 }
