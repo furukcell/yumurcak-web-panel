@@ -167,7 +167,7 @@ export default function EventsPage() {
               </div>
               <Text type="secondary">📅 {item.tarih ?? '-'} {item.saat ? `· ${item.saat}` : ''}</Text>
               <br />
-              <Text type="secondary">🏫 {item.sinifAdlari.length > 0 ? item.sinifAdlari.join(', ') : 'Sınıf seçilmemiş'}</Text>
+              <Text type="secondary">🏫 {item.sinifAdlari.length > 0 ? item.sinifAdlari.join(', ') : '{t('events.noSelectedClass')}'}</Text>
               {item.aciklama && <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginTop: 6, marginBottom: 0 }}>{item.aciklama}</Paragraph>}
             </div>
           </List.Item>
