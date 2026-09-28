@@ -189,10 +189,10 @@ export default function ClassesPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}{t('classes.title')}</Title>
+          <Title level={3} style={{ margin: 0 }}>{t('classes.title')}</Title>
           <Text type="secondary">{t('classes.subtitle')}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}{t('classes.add')}</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('classes.add')}</Button>
       </div>
 
       <div style={{ display: 'flex', gap: 24, marginBottom: 20, background: THEME.primarySoft, borderRadius: 16, padding: '14px 20px' }}>
