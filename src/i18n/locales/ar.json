@@ -326,7 +326,10 @@
     "passwordMin": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
     "authPassword": "هذا المعلم مرتبط بحساب Firebase Auth. لا يمكن تغيير كلمة المرور من هذه الشاشة.",
     "authExists": "يوجد حساب Firebase Auth بالفعل لاسم المستخدم هذا.",
-    "unnamed": "معلم بلا اسم"
+    "unnamed": "معلم بلا اسم",
+    "class": "الفصل",
+    "phone": "الهاتف",
+    "status": "الحالة"
   },
   "administrators": {
     "title": "Administrators",
