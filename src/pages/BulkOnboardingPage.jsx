@@ -387,7 +387,7 @@ export default function BulkOnboardingPage() {
         style={{ marginBottom: 16 }}
         items={siniflar.map((sinifData) => ({
           key: sinifData.key,
-          label: sinifData.ad ? `${sinifData.ad} — ${sinifData.ogrenciler.filter((o) => o.ad.trim()).length} ${t('bulkOnboarding.studentCount', { count: '' }).trim()}` : t('bulkOnboarding.newClass'),
+          label: sinifData.ad ? `${sinifData.ad} — ${sinifData.ogrenciler.filter((o) => o.ad.trim()).length} ${t('bulkOnboarding.studentCount', { count: sinifData.ogrenciler.filter((o) => o.ad.trim()).length })}` : t('bulkOnboarding.newClass'),
           extra: (
             <Button
               danger
