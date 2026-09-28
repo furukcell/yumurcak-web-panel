@@ -326,7 +326,10 @@
     "passwordMin": "Şifre en az 6 karakter olmalı",
     "authPassword": "Bu öğretmen Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.",
     "authExists": "Bu kullanıcı adı için Firebase Auth hesabı zaten var. Farklı kullanıcı adı dene.",
-    "unnamed": "İsimsiz öğretmen"
+    "unnamed": "İsimsiz öğretmen",
+    "class": "Sınıf",
+    "phone": "Telefon",
+    "status": "Durum"
   },
   "administrators": {
     "title": "Administrators",
