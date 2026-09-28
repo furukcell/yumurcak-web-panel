@@ -13,12 +13,12 @@ import { useTranslation } from 'react-i18next';
 const { Title, Text } = Typography;
 
 const AY_ADLARI = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-const DURUM_META = {
+const getDurumMeta = (t) => ({
   tum: { label: t('payments.all'), color: THEME.primary },
   odendi: { label: t('payments.paidStatus'), color: THEME.green },
   bekliyor: { label: t('payments.pending'), color: THEME.orange },
   gecikti: { label: t('payments.overdueStatus'), color: THEME.red },
-};
+});
 
 function safeObject(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
 function toList(data) { return Object.entries(safeObject(data)).map(([id, item]) => ({ id, ...safeObject(item) })); }
@@ -66,6 +66,7 @@ function dueDateForMonth(yil, ay) { return `${Number(yil) || new Date().getFullY
 export default function PaymentsPage() {
   const { kullanici } = useAuth();
   const { t } = useTranslation();
+  const DURUM_META = getDurumMeta(t);
   const kresId = kullanici?.kresId || kullanici?.kurumId || null;
 
   const [odemeler, setOdemeler] = useState([]);
