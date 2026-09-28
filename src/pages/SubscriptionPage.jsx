@@ -149,46 +149,46 @@ export default function SubscriptionPage() {
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <Text type="secondary" style={{ fontSize: 12 }}{t('subscription.current')}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{t('subscription.current')}</Text>
             <div><Text strong style={{ fontSize: 18 }}>{getPlanLabel(subscription)}</Text></div>
           </div>
-          <Tag color={getStatusColor(status)}>{status.label}</Tag>
+          <Tag color={getStatusColor(status)}>{t(`subscription.status.${status.key}`, { days: status.remainingDays })}</Tag>
         </div>
         <Paragraph type="secondary" style={{ marginBottom: 8 }}>{status.key === 'expiring_soon' ? t('subscription.statusMsg.expiring_soon') : t(`subscription.statusMsg.${status.key}`)}</Paragraph>
-        {status.remainingDays != null && <Text type="secondary"{t('subscription.remaining', { days: status.remainingDays })}</Text>}
+        {status.remainingDays != null && <Text type="secondary">{t('subscription.remaining', { days: status.remainingDays })}</Text>}
 
         <div style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={{ fontWeight: 700, fontSize: 13 }}{t('subscription.usage')}</Text>
+            <Text style={{ fontWeight: 700, fontSize: 13 }}>{t('subscription.usage')}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>{studentCount} / {activeLimit || '-'}</Text>
           </div>
           <Progress percent={getUsagePercent(studentCount, activeLimit)} showInfo={false} strokeColor={overLimit ? THEME.red : THEME.primary} />
-          {overLimit && <Text type="danger" style={{ fontSize: 12 }}{t('subscription.overLimit')}</Text>}
+          {overLimit && <Text type="danger" style={{ fontSize: 12 }}>{t('subscription.overLimit')}</Text>}
         </div>
 
         {status.key === 'none' && (
-          <Button type="primary" block loading={saving} onClick={startTrial} style={{ marginTop: 16 }}{t('subscription.trial')}</Button>
+          <Button type="primary" block loading={saving} onClick={startTrial} style={{ marginTop: 16 }}>{t('subscription.trial')}</Button>
         )}
       </Card>
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }} title={t('subscription.promo')}>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder={t('subscription.promoPlaceholder') } style={{ flex: 1 }} />
-          <Button type="primary" loading={saving} onClick={applyPromo}{t('subscription.apply')}</Button>
+          <Button type="primary" loading={saving} onClick={applyPromo}>{t('subscription.apply')}</Button>
         </div>
       </Card>
 
-      <Title level={5} style={{ marginBottom: 12 }}{t('subscription.packages')}</Title>
+      <Title level={5} style={{ marginBottom: 12 }}>{t('subscription.packages')}</Title>
       <Row gutter={[12, 12]}>
         {PACKAGE_TIERS.map((tier) => (
           <Col xs={24} md={8} key={tier.id}>
             <Card style={{ borderColor: tier.featured ? tier.color : THEME.border, borderWidth: tier.featured ? 2 : 1 }}>
               <Tag color={tier.color}>{t(`subscription.tiers.${tier.id}.badge`)}</Tag>
-              <Title level={4} style={{ margin: '8px 0 0' }}>{tier.title}</Title>
+              <Title level={4} style={{ margin: '8px 0 0' }}>{t(`subscription.tiers.${tier.id}.title`)}</Title>
               <Text type="secondary">{t(`subscription.tiers.${tier.id}.range`)}</Text>
               <Paragraph style={{ marginTop: 8, marginBottom: 8 }}>{t(`subscription.tiers.${tier.id}.desc`)}</Paragraph>
               <Text strong style={{ fontSize: 16 }}>{formatPrice(tier.monthly)} / {t('subscription.month')}</Text>
-              <div><Text type="secondary" style={{ fontSize: 12 }}>{formatPrice(tier.yearly)} / yıl</Text></div>
+              <div><Text type="secondary" style={{ fontSize: 12 }}>{formatPrice(tier.yearly)} / {t('subscription.year')}</Text></div>
             </Card>
           </Col>
         ))}
