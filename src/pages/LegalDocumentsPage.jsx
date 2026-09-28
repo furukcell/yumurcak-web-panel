@@ -33,8 +33,8 @@ export default function LegalDocumentsPage() {
     <div>
       <div style={{ background: THEME.primary, borderRadius: 20, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
         <div style={{ fontSize: 34 }}>⚖️</div>
-        <Title level={3} style={{ color: '#fff', margin: '6px 0 0' }}>Yasal Metinler</Title>
-        <Text style={{ color: 'rgba(255,255,255,0.84)' }}>Kullanım şartları, gizlilik politikası ve KVKK aydınlatma metni.</Text>
+        <Title level={3} style={{ color: '#fff', margin: '6px 0 0' }}>{t('legal.title')}</Title>
+        <Text style={{ color: 'rgba(255,255,255,0.84)' }}>{t('legal.subtitle')}</Text>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -59,7 +59,7 @@ export default function LegalDocumentsPage() {
         <Text type="secondary">{selectedDoc.subtitle}</Text>
         <div>
           <Text style={{ display: 'inline-block', marginTop: 12, marginBottom: 14, background: THEME.primarySoft, color: THEME.primaryDark, borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 900 }}>
-            Son Güncelleme: {selectedDoc.updatedAt}
+            {t('legal.updated')}: {selectedDoc.updatedAt}
           </Text>
         </div>
         <Paragraph style={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{selectedDoc.body}</Paragraph>
