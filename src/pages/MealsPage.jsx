@@ -187,8 +187,8 @@ export default function MealsPage() {
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('meals.copyPrevious')}</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>{t('meals.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </Space>
 
       <List
@@ -199,7 +199,7 @@ export default function MealsPage() {
             <List.Item onClick={() => setSelectedDateKey(day.dateKey)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <Text strong style={{ width: 90 }}>{day.label}</Text>
-                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}{t('common.empty')}</Text>}
+                {preview ? <Text type="secondary" ellipsis style={{ flex: 1 }}>{preview}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}>{t('common.empty')}</Text>}
               </div>
             </List.Item>
           );
@@ -221,7 +221,7 @@ export default function MealsPage() {
         <Select mode="tags" style={{ width: '100%', marginTop: 6, marginBottom: 16 }} value={selectedValue.araOgun} onChange={(list) => updateMealList(selectedDateKey, 'araOgun', list)} placeholder={t('meals.snackPlaceholder')} open={false} suffixIcon={null} />
 
         {hasMealContent(selectedValue) && (
-          <Button danger block onClick={() => setValues((prev) => ({ ...prev, [selectedDateKey]: emptyMealValue() }))}{t('meals.clearDay')}</Button>
+          <Button danger block onClick={() => setValues((prev) => ({ ...prev, [selectedDateKey]: emptyMealValue() }))}>{t('meals.clearDay')}</Button>
         )}
       </Drawer>
     </div>
