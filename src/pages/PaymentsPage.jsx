@@ -231,15 +231,15 @@ export default function PaymentsPage() {
       </div>
 
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.openAmount')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.primary)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.thisMonth')}</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.green)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.paid')}</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.overdue')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>{t('payments.openAmount')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.primary)}><Text type="secondary" style={{ fontSize: 12 }}>{t('payments.thisMonth')}</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.green)}><Text type="secondary" style={{ fontSize: 12 }}>{t('payments.paid')}</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>{t('payments.overdue')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
       </Row>
 
       <Space wrap style={{ marginBottom: 14 }}>
         {['tum', 'bekliyor', 'gecikti', 'odendi'].map((key) => (
-          <Tag.CheckableTag key={key} checked={filter === key} onChange={() => setFilter(key)}>{DURUM_META[key].label}</Tag.CheckableTag>
+          <Tag.CheckableTag key={key} checked={filter === key} onChange={() => setFilter(key)}>{t(`payments.${key === 'tum' ? 'all' : key === 'bekliyor' ? 'pending' : key === 'gecikti' ? 'overdueStatus' : 'paidStatus'}`)}</Tag.CheckableTag>
         ))}
       </Space>
 
@@ -258,15 +258,15 @@ export default function PaymentsPage() {
                     <div><Text style={{ color: THEME.primary, fontSize: 13, fontWeight: 700 }}>{item.baslik || item.aciklama || t('payments.monthlyFee')}</Text></div>
                     <div><Text type="secondary" style={{ fontSize: 12 }}>{item.donem}</Text></div>
                   </div>
-                  <Tag color={meta.color}>{meta.label}</Tag>
+                  <Tag color={meta.color}>{t(`payments.${item.durum === 'odendi' ? 'paidStatus' : item.durum === 'gecikti' ? 'overdueStatus' : 'pending'}`)}</Tag>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: `1px solid ${THEME.border}` }}>
-                  <div><Text type="secondary" style={{ fontSize: 11 }}>Tutar</Text><div><Text strong style={{ fontSize: 18 }}>{formatMoney(item.tutar || item.amount)}</Text></div></div>
+                  <div><Text type="secondary" style={{ fontSize: 11 }}>{t('payments.amount')}</Text><div><Text strong style={{ fontSize: 18 }}>{formatMoney(item.tutar || item.amount)}</Text></div></div>
                   <div style={{ textAlign: 'right' }}><Text type="secondary" style={{ fontSize: 11 }}>{item.odemeTarihi ? t('payments.paymentDate') : t('payments.dueDate')}</Text><div><Text strong style={{ fontSize: 13 }}>{item.odemeTarihi || item.sonOdemeTarihi || '-'}</Text></div></div>
                 </div>
                 <Space style={{ marginTop: 12, width: '100%' }}>
-                  <Button size="small" onClick={() => openEdit(item)}{t('payments.edit')}</Button>
-                  {item.durum !== 'odendi' && <Button size="small" type="primary" style={{ background: THEME.green, borderColor: THEME.green }} onClick={() => odendiYap(item)}{t('payments.markPaid')}</Button>}
+                  <Button size="small" onClick={() => openEdit(item)}>{t('payments.edit')}</Button>
+                  {item.durum !== 'odendi' && <Button size="small" type="primary" style={{ background: THEME.green, borderColor: THEME.green }} onClick={() => odendiYap(item)}>{t('payments.markPaid')}</Button>}
                 </Space>
               </div>
             </List.Item>
@@ -275,12 +275,12 @@ export default function PaymentsPage() {
       />
 
       <Drawer title={editingId ? t('payments.editTitle') : t('payments.newTitle')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={460} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('payments.update') : t('payments.createAction')}</Button>}>
-        <Text strong{t('payments.childSelection')}</Text>
+        <Text strong>{t('payments.childSelection')}</Text>
         <Select style={{ width: '100%', marginTop: 6, marginBottom: 16 }} value={selectedChildId || undefined} onChange={setSelectedChildId} placeholder={children.length === 0 ? t('payments.noChildren') : t('payments.selectChild')} disabled={children.length === 0} options={children.map((c) => ({ value: c.id, label: c.adSoyad }))} />
 
         <Space style={{ marginBottom: 12 }}>
-          <Button size="small" onClick={() => { const d = new Date(); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}{t('payments.thisMonthBtn')}</Button>
-          <Button size="small" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() + 1); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}{t('payments.nextMonth')}</Button>
+          <Button size="small" onClick={() => { const d = new Date(); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}>{t('payments.thisMonthBtn')}</Button>
+          <Button size="small" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() + 1); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}>{t('payments.nextMonth')}</Button>
         </Space>
 
         <Form form={form} layout="vertical">
@@ -288,7 +288,7 @@ export default function PaymentsPage() {
             <Input placeholder="Aylık Kreş Ücreti" />
           </Form.Item>
 
-          <Text strong>Ay</Text>
+          <Text strong>{t('payments.month')}</Text>
           <Space wrap style={{ marginTop: 6, marginBottom: 16 }}>
             {AY_ADLARI.slice(1).map((ad, i) => (
               <Tag.CheckableTag key={ad} checked={selectedMonth === i + 1} onChange={() => setSelectedMonth(i + 1)}>{ad.slice(0, 3)}</Tag.CheckableTag>
@@ -304,16 +304,16 @@ export default function PaymentsPage() {
             label={t('payments.amount')}
             rules={[
               { required: true, message: t('payments.required') },
-              { validator: (_, value) => (toNumber(value) > 0 ? Promise.resolve() : Promise.reject(new Error('0\'dan büyük bir tutar gir'))) },
+              { validator: (_, value) => (toNumber(value) > 0 ? Promise.resolve() : Promise.reject(new Error(t('payments.greaterZero')))) },
             ]}
           >
             <Input placeholder="7500" inputMode="decimal" />
           </Form.Item>
 
-          <Text strong>Durum</Text>
+          <Text strong>{t('payments.status')}</Text>
           <Space wrap style={{ marginTop: 6, marginBottom: 16 }}>
             {['bekliyor', 'odendi', 'gecikti'].map((d) => (
-              <Tag.CheckableTag key={d} checked={selectedDurum === d} onChange={() => setSelectedDurum(d)}>{DURUM_META[d].label}</Tag.CheckableTag>
+              <Tag.CheckableTag key={d} checked={selectedDurum === d} onChange={() => setSelectedDurum(d)}>{t(`payments.${d === 'bekliyor' ? 'pending' : d === 'odendi' ? 'paidStatus' : 'overdueStatus'}`)}</Tag.CheckableTag>
             ))}
           </Space>
 
