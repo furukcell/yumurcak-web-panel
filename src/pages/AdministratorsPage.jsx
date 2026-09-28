@@ -238,7 +238,7 @@ export default function AdministratorsPage() {
 
   const columns = [
     {
-      title: 'Ad Soyad',
+      title: t('administrators.fullName'),
       dataIndex: 'adSoyad',
       key: 'adSoyad',
       render: (v, r) => (
@@ -249,7 +249,7 @@ export default function AdministratorsPage() {
       ),
     },
     { title: t('administrators.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
-    { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
+    { title: t('administrators.phoneCol'), dataIndex: 'telefon', key: 'telefon' },
     { title: 'Durum', key: 'aktif', render: (_, r) => <Tag color={r.aktif ? 'green' : 'red'}>{r.aktif ? t('administrators.active') : t('administrators.inactive')}</Tag> },
     {
       title: '',
