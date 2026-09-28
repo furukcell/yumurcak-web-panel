@@ -337,7 +337,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
                 <Button size="small" loading={loadingMore} onClick={loadOlderMessages}>{t('messages.loadMore')}</Button>
               </div>
             ) : allMessages.length > 0 ? (
-              <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 12, marginBottom: 12 }}{t('messages.start')}</Text>
+              <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 12, marginBottom: 12 }}>{t('messages.start')}</Text>
             ) : null}
 
             {allMessages.length === 0 ? (
