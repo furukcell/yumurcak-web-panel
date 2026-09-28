@@ -165,16 +165,16 @@ function VehiclesTab() {
           <Form.Item name="ad" label={t('service.vehicleName')} rules={[{ required: true, message: t('common.required') }]} style={{ marginTop: 10 }}>
             <Input placeholder="Örn: 1 Nolu Servis / Sabah Turu" />
           </Form.Item>
-          <Form.Item name="plaka" label={t('service.plate')} rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="plaka" label={t('service.plate')} rules={[{ required: true, message: t('common.required') }]}>
             <Input placeholder="Örn: 48 AB 123" />
           </Form.Item>
 
           <Text strong>Servis {t('service.driver')}si</Text>
           <Text type="secondary" style={{ display: 'block', fontSize: 12, marginTop: 4, marginBottom: 10 }}>Bu araca atanan görevli, kendi hesabıyla giriş yapıp çocukları alındı/bırakıldı işaretleyebilir.</Text>
-          <Form.Item name="kullaniciAdi" label={t('service.username')} rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="kullaniciAdi" label={t('service.username')} rules={[{ required: true, message: t('common.required') }]}>
             <Input placeholder="Örn: servis1" />
           </Form.Item>
-          <Form.Item name="servisciAd" label={t('service.fullName')} rules={[{ required: true, message: '{t('common.required')}' }]}>
+          <Form.Item name="servisciAd" label={t('service.fullName')} rules={[{ required: true, message: t('common.required') }]}>
             <Input placeholder="Örn: Ayşe Yılmaz" />
           </Form.Item>
           <Form.Item name="sifre" label={t('common.password')} extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}>
