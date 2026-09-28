@@ -4,32 +4,33 @@ import { ref, onValue, update, query, orderByChild, equalTo } from 'firebase/dat
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME, cardStyle } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
 function safeObject(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
 function toList(data) { return Object.entries(safeObject(data)).map(([id, item]) => ({ id, ...safeObject(item) })); }
 function normalizeText(v) { return String(v || '').toLowerCase().trim(); }
-function formatTime(value) {
-  if (!value) return 'Saat yok';
+function formatTime(value, t) {
+  if (!value) return t('bell.noTime');
   let date = null;
   if (typeof value === 'number') date = new Date(value);
   if (typeof value === 'string') { const n = Number(value); date = Number.isFinite(n) && value.length >= 10 ? new Date(n) : new Date(value); }
   if (!date || Number.isNaN(date.getTime())) return String(value);
   return date.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
-function teslimLabel(value) {
+function teslimLabel(value, t) {
   const v = normalizeText(value);
-  if (v === 'birakacagim' || v === 'birakacağım' || v === 'birakma') return '🏫 Bırakacağım';
-  if (v === 'alacagim' || v === 'alacağım' || v === 'alma') return '👋 Alacağım';
-  return value || 'Teslim bilgisi yok';
+  if (v === 'birakacagim' || v === 'birakacağım' || v === 'birakma') return t('bell.leaving');
+  if (v === 'alacagim' || v === 'alacağım' || v === 'alma') return t('bell.pickingUp');
+  return value || t('bell.noDelivery');
 }
-function durumLabel(value) {
+function durumLabel(value, t) {
   const v = normalizeText(value);
-  if (v === 'kapidayim' || v === 'kapıdayım') return '📍 Kapıdayım';
-  if (v === 'geliyorum') return '🚗 Geliyorum';
-  if (v === 'tamamlandi' || v === 'tamamlandı') return '✅ Tamamlandı';
-  return value || 'Bildirim';
+  if (v === 'kapidayim' || v === 'kapıdayım') return t('bell.atDoor');
+  if (v === 'geliyorum') return t('bell.coming');
+  if (v === 'tamamlandi' || v === 'tamamlandı') return `✅ ${t('bell.complete')}`;
+  return value || t('bell.notification');
 }
 function getAccent(item) {
   const durum = normalizeText(item?.durum || item?.status);
@@ -42,6 +43,7 @@ function getAccent(item) {
 // Mobildeki AdminBellScreen.js'in web karşılığı.
 export default function BellPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || kullanici?.kurumId || null;
 
   const [bildirimler, setBildirimler] = useState([]);
@@ -77,7 +79,7 @@ export default function BellPage() {
     try {
       await update(ref(database, `kurumZili/${item.id}`), { okundu: true, read: true, okunduAt: Date.now(), updatedAt: Date.now() });
     } catch {
-      message.error('Bildirim okundu yapılamadı.');
+      message.error(t('bell.readError'));
     } finally {
       setBusyId(null);
     }
@@ -88,7 +90,7 @@ export default function BellPage() {
     try {
       await update(ref(database, `kurumZili/${item.id}`), { okundu: true, read: true, tamamlandi: true, tamamlandiAt: Date.now(), updatedAt: Date.now() });
     } catch {
-      message.error('Bildirim tamamlandı yapılamadı.');
+      message.error(t('bell.completeError'));
     } finally {
       setBusyId(null);
     }
@@ -96,19 +98,19 @@ export default function BellPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Kurum Zili</Title>
-      <Text type="secondary">Veliler "Geliyorum" veya "Kapıdayım" dediğinde burada görünür</Text>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('bell.title')}</Title>
+      <Text type="secondary">{t('bell.subtitle')}</Text>
 
       <Row gutter={[12, 12]} style={{ margin: '16px 0' }}>
-        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.orange), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.orange }}>{stats.aktif}</Text><br /><Text type="secondary">Aktif</Text></Card></Col>
-        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.red), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.red }}>{stats.okunmamis}</Text><br /><Text type="secondary">Okunmamış</Text></Card></Col>
-        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{stats.tamamlanan}</Text><br /><Text type="secondary">Tamamlanan</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.orange), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.orange }}>{stats.aktif}</Text><br /><Text type="secondary">{t('bell.active')}</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.red), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.red }}>{stats.okunmamis}</Text><br /><Text type="secondary">{t('bell.unread')}</Text></Card></Col>
+        <Col span={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{stats.tamamlanan}</Text><br /><Text type="secondary">{t('bell.completed')}</Text></Card></Col>
       </Row>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
       ) : bildirimler.length === 0 ? (
-        <Empty description="Henüz kurum zili bildirimi yok" />
+        <Empty description={t('bell.empty')} />
       ) : (
         bildirimler.map((item) => {
           const tamamlandi = !!(item.tamamlandi || item.tamamlandı);
@@ -121,24 +123,24 @@ export default function BellPage() {
             <Card key={item.id} style={{ ...cardStyle(tamamlandi ? THEME.green : !okundu ? THEME.red : THEME.orange), marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <div>
-                  <Text strong>{item.cocukAdi || item.cocukAd || item.childName || item.cocukId || 'Çocuk'}</Text>
-                  <div><Text type="secondary" style={{ fontSize: 12 }}>{item.veliAdi || item.veliAd || item.parentName || item.veliId || 'Veli'}</Text></div>
+                  <Text strong>{item.cocukAdi || item.cocukAd || item.childName || item.cocukId || t('bell.child')}</Text>
+                  <div><Text type="secondary" style={{ fontSize: 12 }}>{item.veliAdi || item.veliAd || item.parentName || item.veliId || t('bell.parent')}</Text></div>
                 </div>
-                <Tag color={accent}>{tamamlandi ? '✅ Tamamlandı' : durumLabel(durum)}</Tag>
+                <Tag color={accent}>{tamamlandi ? `✅ ${t('bell.complete')}` : durumLabel(durum, t)}</Tag>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: `1px solid ${THEME.border}` }}>
-                <Text type="secondary">Teslim</Text><Text strong>{teslimLabel(item.teslimTuru || item.teslimTipi || item.type)}</Text>
+                <Text type="secondary">{t('bell.delivery')}</Text><Text strong>{teslimLabel(item.teslimTuru || item.teslimTipi || item.type, t)}</Text>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: `1px solid ${THEME.border}` }}>
-                <Text type="secondary">Saat</Text><Text strong>{formatTime(item.createdAt || item.tarih || item.time)}</Text>
+                <Text type="secondary">{t('bell.time')}</Text><Text strong>{formatTime(item.createdAt || item.tarih || item.time, t)}</Text>
               </div>
               {(item.not || item.note) && <div style={{ background: '#F6F3FF', borderRadius: 12, padding: 10, marginTop: 8 }}><Text>{item.not || item.note}</Text></div>}
 
               {!tamamlandi && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                  {!okundu && <Button style={{ flex: 1 }} loading={busy} onClick={() => markOkundu(item)}>👀 Okundu</Button>}
-                  <Button type="primary" style={{ flex: 1, background: THEME.green, borderColor: THEME.green }} loading={busy} onClick={() => markTamamlandi(item)}>✅ Tamamlandı</Button>
+                  {!okundu && <Button style={{ flex: 1 }} loading={busy} onClick={() => markOkundu(item)}>{`👀 ${t('bell.read')}`}</Button>}
+                  <Button type="primary" style={{ flex: 1, background: THEME.green, borderColor: THEME.green }} loading={busy} onClick={() => markTamamlandi(item)}>{`✅ ${t('bell.complete')}`}</Button>
                 </div>
               )}
             </Card>
