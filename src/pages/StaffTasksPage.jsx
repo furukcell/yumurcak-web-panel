@@ -59,7 +59,7 @@ export default function StaffTasksPage() {
         setBolumler(Array.isArray(record.bolumler) && record.bolumler.length > 0 ? record.bolumler.map((s) => ({ id: generateId(), baslik: s.baslik || '', icerik: s.icerik || '' })) : defaultSections(t));
       } else {
         setBaslik('');
-        setBolumler(defaultSections());
+        setBolumler(defaultSections(t));
       }
       setLoadingDraft(false);
     });
