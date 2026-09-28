@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Typography, Button, Drawer, Form, Radio, Select, Input, Upload, message,
   Empty, Space, Popconfirm, Row, Col, Card, Tag, Modal, Spin,
@@ -36,11 +37,11 @@ function toList(data) {
 }
 
 function getChildName(child) {
-  return `${child?.ad || child?.adSoyad || child?.isim || 'Çocuk'} ${child?.soyad || ''}`.trim();
+  return `${child?.ad || child?.adSoyad || child?.isim || t('gallery.child')} ${child?.soyad || ''}`.trim();
 }
 
 function getClassName(classItem) {
-  return classItem?.ad || classItem?.sinifAdi || classItem?.name || 'Sınıf';
+  return classItem?.ad || classItem?.sinifAdi || classItem?.name || t('gallery.class');
 }
 
 function formatDateTime(timestamp) {
@@ -51,11 +52,11 @@ function formatDateTime(timestamp) {
 
 function remainingText(expiresAt, now) {
   const diff = Number(expiresAt || 0) - now;
-  if (diff <= 0) return 'Süresi doldu';
+  if (diff <= 0) return t('gallery.expired');
   const hours = Math.floor(diff / (60 * 60 * 1000));
   const minutes = Math.ceil((diff % (60 * 60 * 1000)) / (60 * 1000));
-  if (hours <= 0) return `${minutes} dk kaldı`;
-  return `${hours} sa ${minutes} dk kaldı`;
+  if (hours <= 0) return t('gallery.minutesLeft',{count:minutes});
+  return t('gallery.hoursLeft',{hours,minutes});
 }
 
 function isVideoFile(file) {
@@ -86,7 +87,7 @@ function normalizeMediaItems(item) {
 }
 
 function getGalleryTitle(item) {
-  return item?.baslik || item?.title || item?.aciklama || item?.hedefAdi || 'Galeri paylaşımı';
+  return item?.baslik || item?.title || item?.aciklama || item?.hedefAdi || t('gallery.share');
 }
 
 // Mobildeki AdminGalleryScreen.js'in web karşılığı — yönetici tüm kurum,
@@ -94,10 +95,11 @@ function getGalleryTitle(item) {
 // Paylaşımlar 24 saat sonra otomatik "süresi doldu" olur; gerçek silme
 // işini functions/index.js -> cleanupExpiredGalleryDaily (48 saat sonra) yapar.
 export default function GalleryPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
   const userId = kullanici?.uid || kullanici?.id || '';
-  const userName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
+  const userName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('gallery.admin');
 
   const [gallery, setGallery] = useState([]);
   const [siniflar, setSiniflar] = useState([]);
@@ -156,14 +158,14 @@ export default function GalleryPage() {
   const uploadTarget = useMemo(() => {
     if (targetType === 'cocuk' && selectedCocukId) {
       const child = cocuklar.find((c) => c.id === selectedCocukId);
-      return { hedef: 'cocuk', targetType: 'student', classId: child?.sinifId || '', studentId: child?.id || '', cocukIds: child ? [child.id] : [], label: child ? getChildName(child) : 'Seçili çocuk' };
+      return { hedef: 'cocuk', targetType: 'student', classId: child?.sinifId || '', studentId: child?.id || '', cocukIds: child ? [child.id] : [], label: child ? getChildName(child) : t('gallery.selectedChild') };
     }
     if (targetType === 'sinif' && selectedSinifId) {
       const sinif = siniflar.find((s) => s.id === selectedSinifId);
       const sinifCocuklari = cocuklar.filter((c) => c.sinifId === selectedSinifId);
-      return { hedef: 'sinif', targetType: 'class', classId: selectedSinifId, studentId: '', cocukIds: sinifCocuklari.map((c) => c.id), label: sinif ? getClassName(sinif) : 'Seçili sınıf' };
+      return { hedef: 'sinif', targetType: 'class', classId: selectedSinifId, studentId: '', cocukIds: sinifCocuklari.map((c) => c.id), label: sinif ? getClassName(sinif) : t('gallery.selectedClass') };
     }
-    return { hedef: 'kurum', targetType: 'school', classId: '', studentId: '', cocukIds: [], label: 'Tüm kurum' };
+    return { hedef: 'kurum', targetType: 'school', classId: '', studentId: '', cocukIds: [], label: t('gallery.allInstitution') };
   }, [cocuklar, selectedCocukId, selectedSinifId, siniflar, targetType]);
 
   const openCreate = () => {
@@ -180,13 +182,13 @@ export default function GalleryPage() {
   };
 
   async function handleUpload() {
-    if (fileList.length === 0) { message.error('Lütfen en az bir fotoğraf veya video seç.'); return; }
-    if (fileList.length > MAX_MEDIA_PER_POST) { message.error(`Tek paylaşımda en fazla ${MAX_MEDIA_PER_POST} medya olabilir.`); return; }
+    if (fileList.length === 0) { message.error(t('gallery.selectMedia')); return; }
+    if (fileList.length > MAX_MEDIA_PER_POST) { message.error(t('gallery.maxMedia',{count:MAX_MEDIA_PER_POST})); return; }
     const videoCount = fileList.filter((f) => isVideoFile(f.originFileObj || f)).length;
-    if (videoCount > MAX_VIDEO_PER_POST) { message.error(`Tek paylaşımda en fazla ${MAX_VIDEO_PER_POST} video olabilir.`); return; }
-    if (targetType === 'sinif' && !selectedSinifId) { message.error('Lütfen bir sınıf seç.'); return; }
-    if (targetType === 'cocuk' && !selectedCocukId) { message.error('Lütfen bir çocuk seç.'); return; }
-    if (!kresId) { message.error('Kreş bilgisi bulunamadı.'); return; }
+    if (videoCount > MAX_VIDEO_PER_POST) { message.error(t('gallery.maxVideo',{count:MAX_VIDEO_PER_POST})); return; }
+    if (targetType === 'sinif' && !selectedSinifId) { message.error(t('gallery.selectClass')); return; }
+    if (targetType === 'cocuk' && !selectedCocukId) { message.error(t('gallery.selectChild')); return; }
+    if (!kresId) { message.error(t('gallery.noInstitution')); return; }
 
     setUploading(true);
     try {
@@ -203,7 +205,7 @@ export default function GalleryPage() {
           throw new Error(`"${file.name}" 50 MB sınırını aşıyor. Lütfen daha küçük bir video seç.`);
         }
 
-        setUploadStatus(`Medya yükleniyor... (${index + 1}/${fileList.length})`);
+        setUploadStatus(`${t('gallery.uploading')} (${index + 1}/${fileList.length})`);
         const extension = getExtension(file, isVideo);
         const mediaId = `${galleryId}-${index}`;
         const storagePath = `galeri/${kresId}/${galleryId}/${mediaId}.${extension}`;
@@ -256,7 +258,7 @@ export default function GalleryPage() {
       setDrawerOpen(false);
     } catch (error) {
       console.error('Galeri yüklemesi yapılamadı:', error);
-      message.error(error?.message || 'Galeri yüklemesi yapılamadı. Storage ayarlarını kontrol et.');
+      message.error(error?.message || t('gallery.uploadError'));
     } finally {
       setUploadStatus('');
       setUploading(false);
@@ -273,11 +275,11 @@ export default function GalleryPage() {
         ...asArray(item.cocukIds || item.cocukId || item.studentId).map((childId) => remove(ref(database, `cocukGalerileri/${childId}/${item.id}`)).catch(() => null)),
         ...mediaItems.map((media) => (media.storagePath ? deleteObject(storageRef(storage, media.storagePath)).catch(() => null) : Promise.resolve(null))),
       ]);
-      message.success('Galeri kaydı silindi');
+      message.success(t('gallery.deleted'));
       if (viewer?.item?.id === item.id) setViewer(null);
     } catch (error) {
       console.error(error);
-      message.error('Galeri kaydı silinemedi.');
+      message.error(t('gallery.deleteError'));
     }
   }
 
@@ -285,16 +287,16 @@ export default function GalleryPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Galeri Yönetimi</Title>
+          <Title level={3} style={{ margin: 0 }}>{t('gallery.title')}</Title>
           <Text type="secondary">{visibleGallery.length} aktif paylaşım · Yüklenenler 24 saat görünür kalır</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Fotoğraf / Video Yükle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('gallery.upload')}</Button>
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60 }}><Spin size="large" /></div>
       ) : visibleGallery.length === 0 ? (
-        <Empty description="Aktif galeri paylaşımı yok" style={{ padding: 60 }} />
+        <Empty description={t('gallery.empty')} style={{ padding: 60 }} />
       ) : (
         <Row gutter={[16, 16]}>
           {visibleGallery.map((item) => {
@@ -322,14 +324,14 @@ export default function GalleryPage() {
                   }
                   styles={{ body: { padding: 12 } }}
                   actions={[
-                    <Popconfirm key="del" title="Bu paylaşımı silmek istediğine emin misin?" okText="Sil" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={(e) => { e?.stopPropagation?.(); handleDelete(item); }} onCancel={(e) => e?.stopPropagation?.()}>
+                    <Popconfirm key="del" title={t('gallery.deleteTitle')} okText={t('gallery.delete')} cancelText={t('gallery.cancel')} okButtonProps={{ danger: true }} onConfirm={(e) => { e?.stopPropagation?.(); handleDelete(item); }} onCancel={(e) => e?.stopPropagation?.()}>
                       <span onClick={(e) => e.stopPropagation()}><DeleteOutlined /> Sil</span>
                     </Popconfirm>,
                   ]}
                 >
                   <Text strong ellipsis style={{ display: 'block' }}>{getGalleryTitle(item)}</Text>
                   <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>Hedef: {item.hedefAdi || '-'}</Text>
-                  <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>{item.yukleyenAd || 'Bilinmiyor'} · {formatDateTime(item.createdAt)}</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>{item.yukleyenAd || t('gallery.unknown')} · {formatDateTime(item.createdAt)}</Text>
                   <Tag style={{ marginTop: 8 }} color="purple">⏳ {remainingText(item.expiresAt, now)}</Tag>
                 </Card>
               </Col>
@@ -339,51 +341,51 @@ export default function GalleryPage() {
       )}
 
       <Drawer
-        title="Fotoğraf / Video Yükle"
+        title={t('gallery.upload')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={440}
-        extra={<Button type="primary" loading={uploading} onClick={handleUpload}>{uploading ? (uploadStatus || 'Yükleniyor...') : 'Yükle'}</Button>}
+        extra={<Button type="primary" loading={uploading} onClick={handleUpload}>{uploading ? (uploadStatus || t('gallery.loading')) : t('gallery.uploadShort')}</Button>}
       >
         <Form layout="vertical">
-          <Form.Item label="Kime paylaşılacak?">
+          <Form.Item label={t('gallery.shareTo')}>
             <Radio.Group value={targetType} onChange={(e) => setTargetType(e.target.value)} style={{ width: '100%' }}>
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Radio value="kurum">Tüm Kurum</Radio>
-                <Radio value="sinif">Belirli Bir Sınıf</Radio>
-                <Radio value="cocuk">Belirli Bir Çocuk</Radio>
+                <Radio value="sinif">{t('gallery.specificClass')}</Radio>
+                <Radio value="cocuk">{t('gallery.specificChild')}</Radio>
               </Space>
             </Radio.Group>
           </Form.Item>
 
           {targetType === 'sinif' && (
-            <Form.Item label="Sınıf Seç">
+            <Form.Item label={t('gallery.selectClassLabel')}>
               <Select
-                placeholder="Sınıf seç"
+                placeholder={t('gallery.selectClass')}
                 value={selectedSinifId || undefined}
                 onChange={setSelectedSinifId}
                 options={siniflar.map((s) => ({ value: s.id, label: getClassName(s) }))}
-                notFoundContent="Henüz sınıf eklenmemiş"
+                notFoundContent={t('gallery.noClass')}
               />
             </Form.Item>
           )}
 
           {targetType === 'cocuk' && (
-            <Form.Item label="Çocuk Seç">
+            <Form.Item label={t('gallery.selectChildLabel')}>
               <Select
-                placeholder="Çocuk seç"
+                placeholder={t('gallery.selectChild')}
                 value={selectedCocukId || undefined}
                 onChange={setSelectedCocukId}
                 showSearch
                 optionFilterProp="label"
                 options={cocuklar.map((c) => ({ value: c.id, label: getChildName(c) }))}
-                notFoundContent="Henüz çocuk eklenmemiş"
+                notFoundContent={t('gallery.noChild')}
               />
             </Form.Item>
           )}
 
-          <Form.Item label="Açıklama (opsiyonel)">
-            <Input.TextArea rows={3} placeholder="Paylaşım hakkında kısa bir not..." value={caption} onChange={(e) => setCaption(e.target.value)} />
+          <Form.Item label={t('gallery.caption')}>
+            <Input.TextArea rows={3} placeholder={t('gallery.captionPlaceholder')} value={caption} onChange={(e) => setCaption(e.target.value)} />
           </Form.Item>
 
           <Form.Item label={`Fotoğraf / Video (en fazla ${MAX_MEDIA_PER_POST}, en fazla ${MAX_VIDEO_PER_POST} video)`}>
@@ -397,8 +399,8 @@ export default function GalleryPage() {
               disabled={uploading}
             >
               <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-              <p className="ant-upload-text">Yüklemek için tıkla veya sürükle</p>
-              <p className="ant-upload-hint">Video başına en fazla 50 MB</p>
+              <p className="ant-upload-text">{t('gallery.dragText')}</p>
+              <p className="ant-upload-hint">{t('gallery.videoHint')}</p>
             </Dragger>
           </Form.Item>
         </Form>
@@ -439,8 +441,8 @@ export default function GalleryPage() {
               )}
               <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>Hedef: {viewer.item.hedefAdi || '-'} · {viewer.item.yukleyenAd || ''}</Text>
-                <Popconfirm title="Bu paylaşımı silmek istediğine emin misin?" okText="Sil" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={() => handleDelete(viewer.item)}>
-                  <Button danger icon={<DeleteOutlined />} size="small">Sil</Button>
+                <Popconfirm title={t('gallery.deleteTitle')} okText={t('gallery.delete')} cancelText={t('gallery.cancel')} okButtonProps={{ danger: true }} onConfirm={() => handleDelete(viewer.item)}>
+                  <Button danger icon={<DeleteOutlined />} size="small">{t('gallery.delete')}</Button>
                 </Popconfirm>
               </div>
             </div>
