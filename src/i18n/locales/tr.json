@@ -1,0 +1,43 @@
+{
+  "common": {
+    "language": "Dil",
+    "logout": "Çıkış Yap",
+    "institutionProfile": "Kurum profilini görüntüle",
+    "user": "Kullanıcı",
+    "administrator": "Yönetici"
+  },
+  "navigation": {
+    "general": "Genel",
+    "dashboard": "Dashboard",
+    "statistics": "İstatistik",
+    "institutionManagement": "Kurum Yönetimi",
+    "classes": "Sınıflar",
+    "bulkSetup": "Toplu Kurulum",
+    "children": "Çocuklar",
+    "administrators": "Yöneticiler",
+    "teachers": "Öğretmenler",
+    "parents": "Veliler",
+    "communication": "İletişim",
+    "announcements": "Duyurular",
+    "events": "Etkinlikler",
+    "gallery": "Galeri",
+    "polls": "Anketler",
+    "messages": "Mesajlar",
+    "support": "Destek",
+    "dailyOperations": "Günlük Operasyon",
+    "meals": "Yemek Listesi",
+    "schedule": "Ders Programı",
+    "dutyRoster": "Nöbet Çizelgesi",
+    "staffTasks": "Personel Görevleri",
+    "service": "Servis",
+    "birthdays": "Doğum Günleri",
+    "payments": "Ödemeler",
+    "settings": "Ayarlar",
+    "institutionInfo": "Kurum Bilgileri",
+    "theme": "Tema Ayarları",
+    "subscription": "Abonelik",
+    "institutionBell": "Kurum Zili",
+    "legalDocuments": "Yasal Belgeler",
+    "auditLog": "Denetim Kaydı"
+  }
+}
