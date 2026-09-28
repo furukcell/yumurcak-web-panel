@@ -798,5 +798,22 @@
     "loadError": "Theme information could not be loaded.",
     "saved": "Nursery theme updated",
     "saveError": "Theme could not be saved."
+  },
+  "auditLog": {
+    "title": "Aktivitätsprotokoll",
+    "subtitle": "Verlauf der im Panel vorgenommenen Hinzufügungen, Änderungen und Löschungen · letzte {{count}} Einträge",
+    "searchPlaceholder": "Nach Datensatzname oder Person suchen",
+    "allModules": "Alle Module",
+    "allActions": "Alle Aktionen",
+    "date": "Datum",
+    "action": "Aktion",
+    "module": "Modul",
+    "record": "Datensatz",
+    "performedBy": "Ausgeführt von",
+    "details": "Details",
+    "empty": "Noch keine Protokolleinträge",
+    "added": "Hinzugefügt",
+    "updated": "Aktualisiert",
+    "deleted": "Gelöscht"
   }
 }
