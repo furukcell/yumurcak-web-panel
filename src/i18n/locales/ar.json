@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "إجراءات سريعة",
+    "viewAll": "عرض الكل"
   },
   "navigation": {
     "general": "عام",
@@ -118,7 +120,14 @@
     "classless": "بدون فصل",
     "breakfast": "الإفطار",
     "lunch": "الغداء",
-    "snack": "وجبة خفيفة"
+    "snack": "وجبة خفيفة",
+    "kpiClassesHint": "نشطة هذا الفصل",
+    "kpiChildrenHint": "الأطفال المسجلون",
+    "kpiTeachersHint": "المعلمون النشطون",
+    "kpiParentsHint": "أولياء الأمور النشطون",
+    "attention": "يحتاج إلى الانتباه",
+    "noNotificationsToday": "لا توجد إشعارات معلقة اليوم",
+    "pendingCount": "{{count}} دفعات معلقة"
   },
   "statistics": {
     "title": "📊 إحصائيات المؤسسة",
