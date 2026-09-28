@@ -14,6 +14,7 @@ import {
   formatDateTimeTr,
 } from '../utils/statisticsHelpers';
 import { exportStatisticsToExcel } from '../utils/statisticsExport';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -21,6 +22,7 @@ const { Title, Text, Paragraph } = Typography;
 // (bkz. src/utils/statisticsHelpers.js), UI antd bileşenleriyle kuruldu.
 export default function StatisticsPage() {
   const { kullanici, kres } = useAuth();
+  const { t, i18n } = useTranslation();
   const kresId = kullanici?.kresId || null;
   const [raw, setRaw] = useState({});
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,11 @@ export default function StatisticsPage() {
   const stats = useMemo(() => buildStatistics(raw, kresId), [raw, kresId]);
 
   const items = [
-    { key: 'genel', label: 'Genel', children: <GeneralTab stats={stats} /> },
-    { key: 'ogretmen', label: 'Öğretmenler', children: <TeacherTab teachers={stats.teacherStats} /> },
-    { key: 'cocuk', label: 'Çocuklar', children: <ChildrenTab childList={stats.childStats} /> },
-    { key: 'risk', label: 'Riskler', children: <RiskTab riskGroups={stats.riskGroups} /> },
-    { key: 'aktivite', label: 'Aktivite', children: <ActivityTab entries={stats.activityLog} /> },
+    { key: 'genel', label: t('statistics.general'), children: <GeneralTab stats={stats} /> },
+    { key: 'ogretmen', label: t('statistics.teachers'), children: <TeacherTab teachers={stats.teacherStats} /> },
+    { key: 'cocuk', label: t('statistics.children'), children: <ChildrenTab childList={stats.childStats} /> },
+    { key: 'risk', label: t('statistics.risks'), children: <RiskTab riskGroups={stats.riskGroups} /> },
+    { key: 'aktivite', label: t('statistics.activity'), children: <ActivityTab entries={stats.activityLog} /> },
   ];
 
   return (
@@ -86,9 +88,9 @@ export default function StatisticsPage() {
         }}
       >
         <div>
-          <Title level={3} style={{ color: '#fff', margin: 0 }}>📊 Kurum İstatistikleri</Title>
+          <Title level={3} style={{ color: '#fff', margin: 0 }}>{t('statistics.title')}</Title>
           <Text style={{ color: 'rgba(255,255,255,0.82)' }}>
-            Genel gidişat, öğretmen kullanımı ve çocuk bazlı risk analizi
+            {t('statistics.subtitle')}
           </Text>
         </div>
         {!loading && (
@@ -104,14 +106,14 @@ export default function StatisticsPage() {
       </div>
 
       <div className="print-only" style={{ display: 'none', marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>📊 {kres?.ad || 'Kurum'} — İstatistik Raporu</Title>
-        <Text type="secondary">{new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })} itibarıyla</Text>
+        <Title level={3} style={{ margin: 0 }}>📊 {kres?.ad || 'Kurum'} — {t('statistics.reportTitle')}</Title>
+        <Text type="secondary">{new Date().toLocaleDateString(i18n.language, { day: '2-digit', month: 'long', year: 'numeric' })} {t('statistics.asOf')}</Text>
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60 }}>
           <Spin size="large" />
-          <Paragraph type="secondary" style={{ marginTop: 12 }}>İstatistikler hazırlanıyor...</Paragraph>
+          <Paragraph type="secondary" style={{ marginTop: 12 }}>{t('statistics.preparing')}</Paragraph>
         </div>
       ) : (
         <Tabs items={items} />
@@ -147,43 +149,45 @@ function ProgressLine({ label, percent: value, color }) {
   );
 }
 
-function ChangeTag({ value, suffix = ' puan geçen aya göre' }) {
+function ChangeTag({ value, suffix }) {
+  const { t } = useTranslation();
   if (value === null || value === undefined || Number.isNaN(value)) return null;
   const positive = value >= 0;
   return (
     <Tag color={positive ? 'green' : 'red'} style={{ marginLeft: 8 }}>
-      {positive ? '▲' : '▼'} {Math.abs(value)}{suffix}
+      {positive ? '▲' : '▼'} {Math.abs(value)}{suffix || ` ${t('statistics.pointsVsLastMonth')}`}
     </Tag>
   );
 }
 
 function GeneralTab({ stats }) {
+  const { t } = useTranslation();
   return (
     <>
-      <SectionTitle>Kurum Genel Durum</SectionTitle>
+      <SectionTitle>{t('statistics.institutionOverview')}</SectionTitle>
       <Row gutter={[12, 12]} style={{ marginBottom: 8 }}>
-        <Col xs={12} md={6}><StatBlock icon="👶" value={stats.totalChildren} label="Toplam çocuk" color={THEME.orange} /></Col>
-        <Col xs={12} md={6}><StatBlock icon="👨‍🏫" value={stats.totalTeachers} label="Öğretmen" color={THEME.primary} /></Col>
-        <Col xs={12} md={6}><StatBlock icon="👨‍👩‍👧" value={stats.totalParents} label="Veli" color={THEME.green} /></Col>
-        <Col xs={12} md={6}><StatBlock icon="🏫" value={stats.totalClasses} label="Sınıf" color={THEME.blue} /></Col>
+        <Col xs={12} md={6}><StatBlock icon="👶" value={stats.totalChildren} label={t('statistics.totalChildren')} color={THEME.orange} /></Col>
+        <Col xs={12} md={6}><StatBlock icon="👨‍🏫" value={stats.totalTeachers} label={t('statistics.teacher')} color={THEME.primary} /></Col>
+        <Col xs={12} md={6}><StatBlock icon="👨‍👩‍👧" value={stats.totalParents} label={t('statistics.parent')} color={THEME.green} /></Col>
+        <Col xs={12} md={6}><StatBlock icon="🏫" value={stats.totalClasses} label={t('statistics.class')} color={THEME.blue} /></Col>
       </Row>
 
-      <Card style={{ ...cardStyle(THEME.green), marginBottom: 14 }} title="📅 Bugünkü Yoklama">
-        <ProgressLine label={`${stats.todayPresent} gelen / ${stats.todayAttendanceTotal} kayıt`} percent={stats.todayAttendanceRate} color={THEME.green} />
-        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Bugün gelmeyen çocuk: {stats.todayAbsent}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 8 }}>Bugün girilen günlük rapor: {stats.todayReportCount}</Paragraph>
+      <Card style={{ ...cardStyle(THEME.green), marginBottom: 14 }} title={t('statistics.attendanceToday')}>
+        <ProgressLine label={t('statistics.attendanceProgress', { present: stats.todayPresent, total: stats.todayAttendanceTotal })} percent={stats.todayAttendanceRate} color={THEME.green} />
+        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{t('statistics.absentToday', { count: stats.todayAbsent })}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 8 }}>{t('statistics.dailyReportsToday', { count: stats.todayReportCount })}</Paragraph>
         <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Text style={{ fontWeight: 700, fontSize: 13 }}>Aylık devam oranı</Text>
+            <Text style={{ fontWeight: 700, fontSize: 13 }}{t('statistics.monthlyAttendance')}/Text>
             <ChangeTag value={stats.monthlyAttendanceRateChange} />
           </div>
-          <ProgressLine label={`Bu ay: %${stats.monthlyAttendanceRate}`} percent={stats.monthlyAttendanceRate} color={THEME.green} />
+          <ProgressLine label={t('statistics.thisMonth', { rate: stats.monthlyAttendanceRate })} percent={stats.monthlyAttendanceRate} color={THEME.green} />
         </div>
       </Card>
 
       <Card
         style={{ ...cardStyle(THEME.teal), marginBottom: 14 }}
-        title={<span>📈 Kayıt Hareketleri (Son 6 Ay)</span>}
+        title={<span>{t('statistics.enrollment')}</span>}
       >
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 110, marginBottom: 8 }}>
           {stats.enrollmentTrend.map((m, idx) => {
@@ -191,8 +195,8 @@ function GeneralTab({ stats }) {
             return (
               <div key={m.ay + idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 74 }}>
-                  <div title={`${m.yeni} yeni kayıt`} style={{ width: 12, borderRadius: 4, background: THEME.green, height: Math.max(3, (m.yeni / maxVal) * 74) }} />
-                  <div title={`${m.ayrilan} ayrılan`} style={{ width: 12, borderRadius: 4, background: THEME.red, height: Math.max(3, (m.ayrilan / maxVal) * 74) }} />
+                  <div title={t('statistics.newEnrollmentTitle', { count: m.yeni })} style={{ width: 12, borderRadius: 4, background: THEME.green, height: Math.max(3, (m.yeni / maxVal) * 74) }} />
+                  <div title={t('statistics.leftTitle', { count: m.ayrilan })} style={{ width: 12, borderRadius: 4, background: THEME.red, height: Math.max(3, (m.ayrilan / maxVal) * 74) }} />
                 </div>
                 <Text style={{ fontSize: 11, color: THEME.muted }}>{m.ay}</Text>
               </div>
@@ -200,29 +204,29 @@ function GeneralTab({ stats }) {
           })}
         </div>
         <div style={{ display: 'flex', gap: 14, marginBottom: 8 }}>
-          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.green, marginRight: 5 }} />Yeni kayıt</Text>
-          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.red, marginRight: 5 }} />Ayrılan</Text>
+          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.green, marginRight: 5 }} />{t('statistics.newEnrollment')}</Text>
+          <Text style={{ fontSize: 12 }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 3, background: THEME.red, marginRight: 5 }} />{t('statistics.left')}</Text>
         </div>
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-          Bu ay net değişim: {stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net >= 0 ? '+' : ''}{stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net ?? 0} çocuk
+          {t('statistics.netChange', { value: `${stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net >= 0 ? '+' : ''}${stats.enrollmentTrend[stats.enrollmentTrend.length - 1]?.net ?? 0}` })}
         </Paragraph>
         {stats.ayrilanChildrenCount > 0 && (
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>Toplam ayrılan (tüm zamanlar): {stats.ayrilanChildrenCount}</Paragraph>
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.totalLeft', { count: stats.ayrilanChildrenCount })}</Paragraph>
         )}
       </Card>
 
-      <Card style={{ ...cardStyle(THEME.blue), marginBottom: 14 }} title="🏫 Sınıf Bazlı Doluluk">
+      <Card style={{ ...cardStyle(THEME.blue), marginBottom: 14 }} title={t('statistics.classOccupancy')}>
         {stats.classOccupancy.length ? (
           stats.classOccupancy.map((cls, index) => (
             <div key={cls.id} style={{ paddingTop: index === 0 ? 0 : 10, borderTop: index === 0 ? 'none' : `1px solid ${THEME.border}`, marginTop: index === 0 ? 0 : 10 }}>
               {cls.rate === null ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={{ fontWeight: 700, fontSize: 13 }}>{cls.name}</Text>
-                  <Tag>{cls.childCount} çocuk · kapasite girilmemiş</Tag>
+                  <Tag>{t('statistics.childrenCapacity', { count: cls.childCount })}</Tag>
                 </div>
               ) : (
                 <ProgressLine
-                  label={`${cls.name} · ${cls.childCount}/${cls.kapasite} çocuk`}
+                  label={t('statistics.classChildren', { name: cls.name, count: cls.childCount, capacity: cls.kapasite })}
                   percent={Math.min(cls.rate, 100)}
                   color={cls.rate >= 100 ? THEME.red : cls.rate >= 80 ? THEME.orange : THEME.blue}
                 />
@@ -230,22 +234,22 @@ function GeneralTab({ stats }) {
             </div>
           ))
         ) : (
-          <Text type="secondary">Henüz sınıf kaydı yok.</Text>
+          <Text type="secondary"{t('statistics.noClasses')}</Text>
         )}
       </Card>
 
-      <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title={<span>💰 Bu Ay Ödeme Durumu<ChangeTag value={stats.paymentCollectionRateChange} /></span>}>
-        <ProgressLine label={`Tahsilat oranı: %${stats.paymentCollectionRate}`} percent={stats.paymentCollectionRate} color={THEME.gold} />
-        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Ödenen: {formatTL(stats.paidAmount)}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen / geciken: {formatTL(stats.pendingAmount)}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen ödeme kaydı: {stats.pendingPaymentCount}</Paragraph>
+      <Card style={{ ...cardStyle(THEME.gold), marginBottom: 14 }} title={<span>{t('statistics.paymentStatus')}<ChangeTag value={stats.paymentCollectionRateChange} /></span>}>
+        <ProgressLine label={t('statistics.collectionRate', { rate: stats.paymentCollectionRate })} percent={stats.paymentCollectionRate} color={THEME.gold} />
+        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{t('statistics.paid', { amount: formatTL(stats.paidAmount) })}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.pendingLate', { amount: formatTL(stats.pendingAmount) })}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.pendingPaymentRecords', { count: stats.pendingPaymentCount })}</Paragraph>
       </Card>
 
-      <Card style={cardStyle(THEME.purple)} title="🔔 Veli Etkileşimi">
-        <ProgressLine label={`Anket cevabı: ${stats.pollAnswerCount}`} percent={Math.min(100, stats.pollAnswerCount * 10)} color={THEME.purple} />
-        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>Aktif anket: {stats.activePollCount}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>Kurum zili bildirimi: {stats.bellCount}</Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>Bekleyen kurum zili: {stats.pendingBellCount}</Paragraph>
+      <Card style={cardStyle(THEME.purple)} title={t('statistics.parentInteraction')}>
+        <ProgressLine label={t('statistics.pollAnswers', { count: stats.pollAnswerCount })} percent={Math.min(100, stats.pollAnswerCount * 10)} color={THEME.purple} />
+        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{t('statistics.activePolls', { count: stats.activePollCount })}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.bellNotifications', { count: stats.bellCount })}</Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>{t('statistics.pendingBell', { count: stats.pendingBellCount })}</Paragraph>
       </Card>
     </>
   );
