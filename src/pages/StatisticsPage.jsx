@@ -96,10 +96,10 @@ export default function StatisticsPage() {
         {!loading && (
           <Space>
             <Button icon={<FileExcelOutlined />} onClick={() => exportStatisticsToExcel(stats, kres?.ad || 'Kurum')}>
-              Excel'e Aktar
+              {t('statistics.exportExcel')}
             </Button>
             <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
-              Yazdır / PDF
+              {t('statistics.printPdf')}
             </Button>
           </Space>
         )}
@@ -178,7 +178,7 @@ function GeneralTab({ stats }) {
         <Paragraph type="secondary" style={{ marginBottom: 8 }}>{t('statistics.dailyReportsToday', { count: stats.todayReportCount })}</Paragraph>
         <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Text style={{ fontWeight: 700, fontSize: 13 }}{t('statistics.monthlyAttendance')}/Text>
+            <Text style={{ fontWeight: 700, fontSize: 13 }}>{t('statistics.monthlyAttendance')}</Text>
             <ChangeTag value={stats.monthlyAttendanceRateChange} />
           </div>
           <ProgressLine label={t('statistics.thisMonth', { rate: stats.monthlyAttendanceRate })} percent={stats.monthlyAttendanceRate} color={THEME.green} />
@@ -234,7 +234,7 @@ function GeneralTab({ stats }) {
             </div>
           ))
         ) : (
-          <Text type="secondary"{t('statistics.noClasses')}</Text>
+          <Text type="secondary">{t('statistics.noClasses')}</Text>
         )}
       </Card>
 
