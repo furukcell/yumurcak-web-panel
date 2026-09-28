@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography, Tabs, Row, Col, Card, Progress, Tag, Spin, Empty, Statistic, Button, Space } from 'antd';
 import { FileExcelOutlined, PrinterOutlined } from '@ant-design/icons';
