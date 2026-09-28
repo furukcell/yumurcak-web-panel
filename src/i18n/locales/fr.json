@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "Actions rapides",
+    "viewAll": "Tout voir"
   },
   "navigation": {
     "general": "Général",
@@ -118,7 +120,14 @@
     "classless": "Sans groupe",
     "breakfast": "Petit-déjeuner",
     "lunch": "Déjeuner",
-    "snack": "Goûter"
+    "snack": "Goûter",
+    "kpiClassesHint": "Actives cette période",
+    "kpiChildrenHint": "Enfants inscrits",
+    "kpiTeachersHint": "Enseignants actifs",
+    "kpiParentsHint": "Parents actifs",
+    "attention": "À surveiller",
+    "noNotificationsToday": "Aucune notification en attente aujourd'hui",
+    "pendingCount": "{{count}} paiements en attente"
   },
   "statistics": {
     "title": "📊 Statistiques de l’établissement",
