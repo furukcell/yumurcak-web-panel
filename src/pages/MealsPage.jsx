@@ -181,7 +181,7 @@ export default function MealsPage() {
             <div><Text type="secondary" style={{ fontSize: 12 }}>Veliler şu an bu ayın listesini görüyor.</Text></div>
           </div>
           <Popconfirm title={t('meals.unpublishConfirm')} okText={t('meals.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}{t('meals.unpublish')}</Button>
+            <Button danger size="small" loading={unpublishing}>{t('meals.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
