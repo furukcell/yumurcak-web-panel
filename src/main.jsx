@@ -3,25 +3,19 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 function Boot() {
-  const [state, setState] = useState({ loading: true, error: null });
+  const [App, setApp] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
 
     import('./App.jsx')
-      .then(({ default: App }) => {
-        if (!alive) return;
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>
-        );
+      .then((module) => {
+        if (alive) setApp(() => module.default);
       })
-      .catch((error) => {
-        console.error('YUMURCAK APP BOOT ERROR:', error);
-        if (!alive) return;
-        setState({ loading: false, error });
+      .catch((err) => {
+        console.error('YUMURCAK APP BOOT ERROR:', err);
+        if (alive) setError(err);
       });
 
     return () => {
@@ -29,8 +23,7 @@ function Boot() {
     };
   }, []);
 
-  if (state.error) {
-    const error = state.error;
+  if (error) {
     return (
       <div style={{ minHeight: '100vh', padding: 32, fontFamily: 'Arial, sans-serif', background: '#fff' }}>
         <h1 style={{ color: '#c00' }}>Yumurcak başlatılamadı</h1>
@@ -45,6 +38,8 @@ function Boot() {
     );
   }
 
+  if (App) return <App />;
+
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'Arial, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
@@ -55,5 +50,8 @@ function Boot() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<Boot />);
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Boot />
+  </React.StrictMode>
+);
