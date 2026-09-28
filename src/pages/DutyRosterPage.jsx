@@ -159,7 +159,7 @@ export default function DutyRosterPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
           <Popconfirm title={t('dutyRoster.unpublishConfirm')} okText={t('dutyRoster.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}{t('dutyRoster.unpublish')}</Button>
+            <Button danger size="small" loading={unpublishing}>{t('dutyRoster.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
