@@ -478,7 +478,8 @@
     "saved": "Etkinlik kaydedildi",
     "deleted": "Etkinlik silindi",
     "saveError": "Kaydedilirken bir sorun oluştu",
-    "deleteError": "Silinirken bir sorun oluştu"
+    "deleteError": "Silinirken bir sorun oluştu",
+    "noSelectedClass": "Sınıf seçilmemiş"
   },
   "gallery": {
     "title": "Galeri Yönetimi",
