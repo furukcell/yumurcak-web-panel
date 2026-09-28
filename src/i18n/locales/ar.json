@@ -787,5 +787,16 @@
     "notPickedUp": "Not picked up yet",
     "notArrived": "Not arrived yet",
     "noAssignedChildren": "No children assigned to this vehicle."
+  },
+  "theme": {
+    "title": "Theme Settings",
+    "subtitle": "This selection applies to the web panel and parent/teacher screens.",
+    "patternTitle": "Background patterns",
+    "patternSubtitle": "Animal and shape patterns appear subtly on the main screen.",
+    "selected": "Selected",
+    "use": "Use This Theme",
+    "loadError": "Theme information could not be loaded.",
+    "saved": "Nursery theme updated",
+    "saveError": "Theme could not be saved."
   }
 }
