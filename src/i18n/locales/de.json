@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "Schnellaktionen",
+    "viewAll": "Alle anzeigen"
   },
   "navigation": {
     "general": "Allgemein",
@@ -118,7 +120,14 @@
     "classless": "Ohne Gruppe",
     "breakfast": "Frühstück",
     "lunch": "Mittagessen",
-    "snack": "Snack"
+    "snack": "Snack",
+    "kpiClassesHint": "In diesem Zeitraum aktiv",
+    "kpiChildrenHint": "Registrierte Kinder",
+    "kpiTeachersHint": "Aktive Lehrkräfte",
+    "kpiParentsHint": "Aktive Eltern",
+    "attention": "Aufmerksamkeit erforderlich",
+    "noNotificationsToday": "Heute keine offenen Benachrichtigungen",
+    "pendingCount": "{{count}} Zahlungen ausstehend"
   },
   "statistics": {
     "title": "📊 Einrichtungsstatistik",
