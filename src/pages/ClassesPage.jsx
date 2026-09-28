@@ -173,7 +173,7 @@ export default function ClassesPage() {
 
   const columns = [
     { title: t('classes.name'), dataIndex: 'ad', key: 'ad', render: (v) => v || t('classes.unnamed') },
-    { title: t('classes.ageGroup'), dataIndex: 'yasGrubu', key: 'yasGrubu', render: (v) => v || <Text type="secondary"{t('classes.notSpecified')}</Text> },
+    { title: t('classes.ageGroup'), dataIndex: 'yasGrubu', key: 'yasGrubu', render: (v) => v || <Text type="secondary">{t('classes.notSpecified')}</Text> },
     { title: t('classes.teacher'), key: 'teacherCount', render: (_, r) => r.ogretmenIds?.length || 0 },
     { title: t('classes.children'), key: 'childCount', render: (_, r) => r.childCount || 0 },
     {
@@ -181,7 +181,7 @@ export default function ClassesPage() {
       key: 'kapasite',
       render: (_, r) => (r.kapasite
         ? <Text type={(r.childCount || 0) > r.kapasite ? 'danger' : 'secondary'}>{r.childCount || 0}/{r.kapasite}</Text>
-        : <Text type="secondary"{t('classes.capacityNotEntered')}</Text>),
+        : <Text type="secondary">{t('classes.capacityNotEntered')}</Text>),
     },
   ];
 
@@ -196,8 +196,8 @@ export default function ClassesPage() {
       </div>
 
       <div style={{ display: 'flex', gap: 24, marginBottom: 20, background: THEME.primarySoft, borderRadius: 16, padding: '14px 20px' }}>
-        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{classes.length}</Text><br /><Text type="secondary"{t('classes.classCount')}</Text></div>
-        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{toplamOgretmen}</Text><br /><Text type="secondary"{t('classes.teacherAssignments')}</Text></div>
+        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{classes.length}</Text><br /><Text type="secondary">{t('classes.classCount')}</Text></div>
+        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{toplamOgretmen}</Text><br /><Text type="secondary">{t('classes.teacherAssignments')}</Text></div>
       </div>
 
       <Table
