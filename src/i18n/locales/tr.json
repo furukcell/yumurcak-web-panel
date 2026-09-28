@@ -987,5 +987,14 @@
         "badge": "Büyük Kreş"
       }
     }
+  },
+  "legal": {
+    "title": "Yasal Belgeler",
+    "subtitle": "Kullanım şartları, gizlilik politikası ve KVKK aydınlatma metni.",
+    "terms": "Kullanım Şartları",
+    "privacy": "Gizlilik Politikası",
+    "kvkk": "KVKK Aydınlatma Metni",
+    "updated": "Son Güncelleme",
+    "legalNote": "Bu metin hukuki danışmanlık niteliğinde değildir."
   }
 }
