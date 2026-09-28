@@ -88,6 +88,7 @@ function useTodayAttendance(kresId) {
 // "Bugünkü Menü" — yemekListeleri node'unda tarih=bugün olan kaydı bulur
 // (varsa genel/sınıfsız kayıt öncelikli), kahvaltı/öğle/ara öğün özetler.
 function useTodayMeal(kresId) {
+  const { t } = useTranslation();
   const [state, setState] = useState({ loading: true, summary: null });
 
   useEffect(() => {
@@ -111,7 +112,7 @@ function useTodayMeal(kresId) {
       () => setState({ loading: false, summary: null })
     );
     return unsub;
-  }, [kresId]);
+  }, [kresId, t]);
 
   return state;
 }
