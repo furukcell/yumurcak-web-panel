@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, List, Button, Drawer, Form, Input, Switch, Tag, message, Empty, Space, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, push, set, update, remove, query, orderByChild, equalTo } from 'firebase/database';
@@ -11,6 +12,7 @@ const { Title, Text, Paragraph } = Typography;
 
 // Mobildeki EventListScreen.js + EventFormScreen.js'in web karşılığı.
 export default function EventsPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
 
@@ -92,11 +94,11 @@ export default function EventsPage() {
     }
 
     if (!values.tarih || !parseChildBirthDate(values.tarih)) {
-      message.error('Tarihi 25.06.2026 formatında gir.');
+      message.error(t('events.dateError'));
       return;
     }
     if (seciliSiniflar.length === 0) {
-      message.error('Lütfen en az bir sınıf seç.');
+      message.error(t('events.classRequired'));
       return;
     }
 
@@ -119,7 +121,7 @@ export default function EventsPage() {
         await set(yeniRef, { ...veri, createdAt: Date.now() });
       }
 
-      message.success('Etkinlik kaydedildi');
+      message.success(t('events.saved'));
       setDrawerOpen(false);
     } catch (error) {
       console.error(error);
@@ -132,10 +134,10 @@ export default function EventsPage() {
   const handleDelete = async (id) => {
     try {
       await remove(ref(database, `etkinlikler/${id}`));
-      message.success('Etkinlik silindi');
+      message.success(t('events.deleted'));
       setDrawerOpen(false);
     } catch (error) {
-      message.error('Silinirken bir sorun oluştu');
+      message.error(t('events.deleteError'));
     }
   };
 
@@ -143,16 +145,16 @@ export default function EventsPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Etkinlikler</Title>
-          <Text type="secondary">{etkinlikler.length} etkinlik</Text>
+          <Title level={3} style={{ margin: 0 }}>{t('events.title')}</Title>
+          <Text type="secondary">{t('events.count',{count:etkinlikler.length})}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Etkinlik Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('events.add')}</Button>
       </div>
 
       <List
         loading={loading}
         dataSource={etkinlikler}
-        locale={{ emptyText: <Empty description="Henüz etkinlik eklenmemiş" /> }}
+        locale={{ emptyText: <Empty description={t('events.empty')} /> }}
         renderItem={(item) => (
           <List.Item
             onClick={() => openEdit(item)}
@@ -161,7 +163,7 @@ export default function EventsPage() {
             <div style={{ width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <Text strong>{item.baslik}</Text>
-                <Tag color={item.aktif ? 'green' : 'red'}>{item.aktif ? 'Aktif' : 'Pasif'}</Tag>
+                <Tag color={item.aktif ? 'green' : 'red'}>{item.aktif ? t('events.active') : t('events.inactive')}</Tag>
               </div>
               <Text type="secondary">📅 {item.tarih ?? '-'} {item.saat ? `· ${item.saat}` : ''}</Text>
               <br />
@@ -173,30 +175,30 @@ export default function EventsPage() {
       />
 
       <Drawer
-        title={editingId ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}
+        title={editingId ? t('events.edit') : t('events.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={440}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('events.update') : t('events.create')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="baslik" label="Etkinlik Başlığı" rules={[{ required: true, message: 'Başlık zorunlu' }]}>
-            <Input placeholder="Örn: Piknik Etkinliği" />
+          <Form.Item name="baslik" label={t('events.heading')} rules={[{ required: true, message: t('events.headingRequired') }]}>
+            <Input placeholder={t('events.headingPlaceholder')} />
           </Form.Item>
-          <Form.Item name="tarih" label="Tarih" rules={[{ required: true, message: 'Tarih zorunlu' }]} extra="Örn: 25.06.2026">
+          <Form.Item name="tarih" label={t('events.date')} rules={[{ required: true, message: t('events.dateRequired') }]} extra={t('events.dateExtra')}>
             <Input placeholder="25.06.2026" />
           </Form.Item>
-          <Form.Item name="saat" label="Saat (opsiyonel)">
+          <Form.Item name="saat" label={t('events.time')}>
             <Input placeholder="10:00" />
           </Form.Item>
-          <Form.Item name="aciklama" label="Açıklama (opsiyonel)">
-            <Input.TextArea rows={4} placeholder="Etkinlik hakkında detay yaz..." />
+          <Form.Item name="aciklama" label={t('events.description')}>
+            <Input.TextArea rows={4} placeholder={t('events.descriptionPlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Sınıflar (birden fazla seçilebilir)" required>
+          <Form.Item label={t('events.classes')} required>
             <Space wrap>
               {siniflar.length === 0 ? (
-                <Text type="secondary">Henüz sınıf eklenmemiş.</Text>
+                <Text type="secondary">{t('events.noClass')}</Text>
               ) : (
                 siniflar.map((s) => (
                   <Tag.CheckableTag key={s.id} checked={seciliSiniflar.includes(s.id)} onChange={() => toggleSinif(s.id)}>
@@ -207,14 +209,14 @@ export default function EventsPage() {
             </Space>
           </Form.Item>
 
-          <Form.Item name="aktif" label="Etkinlik Aktif" valuePropName="checked">
+          <Form.Item name="aktif" label={t('events.eventActive')} valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
 
         {editingId && (
-          <Popconfirm title="Bu etkinliği silmek istediğine emin misin?" okText="Sil" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={() => handleDelete(editingId)}>
-            <Button danger icon={<DeleteOutlined />} block>Etkinliği Sil</Button>
+          <Popconfirm title={t('events.deleteTitle')} okText="Sil" cancelText={t('events.cancel')} okButtonProps={{ danger: true }} onConfirm={() => handleDelete(editingId)}>
+            <Button danger icon={<DeleteOutlined />} block>{t('events.delete')}</Button>
           </Popconfirm>
         )}
       </Drawer>
