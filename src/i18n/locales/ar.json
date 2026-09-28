@@ -478,7 +478,8 @@
     "saved": "تم حفظ الفعالية",
     "deleted": "تم حذف الفعالية",
     "saveError": "حدثت مشكلة أثناء الحفظ",
-    "deleteError": "حدثت مشكلة أثناء الحذف"
+    "deleteError": "حدثت مشكلة أثناء الحذف",
+    "noSelectedClass": "لم يتم اختيار فصل"
   },
   "gallery": {
     "title": "Gallery Management",
