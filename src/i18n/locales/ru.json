@@ -478,7 +478,8 @@
     "saved": "Мероприятие сохранено",
     "deleted": "Мероприятие удалено",
     "saveError": "Ошибка при сохранении",
-    "deleteError": "Ошибка при удалении"
+    "deleteError": "Ошибка при удалении",
+    "noSelectedClass": "Группа не выбрана"
   },
   "gallery": {
     "title": "Gallery Management",
