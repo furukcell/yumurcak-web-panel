@@ -5,6 +5,7 @@ import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { todayDateKey } from '../services/monthlyDocuments';
 import { THEME } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
@@ -101,7 +102,7 @@ function TodayCard({ icon, color, title, loading, children, onClick }) {
 // kapasite. Diğer TodayCard'lar gibi tıklanabilir (sınıflar sayfasına
 // götürür) ama içerik dikdörtgen metin yerine dairesel Progress —
 // ilk bakışta doluluk seviyesini renkle de anlatmak için.
-function DolulukCard({ doluluk, toplamCocuk, navigate }) {
+function DolulukCard({ doluluk, toplamCocuk, navigate, t }) {
   const toplamKapasite = doluluk?.toplamKapasite || 0;
   const kapasiteGirilmemis = toplamKapasite <= 0;
   const oran = kapasiteGirilmemis ? 0 : Math.round((toplamCocuk / toplamKapasite) * 100);
@@ -129,9 +130,9 @@ function DolulukCard({ doluluk, toplamCocuk, navigate }) {
           )}
         />
         <div style={{ minWidth: 0 }}>
-          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>KURUM DOLULUK ORANI</Text>
+          <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>{t('common.todayCapacity')}</Text>
           <Text strong style={{ fontSize: 14 }}>
-            {kapasiteGirilmemis ? 'Kapasite girilmemiş' : `${toplamCocuk} / ${toplamKapasite} çocuk`}
+            {kapasiteGirilmemis ? t('common.capacityNotEntered') : t('common.childrenCount', { count: toplamCocuk, total: toplamKapasite })}
           </Text>
         </div>
       </div>
@@ -142,6 +143,7 @@ function DolulukCard({ doluluk, toplamCocuk, navigate }) {
 // Dashboard'daki "Genel Özet" (toplam sayılar) ile karşılama kartı
 // arasına giren, o günün operasyonel durumunu gösteren kart şeridi.
 export default function TodayCards({ navigate, kresId, doluluk, toplamCocuk }) {
+  const { t } = useTranslation();
   const { personel, loading: dutyLoading } = useTodayDuty(kresId);
   const { toplam, tamamlanan, loading: bellLoading } = useTodayBell(kresId);
 
@@ -150,24 +152,24 @@ export default function TodayCards({ navigate, kresId, doluluk, toplamCocuk }) {
       <TodayCard
         icon={<SolutionOutlined />}
         color={THEME.gold}
-        title="BUGÜNKÜ NÖBETÇİ"
+        title={t('common.todayDuty')}
         loading={dutyLoading}
         onClick={() => navigate('/nobet-cizelgesi')}
       >
-        <Text strong style={{ fontSize: 14 }}>{personel || 'Henüz atanmadı'}</Text>
+        <Text strong style={{ fontSize: 14 }}>{personel || t('common.notAssigned')}</Text>
       </TodayCard>
       <TodayCard
         icon={<BellOutlined />}
         color={THEME.red}
-        title="BUGÜN KURUM ZİLİ"
+        title={t('common.todayBell')}
         loading={bellLoading}
         onClick={() => navigate('/ayarlar/kurum-zili')}
       >
         <Text strong style={{ fontSize: 14 }}>
-          {toplam === 0 ? 'Henüz bildirim yok' : `${toplam} bildirim · ${tamamlanan} tamamlandı`}
+          {toplam === 0 ? t('common.noNotifications') : t('common.notificationCount', { count: toplam, completed: tamamlanan })}
         </Text>
       </TodayCard>
-      <DolulukCard doluluk={doluluk} toplamCocuk={toplamCocuk} navigate={navigate} />
+      <DolulukCard doluluk={doluluk} toplamCocuk={toplamCocuk} navigate={navigate} t={t} />
     </div>
   );
 }
