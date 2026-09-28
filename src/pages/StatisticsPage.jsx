@@ -315,7 +315,7 @@ function ChildrenTab({ childList }) {
           <div>
             {child.risks.length
               ? child.risks.map((risk) => <Tag color="red" key={risk} style={{ marginBottom: 4 }}>{risk}</Tag>)
-              : <Tag color="green"{t('statistics.noClearRisk')}</Tag>}
+              : <Tag color="green">{t('statistics.noClearRisk')}</Tag>}
           </div>
         </Card>
       ))}
