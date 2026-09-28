@@ -37,7 +37,9 @@
     "save": "Save",
     "update": "Update",
     "create": "Create",
-    "required": "Required"
+    "required": "Required",
+    "quickActions": "Быстрые действия",
+    "viewAll": "Показать все"
   },
   "navigation": {
     "general": "Общее",
@@ -118,7 +120,14 @@
     "classless": "Без группы",
     "breakfast": "Завтрак",
     "lunch": "Обед",
-    "snack": "Полдник"
+    "snack": "Полдник",
+    "kpiClassesHint": "Активны в этом периоде",
+    "kpiChildrenHint": "Зарегистрировано детей",
+    "kpiTeachersHint": "Активных учителей",
+    "kpiParentsHint": "Активных родителей",
+    "attention": "Требует внимания",
+    "noNotificationsToday": "Сегодня нет ожидающих уведомлений",
+    "pendingCount": "Ожидают оплаты: {{count}}"
   },
   "statistics": {
     "title": "📊 Статистика учреждения",
