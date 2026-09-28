@@ -987,5 +987,14 @@
         "badge": "Large Nursery"
       }
     }
+  },
+  "legal": {
+    "title": "Legal Documents",
+    "subtitle": "Terms of use, privacy policy and KVKK information notice.",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "kvkk": "KVKK Information Notice",
+    "updated": "Last Updated",
+    "legalNote": "This text does not constitute legal advice."
   }
 }
