@@ -324,7 +324,7 @@ function ChatPanel({ contact, adminId, kullanici, kresId }) {
     <>
       <div style={{ padding: '14px 18px', borderBottom: `1px solid ${THEME.border}` }}>
         <Text strong style={{ fontSize: 16 }}>{getUserName(contact)}</Text>
-        <div><Text type="secondary" style={{ fontSize: 12 }}>{contact.role === 'veli' ? contact.role === 'veli' ? `${t('messages.parent')} · ${contact.childInfo || ''}` : `${t('messages.teacher')} · ${contact.childInfo || ''}`}</Text></div>
+        <div><Text type="secondary" style={{ fontSize: 12 }}>{contact.role === 'veli' ? `${t('messages.parent')} · ${contact.childInfo || ''}` : `${t('messages.teacher')} · ${contact.childInfo || ''}`}</Text></div>
       </div>
 
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: 16, background: THEME.bg }}>
