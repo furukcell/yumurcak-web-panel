@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, Table, Button, Drawer, Form, Input, Select, message, Empty, Tag, Popconfirm } from 'antd';
 import { PlusOutlined, EyeInvisibleOutlined, EyeTwoTone, DeleteOutlined } from '@ant-design/icons';
 import { ref, onValue, get, update } from 'firebase/database';
@@ -14,6 +15,7 @@ const { Title, Text } = Typography;
 
 // Mobildeki VeliListScreen.js + VeliFormScreen.js'in web karşılığı.
 export default function ParentsPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId;
 
@@ -103,7 +105,7 @@ export default function ParentsPage() {
 
             return {
               id,
-              ad: `${v.ad || ''} ${v.soyad || ''}`.trim() || v.kullaniciAdi || 'İsimsiz veli',
+              ad: `${v.ad || ''} ${v.soyad || ''}`.trim() || v.kullaniciAdi || t('parents.unnamed'),
               kullaniciAdi: v.kullaniciAdi || '-',
               telefon: v.telefon || '-',
               cocuklar: bagliCocuklar,
@@ -181,14 +183,14 @@ export default function ParentsPage() {
       }
 
       if (editingId && oldVeli.authUid && (values.sifre || '').trim()) {
-        message.error('Bu veli Firebase Auth hesabına bağlı. Mevcut kullanıcının şifresi bu ekrandan değiştirilemez.');
+        message.error(t('parents.authPassword'));
         setSaving(false);
         return;
       }
 
       const kaydedilenSifre = (values.sifre || '').trim() || oldVeli.sifre || '123456';
       if (kaydedilenSifre.length < 6) {
-        message.error('Şifre en az 6 karakter olmalı');
+        message.error(t('parents.passwordMin'));
         setSaving(false);
         return;
       }
@@ -235,14 +237,14 @@ export default function ParentsPage() {
       if (cleanOldUsername && cleanOldUsername !== cleanNewUsername) updates[`kullaniciAdiIndex/${cleanOldUsername}`] = null;
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Veli güncellendi' : 'Veli kaydedildi');
+      message.success(editingId ? t('parents.updated') : t('parents.saved'));
       setDrawerOpen(false);
     } catch (error) {
       console.error(error);
       if (error?.code === 'auth/email-already-in-use') {
-        message.error('Bu kullanıcı adı için Firebase Auth hesabı zaten var. Farklı kullanıcı adı dene.');
+        message.error(t('parents.authExists'));
       } else {
-        message.error(`Veli kaydedilemedi. ${error?.code || error?.message || ''}`);
+        message.error(`${t('parents.saveError')} ${error?.code || error?.message || ''}`);
       }
     } finally {
       setSaving(false);
@@ -253,21 +255,21 @@ export default function ParentsPage() {
     setDeletingId(record.id);
     try {
       await deleteKullaniciHesabi(record.id);
-      message.success('Veli silindi');
+      message.success(t('parents.deleted'));
     } catch (error) {
       console.error(error);
-      message.error(`Veli silinemedi. ${error?.message || ''}`);
+      message.error(`${t('parents.deleteError')} ${error?.message || ''}`);
     } finally {
       setDeletingId(null);
     }
   };
 
   const columns = [
-    { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
-    { title: 'Kullanıcı Adı', dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
-    { title: 'Telefon', dataIndex: 'telefon', key: 'telefon' },
+    { title: t('parents.name'), dataIndex: 'ad', key: 'ad' },
+    { title: t('parents.username'), dataIndex: 'kullaniciAdi', key: 'kullaniciAdi', render: (v) => `@${v}` },
+    { title: t('parents.phone'), dataIndex: 'telefon', key: 'telefon' },
     {
-      title: 'Çocuklar',
+      title: t('parents.children'),
       key: 'cocuklar',
       render: (_, r) =>
         r.cocuklar.length ? (
@@ -277,7 +279,7 @@ export default function ParentsPage() {
             ))}
           </>
         ) : (
-          <Text type="secondary">Bağlı çocuk yok</Text>
+          <Text type="secondary">{t('parents.noChildren')}</Text>
         ),
     },
     {
@@ -286,11 +288,11 @@ export default function ParentsPage() {
       width: 48,
       render: (_, r) => (
         <Popconfirm
-          title="Veli silinsin mi?"
-          description="Bu işlem geri alınamaz: hesap, çocuk bağlantıları ve Firebase Auth girişi tamamen silinir."
-          okText="Sil"
+          title={t('parents.deleteTitle')}
+          description={t('parents.deleteDesc')}
+          okText={t('parents.delete')}
           okButtonProps={{ danger: true }}
-          cancelText="Vazgeç"
+          cancelText={t('parents.cancel')}
           onConfirm={(e) => {
             e?.stopPropagation();
             handleDelete(r);
@@ -307,16 +309,16 @@ export default function ParentsPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Veliler</Title>
-          <Text type="secondary">{veliler.length} kayıtlı veli</Text>
+          <Title level={3} style={{ margin: 0 }}>{t('parents.title')}</Title>
+          <Text type="secondary">{t('parents.summary', { count: veliler.length })}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Veli Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('parents.add')}</Button>
       </div>
 
       <div style={{ marginBottom: 16, maxWidth: 320 }}>
         <Select
           allowClear
-          placeholder="Sınıfa göre filtrele"
+          placeholder={t('parents.filter')}
           style={{ width: '100%' }}
           value={seciliSinifId}
           onChange={setSeciliSinifId}
@@ -330,33 +332,33 @@ export default function ParentsPage() {
         columns={columns}
         dataSource={filteredVeliler}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
-        locale={{ emptyText: <Empty description="Henüz kayıtlı veli yok" /> }}
+        locale={{ emptyText: <Empty description={t('parents.empty')} /> }}
         pagination={{ pageSize: 10 }}
       />
 
       <Drawer
-        title={editingId ? 'Veliyi Düzenle' : 'Yeni Veli'}
+        title={editingId ? t('parents.edit') : t('parents.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={420}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('parents.update') : t('parents.create')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Kullanıcı adı zorunlu' }]}>
-            <Input placeholder="Örn: veli1" autoCapitalize="none" />
+          <Form.Item name="kullaniciAdi" label={t('parents.username')} rules={[{ required: true, message: t('parents.usernameRequired') }]}>
+            <Input placeholder={t('parents.usernamePlaceholder')} autoCapitalize="none" />
           </Form.Item>
-          <Form.Item name="ad" label="Ad Soyad" rules={[{ required: true, message: 'Ad soyad zorunlu' }]}>
-            <Input placeholder="Örn: Mehmet Yılmaz" />
+          <Form.Item name="ad" label={t('parents.name')} rules={[{ required: true, message: t('parents.nameRequired') }]}>
+            <Input placeholder={t('parents.namePlaceholder')} />
           </Form.Item>
-          <Form.Item name="telefon" label="Telefon">
-            <Input placeholder="05xx xxx xx xx" />
+          <Form.Item name="telefon" label={t('parents.phone')}>
+            <Input placeholder={t('parents.phonePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="sifre"
-            label="Şifre"
-            extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}
+            label={t('parents.password')}
+            extra={editingId ? t('parents.passwordKeep') : t('parents.passwordDefault')}
           >
-            <Input.Password placeholder={editingId ? 'Boş bırakılırsa değişmez' : 'Boş bırakılırsa: 123456'} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
+            <Input.Password placeholder={editingId ? t('parents.passwordUnchanged') : t('parents.passwordDefaultShort')} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
         </Form>
       </Drawer>

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Typography, Card } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import { THEME } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -22,6 +23,7 @@ const LEGAL_DOCS = [
 ];
 
 export default function LegalDocumentsPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKey = searchParams.get('doc');
   const selectedKey = initialKey && LEGAL_DOCS.some((d) => d.key === initialKey) ? initialKey : 'terms';
@@ -31,8 +33,8 @@ export default function LegalDocumentsPage() {
     <div>
       <div style={{ background: THEME.primary, borderRadius: 20, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
         <div style={{ fontSize: 34 }}>⚖️</div>
-        <Title level={3} style={{ color: '#fff', margin: '6px 0 0' }}>Yasal Metinler</Title>
-        <Text style={{ color: 'rgba(255,255,255,0.84)' }}>Kullanım şartları, gizlilik politikası ve KVKK aydınlatma metni.</Text>
+        <Title level={3} style={{ color: '#fff', margin: '6px 0 0' }}>{t('legal.title')}</Title>
+        <Text style={{ color: 'rgba(255,255,255,0.84)' }}>{t('legal.subtitle')}</Text>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -45,7 +47,7 @@ export default function LegalDocumentsPage() {
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, background: active ? THEME.primarySoft : '#fff', border: `1px solid ${active ? THEME.primary : THEME.border}`, borderRadius: 16, padding: 13 }}
             >
               <span style={{ fontSize: 20 }}>{doc.icon}</span>
-              <Text strong style={{ color: active ? THEME.primaryDark : THEME.text }}>{doc.title}</Text>
+              <Text strong style={{ color: active ? THEME.primaryDark : THEME.text }}>{t(`legal.${doc.key}`)}</Text>
             </div>
           );
         })}
@@ -53,11 +55,11 @@ export default function LegalDocumentsPage() {
 
       <Card style={{ borderColor: THEME.border }}>
         <div style={{ fontSize: 34, marginBottom: 8 }}>{selectedDoc.icon}</div>
-        <Title level={3} style={{ margin: 0 }}>{selectedDoc.title}</Title>
+        <Title level={3} style={{ margin: 0 }}>{t(`legal.${selectedDoc.key}`)}</Title>
         <Text type="secondary">{selectedDoc.subtitle}</Text>
         <div>
           <Text style={{ display: 'inline-block', marginTop: 12, marginBottom: 14, background: THEME.primarySoft, color: THEME.primaryDark, borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 900 }}>
-            Son Güncelleme: {selectedDoc.updatedAt}
+            {t('legal.updated')}: {selectedDoc.updatedAt}
           </Text>
         </div>
         <Paragraph style={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{selectedDoc.body}</Paragraph>

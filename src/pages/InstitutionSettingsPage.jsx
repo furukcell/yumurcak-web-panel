@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { useNavigate } from 'react-router-dom';
 import { kurumVerisiniDisaAktar } from '../utils/institutionDataExport';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,6 +19,7 @@ function buildAdminName(user) {
 // Mobildeki AdminInstitutionSettingsScreen.js'in web karşılığı.
 export default function InstitutionSettingsPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || 'kres001';
   const navigate = useNavigate();
 
@@ -43,7 +45,7 @@ export default function InstitutionSettingsPage() {
           whatsapp: data.whatsapp || data.telefon || '', website: data.website || '', calismaSaatleri: data.calismaSaatleri || '', not: data.not || '',
         });
       } catch {
-        message.error('Kurum bilgileri yüklenemedi.');
+        message.error(t('institution.loadError'));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -54,7 +56,7 @@ export default function InstitutionSettingsPage() {
   const setValue = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const save = async () => {
-    if (!form.ad.trim()) { message.error('Kurum adı zorunludur.'); return; }
+    if (!form.ad.trim()) { message.error(t('institution.required')); return; }
     setSaving(true);
     try {
       await update(ref(database, `kresler/${kresId}`), {
@@ -64,9 +66,9 @@ export default function InstitutionSettingsPage() {
         website: form.website.trim(), calismaSaatleri: form.calismaSaatleri.trim(), not: form.not.trim(),
         yoneticiId: kullanici?.uid || kullanici?.id || '', updatedAt: Date.now(),
       });
-      message.success('Kurum bilgileri kaydedildi');
+      message.success(t('institution.saved'));
     } catch {
-      message.error('Kurum bilgileri kaydedilemedi.');
+      message.error(t('institution.saveError'));
     } finally {
       setSaving(false);
     }
@@ -80,9 +82,9 @@ export default function InstitutionSettingsPage() {
       const downloadUrl = await getDownloadURL(fileRef);
       await update(ref(database, `kresler/${kresId}`), { logoUrl: downloadUrl, logoUpdatedAt: Date.now(), updatedAt: Date.now() });
       setLogoUrl(downloadUrl);
-      message.success('Kurum fotoğrafı güncellendi');
+      message.success(t('institution.photoUpdated'));
     } catch {
-      message.error('Kurum fotoğrafı yüklenemedi. Storage ayarlarını kontrol et.');
+      message.error(t('institution.photoError'));
     } finally {
       setUploadingLogo(false);
     }
@@ -93,9 +95,9 @@ export default function InstitutionSettingsPage() {
     try {
       await update(ref(database, `kresler/${kresId}`), { logoUrl: '', updatedAt: Date.now() });
       setLogoUrl('');
-      message.success('Fotoğraf kaldırıldı');
+      message.success(t('institution.removed'));
     } catch {
-      message.error('Fotoğraf kaldırılamadı.');
+      message.error(t('institution.removeError'));
     }
   };
 
@@ -108,7 +110,7 @@ export default function InstitutionSettingsPage() {
       );
     } catch (error) {
       console.error(error);
-      message.error('Veri dışa aktarılamadı. Tekrar dene.');
+      message.error(t('institution.exportError'));
     } finally {
       setExporting(false);
     }
@@ -122,48 +124,48 @@ export default function InstitutionSettingsPage() {
         <div style={{ width: 84, height: 84, borderRadius: 42, background: 'rgba(255,255,255,0.16)', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 36 }}>🏫</span>}
         </div>
-        <Title level={3} style={{ color: '#fff', margin: 0 }}>Kurum Bilgileri</Title>
-        <Text style={{ color: 'rgba(255,255,255,0.82)' }}>Bu bilgiler veli iletişim ekranına direkt düşer.</Text>
+        <Title level={3} style={{ color: '#fff', margin: 0 }}>{t('institution.title')}</Title>
+        <Text style={{ color: 'rgba(255,255,255,0.82)' }}>{t('institution.subtitle')}</Text>
         <div style={{ marginTop: 10, display: 'flex', gap: 16, justifyContent: 'center' }}>
           <Upload showUploadList={false} beforeUpload={handleLogoUpload} accept="image/*">
-            <Button type="link" loading={uploadingLogo} icon={<CameraOutlined />} style={{ color: '#fff', fontWeight: 700 }}>{logoUrl ? 'Fotoğrafı Değiştir' : 'Fotoğraf Ekle'}</Button>
+            <Button type="link" loading={uploadingLogo} icon={<CameraOutlined />} style={{ color: '#fff', fontWeight: 700 }}>{logoUrl ? t('institution.changePhoto') : t('institution.addPhoto')}</Button>
           </Upload>
-          {logoUrl && <Button type="link" icon={<DeleteOutlined />} onClick={removeLogo} style={{ color: '#FFD9DF', fontWeight: 700 }}>Kaldır</Button>}
+          {logoUrl && <Button type="link" icon={<DeleteOutlined />} onClick={removeLogo} style={{ color: '#FFD9DF', fontWeight: 700 }}>{t('institution.remove')}</Button>}
         </div>
       </div>
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
-        <Text strong>⚖️ Yasal Bilgiler</Text>
-        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>Kullanım şartları, gizlilik politikası ve KVKK metinleri.</Paragraph>
+        <Text strong>{t('institution.legal')}</Text>
+        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>{t('institution.legalDesc')}</Paragraph>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=terms')}>📄 Kullanım Şartları</Button>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=privacy')}>🔐 Gizlilik Politikası</Button>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=kvkk')}>🛡️ KVKK Metni</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=terms')}>{t('institution.terms')}</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=privacy')}>{t('institution.privacy')}</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=kvkk')}>{t('institution.kvkk')}</Button>
         </div>
       </Card>
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
-        <Text strong>📦 Veri Yedekleme</Text>
+        <Text strong>{t('institution.backup')}</Text>
         <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>
-          Kurumun tüm verisini (sınıflar, çocuklar, veliler, öğretmenler, yöneticiler, ödemeler) tek bir Excel dosyası olarak indir. Yedek almak, denetim ya da kurum ayrılırken kullanışlıdır.
+          {t('institution.backupDesc')}
         </Paragraph>
         <Button block icon={<DownloadOutlined />} loading={exporting} onClick={handleExport}>
           Tüm Kurum Verilerini Dışa Aktar (Excel)
         </Button>
       </Card>
 
-      <FormField label="Kurum Adı" value={form.ad} onChange={(v) => setValue('ad', v)} placeholder="Yumurcak Kreş" />
-      <FormField label="Adres" value={form.adres} onChange={(v) => setValue('adres', v)} placeholder="Mahalle, cadde, no..." multiline />
-      <FormField label="Kurum Telefonu" value={form.telefon} onChange={(v) => setValue('telefon', v)} placeholder="05xx xxx xx xx" />
-      <FormField label="E-posta" value={form.email} onChange={(v) => setValue('email', v)} placeholder="info@..." />
-      <FormField label="Yönetici Adı" value={form.yoneticiAd} onChange={(v) => setValue('yoneticiAd', v)} placeholder="Yönetici adı soyadı" />
-      <FormField label="Yönetici Telefonu" value={form.yoneticiTelefon} onChange={(v) => setValue('yoneticiTelefon', v)} placeholder="05xx xxx xx xx" />
-      <FormField label="WhatsApp" value={form.whatsapp} onChange={(v) => setValue('whatsapp', v)} placeholder="05xx xxx xx xx" />
-      <FormField label="Website" value={form.website} onChange={(v) => setValue('website', v)} placeholder="https://..." />
-      <FormField label="Çalışma Saatleri" value={form.calismaSaatleri} onChange={(v) => setValue('calismaSaatleri', v)} placeholder="08:00 - 18:00" />
-      <FormField label="Ek Not" value={form.not} onChange={(v) => setValue('not', v)} placeholder="Servis, kayıt, görüşme notu..." multiline />
+      <FormField label={t('institution.name')} value={form.ad} onChange={(v) => setValue('ad', v)} placeholder="Yumurcak Kreş" />
+      <FormField label={t('institution.address')} value={form.adres} onChange={(v) => setValue('adres', v)} placeholder="Mahalle, cadde, no..." multiline />
+      <FormField label={t('institution.phone')} value={form.telefon} onChange={(v) => setValue('telefon', v)} placeholder="05xx xxx xx xx" />
+      <FormField label={t('institution.email')} value={form.email} onChange={(v) => setValue('email', v)} placeholder="info@..." />
+      <FormField label={t('institution.adminName')} value={form.yoneticiAd} onChange={(v) => setValue('yoneticiAd', v)} placeholder="Yönetici adı soyadı" />
+      <FormField label={t('institution.adminPhone')} value={form.yoneticiTelefon} onChange={(v) => setValue('yoneticiTelefon', v)} placeholder="05xx xxx xx xx" />
+      <FormField label={t('institution.whatsapp')} value={form.whatsapp} onChange={(v) => setValue('whatsapp', v)} placeholder="05xx xxx xx xx" />
+      <FormField label={t('institution.website')} value={form.website} onChange={(v) => setValue('website', v)} placeholder="https://..." />
+      <FormField label={t('institution.hours')} value={form.calismaSaatleri} onChange={(v) => setValue('calismaSaatleri', v)} placeholder="08:00 - 18:00" />
+      <FormField label={t('institution.note')} value={form.not} onChange={(v) => setValue('not', v)} placeholder="Servis, kayıt, görüşme notu..." multiline />
 
-      <Button type="primary" block loading={saving} onClick={save} style={{ height: 46, marginTop: 8 }}>Kurum Bilgilerini Kaydet</Button>
+      <Button type="primary" block loading={saving} onClick={save} style={{ height: 46, marginTop: 8 }}>{t('institution.save')}</Button>
     </div>
   );
 }

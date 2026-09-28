@@ -4,6 +4,7 @@ import { PlusOutlined, MinusCircleOutlined, DeleteOutlined } from '@ant-design/i
 import { ref, onValue, push, update, remove, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME, cardStyle } from '../theme';
 
 const { Title, Text, Paragraph } = Typography;
@@ -45,10 +46,10 @@ function getOptionPercent(item, label) {
   const percent = total > 0 ? Math.round((count / total) * 100) : 0;
   return { count, percent };
 }
-function formatDate(value) {
+function formatDate(value, locale = 'tr-TR') {
   if (!value) return '';
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('tr-TR');
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(locale);
 }
 function makeOptionId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -57,6 +58,7 @@ function makeOptionId() {
 // Mobildeki PollManagementScreen.js'in web karşılığı.
 export default function PollsPage() {
   const { kullanici } = useAuth();
+  const { t, i18n } = useTranslation();
   const kresId = kullanici?.kresId || kullanici?.kurumId || null;
 
   const [polls, setPolls] = useState([]);
@@ -102,7 +104,7 @@ export default function PollsPage() {
   const addOption = () => setOptionInputs((prev) => [...prev, { id: makeOptionId(), value: '' }]);
   const removeOption = (id) => {
     if (optionInputs.length <= 2) {
-      message.warning('Anket için en az 2 seçenek olmalı.');
+      message.warning(t('polls.minTwoOptions'));
       return;
     }
     setOptionInputs((prev) => prev.filter((item) => item.id !== id));
@@ -112,8 +114,8 @@ export default function PollsPage() {
     const title = baslik.trim();
     const options = cleanOptions(optionInputs.map((item) => item.value));
 
-    if (!title) return message.error('Anket başlığı yazmalısın.');
-    if (options.length < 2) return message.error('En az 2 seçenek olmalı.');
+    if (!title) return message.error(t('polls.titleRequired'));
+    if (options.length < 2) return message.error(t('polls.minTwoOptions'));
 
     setSaving(true);
     try {
@@ -128,9 +130,9 @@ export default function PollsPage() {
       setBaslik('');
       setAciklama('');
       setOptionInputs([{ id: makeOptionId(), value: 'Evet' }, { id: makeOptionId(), value: 'Hayır' }]);
-      message.success('Anket oluşturuldu');
+      message.success(t('polls.created'));
     } catch (e) {
-      message.error('Anket oluşturulamadı.');
+      message.error(t('polls.createError'));
     } finally {
       setSaving(false);
     }
@@ -142,7 +144,7 @@ export default function PollsPage() {
     try {
       await update(ref(database, `anketler/${item.id}`), { aktif: item.aktif === false, updatedAt: Date.now() });
     } catch (e) {
-      message.error('Anket durumu güncellenemedi.');
+      message.error(t('polls.statusError'));
     } finally {
       setBusyId(null);
     }
@@ -153,9 +155,9 @@ export default function PollsPage() {
     setBusyId(item.id);
     try {
       await remove(ref(database, `anketler/${item.id}`));
-      message.success('Anket silindi');
+      message.success(t('polls.deleted'));
     } catch (e) {
-      message.error('Anket silinemedi.');
+      message.error(t('polls.deleteError'));
     } finally {
       setBusyId(null);
     }
@@ -163,41 +165,41 @@ export default function PollsPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Anket Yönetimi</Title>
-      <Text type="secondary">Velilerden görüş toplamak için hızlı anketler oluştur.</Text>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('polls.title')}</Title>
+      <Text type="secondary">{t('polls.subtitle')}</Text>
 
       <Row gutter={[12, 12]} style={{ margin: '16px 0 20px' }}>
-        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.primary), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.primary }}>{polls.length}</Text><br /><Text type="secondary">Toplam Anket</Text></Card></Col>
-        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{toplamAktif}</Text><br /><Text type="secondary">Aktif Anket</Text></Card></Col>
-        <Col xs={24} md={8}><Card size="small" style={{ ...cardStyle(THEME.purple), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.purple }}>{toplamCevap}</Text><br /><Text type="secondary">Toplam Cevap</Text></Card></Col>
+        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.primary), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.primary }}>{polls.length}</Text><br /><Text type="secondary">{t('polls.total')}</Text></Card></Col>
+        <Col xs={12} md={8}><Card size="small" style={{ ...cardStyle(THEME.green), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.green }}>{toplamAktif}</Text><br /><Text type="secondary">{t('polls.active')}</Text></Card></Col>
+        <Col xs={24} md={8}><Card size="small" style={{ ...cardStyle(THEME.purple), textAlign: 'center' }}><Text strong style={{ fontSize: 22, color: THEME.purple }}>{toplamCevap}</Text><br /><Text type="secondary">{t('polls.responses')}</Text></Card></Col>
       </Row>
 
-      <Card style={{ ...cardStyle(), marginBottom: 24 }} title="Yeni Anket Oluştur">
-        <Text strong>Başlık</Text>
-        <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder="Örn: Yaz kampı ilgi anketi" style={{ marginTop: 6, marginBottom: 14 }} />
+      <Card style={{ ...cardStyle(), marginBottom: 24 }} title={t('polls.newPoll')}>
+        <Text strong>{t('polls.titleLabel')}</Text>
+        <Input value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder={t('polls.titlePlaceholder')} style={{ marginTop: 6, marginBottom: 14 }} />
 
-        <Text strong>Açıklama (opsiyonel)</Text>
-        <Input.TextArea value={aciklama} onChange={(e) => setAciklama(e.target.value)} rows={2} placeholder="Anket hakkında kısa açıklama" style={{ marginTop: 6, marginBottom: 14 }} />
+        <Text strong>{t('polls.descriptionOptional')}</Text>
+        <Input.TextArea value={aciklama} onChange={(e) => setAciklama(e.target.value)} rows={2} placeholder={t('polls.descriptionPlaceholder')} style={{ marginTop: 6, marginBottom: 14 }} />
 
-        <Text strong>Seçenekler</Text>
+        <Text strong>{t('polls.options')}</Text>
         <div style={{ marginTop: 8 }}>
           {optionInputs.map((opt) => (
             <Space key={opt.id} style={{ display: 'flex', marginBottom: 8 }}>
-              <Input value={opt.value} onChange={(e) => updateOption(opt.id, e.target.value)} placeholder="Seçenek" style={{ width: 280 }} />
+              <Input value={opt.value} onChange={(e) => updateOption(opt.id, e.target.value)} placeholder={t('polls.optionPlaceholder')} style={{ width: 280 }} />
               <Button icon={<MinusCircleOutlined />} onClick={() => removeOption(opt.id)} />
             </Space>
           ))}
         </div>
-        <Button icon={<PlusOutlined />} onClick={addOption} style={{ marginBottom: 16 }}>Seçenek Ekle</Button>
+        <Button icon={<PlusOutlined />} onClick={addOption} style={{ marginBottom: 16 }}>{t('polls.addOption')}</Button>
 
         <div>
-          <Button type="primary" loading={saving} onClick={createPoll}>Anketi Oluştur</Button>
+          <Button type="primary" loading={saving} onClick={createPoll}>{t('polls.create')}</Button>
         </div>
       </Card>
 
-      <Title level={5} style={{ marginBottom: 12 }}>Anketler</Title>
+      <Title level={5} style={{ marginBottom: 12 }}>{t('polls.listTitle')}</Title>
       {loading ? null : polls.length === 0 ? (
-        <Empty description="Henüz anket oluşturulmamış" />
+        <Empty description={t('polls.empty')} />
       ) : (
         polls.map((item) => {
           const cevapSayisi = Object.keys(safeObject(item.cevaplar)).length;
@@ -210,14 +212,14 @@ export default function PollsPage() {
                 <div>
                   <Text strong style={{ fontSize: 16 }}>{item.baslik}</Text>
                   {item.aciklama && <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>{item.aciklama}</Paragraph>}
-                  <Text type="secondary" style={{ fontSize: 12 }}>📅 {formatDate(item.createdAt)} · 💬 {cevapSayisi} cevap</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>📅 {formatDate(item.createdAt, i18n.language)} · 💬 {cevapSayisi} cevap</Text>
                 </div>
-                <Tag color={active ? 'green' : 'default'}>{active ? 'Aktif' : 'Pasif'}</Tag>
+                <Tag color={active ? 'green' : 'default'}>{active ? t('polls.active') : t('polls.inactive')}</Tag>
               </div>
 
               <div style={{ background: '#FAF9FF', borderRadius: 12, padding: 12, marginTop: 12, marginBottom: 12 }}>
                 {item.secenekler.length === 0 ? (
-                  <Text type="secondary">Bu anket için seçenek eklenmemiş</Text>
+                  <Text type="secondary">{t('polls.noOptions')}</Text>
                 ) : (
                   item.secenekler.map((label, index) => {
                     const { count, percent } = getOptionPercent(item, label);
@@ -235,8 +237,8 @@ export default function PollsPage() {
               </div>
 
               <Space>
-                <Button size="small" loading={busy} onClick={() => toggleActive(item)}>{active ? 'Pasif Yap' : 'Aktif Et'}</Button>
-                <Popconfirm title="Bu anketi ve cevaplarını tamamen sil?" okText="Sil" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={() => deletePoll(item)}>
+                <Button size="small" loading={busy} onClick={() => toggleActive(item)}>{active ? t('polls.deactivate') : t('polls.activate')}</Button>
+                <Popconfirm title={t('polls.deleteConfirm')} okText={t('common.delete')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={() => deletePoll(item)}>
                   <Button size="small" danger icon={<DeleteOutlined />} loading={busy}>Sil</Button>
                 </Popconfirm>
               </Space>

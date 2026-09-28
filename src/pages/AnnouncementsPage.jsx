@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, List, Button, Drawer, Form, Input, Switch, Tag, message, Empty, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { ref, onValue, get, set, push, query, orderByChild, equalTo } from 'firebase/database';
@@ -10,14 +11,15 @@ import { createRoleNotification, createUserNotification } from '../utils/notific
 const { Title, Text, Paragraph } = Typography;
 
 const TARGET_OPTIONS = [
-  { key: 'all', label: 'Tüm Kurum', icon: '🏫' },
-  { key: 'veli', label: 'Veliler', icon: '👨‍👩‍👧' },
-  { key: 'ogretmen', label: 'Öğretmenler', icon: '👩‍🏫' },
-  { key: 'sinif', label: 'Sınıf', icon: '📚' },
+  { key: 'all', label: t('announcements.all'), icon: '🏫' },
+  { key: 'veli', label: t('announcements.parents'), icon: '👨‍👩‍👧' },
+  { key: 'ogretmen', label: t('announcements.teachers'), icon: '👩‍🏫' },
+  { key: 'sinif', label: t('announcements.class'), icon: '📚' },
 ];
 
 // Mobildeki AnnouncementListScreen.js + AnnouncementFormScreen.js'in web karşılığı.
 export default function AnnouncementsPage() {
+  const { t } = useTranslation();
   const { kullanici, kres } = useAuth();
   const kresId = kres?.id || kullanici?.kresId || 'default-kres';
 
@@ -107,13 +109,13 @@ export default function AnnouncementsPage() {
     }
 
     if (targetRole === 'sinif' && !selectedClassId) {
-      message.error('Sınıf bazlı duyuru için bir sınıf seçmelisin.');
+      message.error(t('announcements.classRequired'));
       return;
     }
 
     setSaving(true);
     try {
-      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || 'Yönetici';
+      const senderName = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('announcements.admin');
       const data = {
         title: values.title.trim(),
         baslik: values.title.trim(),
@@ -161,32 +163,32 @@ export default function AnnouncementsPage() {
         }
       }
 
-      message.success(editingId ? 'Duyuru güncellendi' : 'Duyuru gönderildi');
+      message.success(editingId ? t('announcements.updated') : t('announcements.sent'));
       setDrawerOpen(false);
     } catch (error) {
       console.error(error);
-      message.error('Bir sorun oluştu');
+      message.error(t('announcements.error'));
     } finally {
       setSaving(false);
     }
   };
 
-  const getTargetLabel = (role) => TARGET_OPTIONS.find((t) => t.key === role)?.label || 'Tüm Kurum';
+  const getTargetLabel = (role) => TARGET_OPTIONS.find((t) => t.key === role)?.label || t('announcements.all');
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Duyurular</Title>
-          <Text type="secondary">{announcements.length} duyuru</Text>
+          <Title level={3} style={{ margin: 0 }}>{t('announcements.title')}</Title>
+          <Text type="secondary">{t('announcements.count',{count:announcements.length})}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Duyuru Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('announcements.add')}</Button>
       </div>
 
       <List
         loading={loading}
         dataSource={announcements}
-        locale={{ emptyText: <Empty description="Henüz duyuru gönderilmemiş" /> }}
+        locale={{ emptyText: <Empty description={t('announcements.empty')} /> }}
         renderItem={(item) => (
           <List.Item
             onClick={() => openEdit(item)}
@@ -216,21 +218,21 @@ export default function AnnouncementsPage() {
       />
 
       <Drawer
-        title={editingId ? 'Duyuruyu Düzenle' : 'Yeni Duyuru'}
+        title={editingId ? t('announcements.edit') : t('announcements.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={440}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Gönder'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('announcements.update') : t('announcements.send')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="title" label="Başlık" rules={[{ required: true, message: 'Başlık zorunlu' }]}>
-            <Input placeholder="Duyuru başlığı" />
+          <Form.Item name="title" label={t('announcements.heading')} rules={[{ required: true, message: t('announcements.headingRequired') }]}>
+            <Input placeholder={t('announcements.headingPlaceholder')} />
           </Form.Item>
-          <Form.Item name="message" label="Mesaj" rules={[{ required: true, message: 'Mesaj zorunlu' }]}>
-            <Input.TextArea rows={4} placeholder="Duyuru mesajı" />
+          <Form.Item name="message" label={t('announcements.message')} rules={[{ required: true, message: t('announcements.messageRequired') }]}>
+            <Input.TextArea rows={4} placeholder={t('announcements.messagePlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Duyuru Hedefi">
+          <Form.Item label={t('announcements.target')}>
             <Space wrap>
               {TARGET_OPTIONS.map((opt) => (
                 <Tag.CheckableTag key={opt.key} checked={targetRole === opt.key} onChange={() => setTargetRole(opt.key)}>
@@ -241,14 +243,14 @@ export default function AnnouncementsPage() {
           </Form.Item>
 
           {targetRole === 'sinif' && (
-            <Form.Item label="Sınıf Seç" required>
+            <Form.Item label={t('announcements.selectClass')} required>
               <Space wrap>
                 {classes.length === 0 ? (
-                  <Text type="secondary">Henüz sınıf bulunamadı.</Text>
+                  <Text type="secondary">{t('announcements.noClass')}</Text>
                 ) : (
                   classes.map((c) => (
                     <Tag.CheckableTag key={c.id} checked={selectedClassId === c.id} onChange={() => setSelectedClassId(c.id)}>
-                      {c.ad || 'Sınıf'}
+                      {c.ad || t('announcements.class')}
                     </Tag.CheckableTag>
                   ))
                 )}
@@ -256,7 +258,7 @@ export default function AnnouncementsPage() {
             </Form.Item>
           )}
 
-          <Form.Item name="isUrgent" label="Acil Duyuru" valuePropName="checked">
+          <Form.Item name="isUrgent" label={t('announcements.urgent')} valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

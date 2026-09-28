@@ -8,12 +8,14 @@ import { THEME } from '../theme';
 import { YAS_GRUPLARI } from '../constants';
 import { generateId, asArray } from '../utils/crudHelpers';
 import { calculateChildAge, getChildBirthDate } from '../utils/childDates';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
 // Mobildeki ClassListScreen.js + ClassFormScreen.js'in web karşılığı.
 export default function ClassesPage() {
   const { kullanici, kres } = useAuth();
+  const { t } = useTranslation();
   const kresId = kres?.id || kullanici?.kresId;
 
   const [classes, setClasses] = useState([]);
@@ -159,27 +161,27 @@ export default function ClassesPage() {
       });
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Sınıf güncellendi' : 'Sınıf kaydedildi');
+      message.success(editingId ? t('classes.updated') : t('classes.saved'));
       setDrawerOpen(false);
     } catch (error) {
       console.error(error);
-      message.error('Sınıf kaydedilemedi');
+      message.error(t('classes.saveError'));
     } finally {
       setSaving(false);
     }
   };
 
   const columns = [
-    { title: 'Sınıf Adı', dataIndex: 'ad', key: 'ad', render: (v) => v || 'İsimsiz Sınıf' },
-    { title: 'Yaş Grubu', dataIndex: 'yasGrubu', key: 'yasGrubu', render: (v) => v || <Text type="secondary">Belirtilmemiş</Text> },
-    { title: '👩‍🏫 Öğretmen', key: 'teacherCount', render: (_, r) => r.ogretmenIds?.length || 0 },
-    { title: '👶 Çocuk', key: 'childCount', render: (_, r) => r.childCount || 0 },
+    { title: t('classes.name'), dataIndex: 'ad', key: 'ad', render: (v) => v || t('classes.unnamed') },
+    { title: t('classes.ageGroup'), dataIndex: 'yasGrubu', key: 'yasGrubu', render: (v) => v || <Text type="secondary">{t('classes.notSpecified')}</Text> },
+    { title: t('classes.teacher'), key: 'teacherCount', render: (_, r) => r.ogretmenIds?.length || 0 },
+    { title: t('classes.children'), key: 'childCount', render: (_, r) => r.childCount || 0 },
     {
-      title: 'Kapasite',
+      title: t('classes.capacity'),
       key: 'kapasite',
       render: (_, r) => (r.kapasite
         ? <Text type={(r.childCount || 0) > r.kapasite ? 'danger' : 'secondary'}>{r.childCount || 0}/{r.kapasite}</Text>
-        : <Text type="secondary">Girilmemiş</Text>),
+        : <Text type="secondary">{t('classes.capacityNotEntered')}</Text>),
     },
   ];
 
@@ -187,15 +189,15 @@ export default function ClassesPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Sınıflar</Title>
-          <Text type="secondary">Kurumdaki sınıfları ve öğretmen eşleşmelerini yönetin.</Text>
+          <Title level={3} style={{ margin: 0 }}>{t('classes.title')}</Title>
+          <Text type="secondary">{t('classes.subtitle')}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Sınıf Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('classes.add')}</Button>
       </div>
 
       <div style={{ display: 'flex', gap: 24, marginBottom: 20, background: THEME.primarySoft, borderRadius: 16, padding: '14px 20px' }}>
-        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{classes.length}</Text><br /><Text type="secondary">Sınıf</Text></div>
-        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{toplamOgretmen}</Text><br /><Text type="secondary">Öğretmen Ataması</Text></div>
+        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{classes.length}</Text><br /><Text type="secondary">{t('classes.classCount')}</Text></div>
+        <div><Text strong style={{ color: THEME.primary, fontSize: 22 }}>{toplamOgretmen}</Text><br /><Text type="secondary">{t('classes.teacherAssignments')}</Text></div>
       </div>
 
       <Table
@@ -204,40 +206,40 @@ export default function ClassesPage() {
         columns={columns}
         dataSource={classes}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
-        locale={{ emptyText: <Empty description="Henüz sınıf eklenmemiş" /> }}
+        locale={{ emptyText: <Empty description={t("classes.empty")} /> }}
         pagination={{ pageSize: 10 }}
       />
 
       <Drawer
-        title={editingId ? 'Sınıfı Düzenle' : 'Yeni Sınıf'}
+        title={editingId ? t('classes.edit') : t('classes.newClass')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={420}
-        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
+        extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('classes.update') : t('classes.create')}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="ad" label="Sınıf Adı" rules={[{ required: true, message: 'Sınıf adı zorunlu' }]}>
+          <Form.Item name="ad" label={t('classes.name')} rules={[{ required: true, message: t('classes.nameRequired') }]}>
             <Input placeholder="Örn: Papatya Sınıfı" />
           </Form.Item>
-          <Form.Item name="yasGrubu" label="Yaş Grubu" rules={[{ required: true, message: 'Yaş grubu zorunlu' }]}>
+          <Form.Item name="yasGrubu" label={t('classes.ageGroup')} rules={[{ required: true, message: t('classes.ageRequired') }]}>
             <Space wrap>
               {YAS_GRUPLARI.map((item) => (
                 <YasChip key={item.key} item={item} form={form} />
               ))}
             </Space>
           </Form.Item>
-          <Form.Item name="kapasite" label="Kapasite (opsiyonel)" tooltip="Dashboard'daki doluluk oranı için kullanılır">
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Örn: 15" />
+          <Form.Item name="kapasite" label={t('classes.capacity')} tooltip={t('classes.capacityHint')}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder={t('classes.capacityPlaceholder')} />
           </Form.Item>
         </Form>
 
         {editingId && (
           <div style={{ marginTop: 24, borderTop: `1px solid ${THEME.border}`, paddingTop: 16 }}>
-            <Text strong>Bu Sınıftaki Çocuklar {childrenLoading ? '' : `(${classChildren.length})`}</Text>
+            <Text strong>{t('classes.childrenInClass')} {childrenLoading ? '' : `(${classChildren.length})`}</Text>
             {childrenLoading ? (
               <div style={{ textAlign: 'center', marginTop: 12 }}><Spin /></div>
             ) : classChildren.length === 0 ? (
-              <div style={{ marginTop: 8 }}><Text type="secondary">Bu sınıfa henüz çocuk atanmamış.</Text></div>
+              <div style={{ marginTop: 8 }}><Text type="secondary">{t('classes.noChildren')}</Text></div>
             ) : (
               <div style={{ marginTop: 10 }}>
                 {classChildren.map((c) => (

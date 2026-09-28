@@ -15,6 +15,7 @@ const { Title, Text } = Typography;
 // Mobildeki ChildListScreen.js + ChildFormScreen.js'in web karşılığı.
 export default function ChildrenPage() {
   const { kullanici, kres } = useAuth();
+  const { t } = useTranslation();
   const kresId = kres?.id || kullanici?.kresId;
 
   const [children, setChildren] = useState([]);
@@ -296,7 +297,7 @@ export default function ChildrenPage() {
       });
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Çocuk bilgileri güncellendi' : 'Çocuk kaydedildi');
+      message.success(editingId ? t('children.saveSuccess') : t('children.created'));
       setDrawerOpen(false);
 
       denetimKaydiYaz({
@@ -309,7 +310,7 @@ export default function ChildrenPage() {
       });
     } catch (error) {
       console.error(error);
-      message.error('Çocuk kaydedilemedi');
+      message.error(t('children.saveError'));
     } finally {
       setSaving(false);
     }
@@ -319,7 +320,7 @@ export default function ChildrenPage() {
     setDeletingId(record.id);
     try {
       await deleteCocukKaydi(record.id);
-      message.success('Çocuk kaydı kalıcı olarak silindi');
+      message.success(t('children.deleteSuccess'));
       denetimKaydiYaz({
         kresId: kresId || 'default-kres',
         kullanici,
@@ -338,16 +339,16 @@ export default function ChildrenPage() {
 
   const columns = [
     { title: 'Ad Soyad', dataIndex: 'ad', key: 'ad' },
-    { title: 'Sınıf', dataIndex: 'sinifAd', key: 'sinifAd', render: (v) => v || <Text type="secondary">Belirtilmemiş</Text> },
+    { title: t('children.class'), dataIndex: 'sinifAd', key: 'sinifAd', render: (v) => v || <Text type="secondary">{t('children.notSpecified')}</Text> },
     { title: 'Yaş', dataIndex: 'yas', key: 'yas' },
     { title: 'Öğretmen', dataIndex: 'ogretmenAd', key: 'ogretmenAd', render: (v) => v || <Text type="secondary">Atanmamış</Text> },
     {
-      title: 'Veli',
+      title: t('children.parent'),
       key: 'veli',
       render: (_, r) => (r.veliler.length ? r.veliler.map((v) => v.ad).join(', ') : <Text type="secondary">Bağlı değil</Text>),
     },
     {
-      title: 'Uyum',
+      title: t('children.adaptation'),
       key: 'uyum',
       render: (_, r) => (r.yeniBaslayan ? <Tag color={r.uyumDurumu === 'tamamlandi' ? 'purple' : 'green'}>{r.uyumDurumu === 'tamamlandi' ? 'Tamamlandı' : 'Aktif'}</Tag> : null),
     },
@@ -356,7 +357,7 @@ export default function ChildrenPage() {
       key: 'durum',
       render: (_, r) => (r.durum === 'ayrildi'
         ? <Tag color="red">Ayrıldı{r.ayrilmaTarihi ? ` · ${formatChildBirthDate(r.ayrilmaTarihi)}` : ''}</Tag>
-        : <Tag color="green">Aktif</Tag>),
+        : <Tag color="green">{t('children.active')}</Tag>),
     },
     {
       title: '',
@@ -365,9 +366,9 @@ export default function ChildrenPage() {
       render: (_, r) =>
         r.durum === 'ayrildi' ? (
           <Popconfirm
-            title="Çocuk kaydı kalıcı olarak silinsin mi?"
-            description="Bu işlem geri alınamaz: çocuğun tüm bilgileri, geçmiş yoklama/rapor/gelişim kayıtları ve veli bağlantıları tamamen silinir."
-            okText="Sil"
+            title={t('children.deleteTitle')}
+            description={t('children.deleteDesc')}
+            okText={t('children.delete')}
             okButtonProps={{ danger: true }}
             cancelText="Vazgeç"
             onConfirm={(e) => {
@@ -386,10 +387,10 @@ export default function ChildrenPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Çocuklar</Title>
+          <Title level={3} style={{ margin: 0 }}>{t('children.title')}</Title>
           <Text type="secondary">{aktifCocuklar.length} aktif çocuk{children.length !== aktifCocuklar.length ? ` · ${children.length - aktifCocuklar.length} ayrıldı` : ''}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Çocuk Ekle</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('children.add')}</Button>
       </div>
 
       {limitDoldu && (
@@ -409,7 +410,7 @@ export default function ChildrenPage() {
           ]}
         />
         <Input.Search
-          placeholder="Çocuk, sınıf, öğretmen veya veli adına göre ara"
+          placeholder={t('children.search')}
           allowClear
           style={{ width: 280 }}
           value={aramaMetni}
@@ -423,32 +424,32 @@ export default function ChildrenPage() {
         columns={columns}
         dataSource={gorunenCocuklar}
         onRow={(record) => ({ onClick: () => openEdit(record), style: { cursor: 'pointer' } })}
-        locale={{ emptyText: <Empty description="Henüz çocuk eklenmemiş" /> }}
+        locale={{ emptyText: <Empty description={t('children.empty')} /> }}
         pagination={{ pageSize: 10 }}
       />
 
       <Drawer
-        title={editingId ? 'Çocuğu Düzenle' : 'Yeni Çocuk'}
+        title={editingId ? t('children.edit') : t('children.new')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={460}
         extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="ad" label="Çocuk Adı" rules={[{ required: true, message: 'Ad soyad zorunlu' }]}>
+          <Form.Item name="ad" label={t('children.name')} rules={[{ required: true, message: 'Ad soyad zorunlu' }]}>
             <Input placeholder="Örn: Ali Yılmaz" />
           </Form.Item>
           <Form.Item
             name="dogumTarihi"
-            label="Doğum Tarihi"
+            label={t('children.birth')}
             rules={[{ required: true, message: 'Doğum tarihi zorunlu' }]}
             extra="Kaydedilince sistem 2022-05-15 olarak saklar, ekranlarda 15.05.2022 gösterir."
           >
             <Input placeholder="15.05.2022" />
           </Form.Item>
-          <Form.Item name="sinifId" label="Sınıf" rules={[{ required: true, message: 'Sınıf seçimi zorunlu' }]}>
+          <Form.Item name="sinifId" label={t('children.class')} rules={[{ required: true, message: 'Sınıf seçimi zorunlu' }]}>
             <Select
-              placeholder={siniflar.length === 0 ? 'Önce sınıf oluşturun' : 'Sınıf seçin'}
+              placeholder={siniflar.length === 0 ? t('children.noClass') : t('children.selectClass')}
               disabled={siniflar.length === 0}
               options={siniflar.map((s) => ({ value: s.id, label: `${s.ad} — ${s.yasGrubu}` }))}
             />
@@ -480,7 +481,7 @@ export default function ChildrenPage() {
                 {editingId && (
                   <Radio.Group value={uyumDurumu} onChange={(e) => setUyumDurumu(e.target.value)} optionType="button" buttonStyle="solid">
                     <Radio.Button value="aktif">Aktif</Radio.Button>
-                    <Radio.Button value="tamamlandi">Tamamlandı</Radio.Button>
+                    <Radio.Button value="tamamlandi">{t('children.completed')}</Radio.Button>
                   </Radio.Group>
                 )}
               </div>
@@ -491,10 +492,10 @@ export default function ChildrenPage() {
             <Input.TextArea rows={3} placeholder="Örn: Muğla Mah. Deniz Sok. No:5 Bodrum" />
           </Form.Item>
 
-          <Form.Item name="veliIds" label="Veli Bağla (opsiyonel)">
+          <Form.Item name="veliIds" label={t('children.parent')}>
             <Select
               mode="multiple"
-              placeholder={veliler.length === 0 ? 'Henüz veli yok' : 'Veli seçin'}
+              placeholder={veliler.length === 0 ? t('children.noParent') : t('children.selectParent')}
               disabled={veliler.length === 0}
               options={veliler.map((v) => ({ value: v.id, label: `${v.ad || ''} (${v.kullaniciAdi || '-'})` }))}
             />

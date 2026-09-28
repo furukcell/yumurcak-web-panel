@@ -5,14 +5,15 @@ import { ref, onValue, query, orderByChild, limitToLast } from 'firebase/databas
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
-const ISLEM_META = {
-  ekle: { label: 'Eklendi', color: THEME.green },
-  guncelle: { label: 'Güncellendi', color: THEME.blue },
-  sil: { label: 'Silindi', color: THEME.red },
-};
+const ISLEM_META = (t) => ({
+  ekle: { label: t('auditLog.added'), color: THEME.green },
+  guncelle: { label: t('auditLog.updated'), color: THEME.blue },
+  sil: { label: t('auditLog.deleted'), color: THEME.red },
+});
 
 function formatTarih(ts) {
   if (!ts) return '-';
@@ -24,6 +25,7 @@ function formatTarih(ts) {
 // Yöneticiler ve Ödemeler modüllerinden kayıt alıyor).
 export default function AuditLogPage() {
   const { kullanici, kres } = useAuth();
+  const { t } = useTranslation();
   const kresId = kres?.id || kullanici?.kresId;
 
   const [kayitlar, setKayitlar] = useState([]);
@@ -68,18 +70,18 @@ export default function AuditLogPage() {
   });
 
   const columns = [
-    { title: 'Tarih', dataIndex: 'tarih', key: 'tarih', width: 160, render: formatTarih },
+    { title: t('auditLog.date'), dataIndex: 'tarih', key: 'tarih', width: 160, render: formatTarih },
     {
-      title: 'İşlem',
+      title: t('auditLog.action'),
       dataIndex: 'islem',
       key: 'islem',
       width: 110,
-      render: (v) => <Tag color={ISLEM_META[v]?.color || THEME.muted}>{ISLEM_META[v]?.label || v}</Tag>,
+      render: (v) => <Tag color={ISLEM_META(t)[v]?.color || THEME.muted}>{ISLEM_META(t)[v]?.label || v}</Tag>,
     },
-    { title: 'Modül', dataIndex: 'modul', key: 'modul', width: 140 },
-    { title: 'Kayıt', dataIndex: 'hedef', key: 'hedef', render: (v) => v || <Text type="secondary">-</Text> },
-    { title: 'Yapan', dataIndex: 'yapanAd', key: 'yapanAd', width: 170 },
-    { title: 'Detay', dataIndex: 'detay', key: 'detay', render: (v) => (v ? <Text type="secondary">{v}</Text> : null) },
+    { title: t('auditLog.module'), dataIndex: 'modul', key: 'modul', width: 140 },
+    { title: t('auditLog.record'), dataIndex: 'hedef', key: 'hedef', render: (v) => v || <Text type="secondary">-</Text> },
+    { title: t('auditLog.performedBy'), dataIndex: 'yapanAd', key: 'yapanAd', width: 170 },
+    { title: t('auditLog.details'), dataIndex: 'detay', key: 'detay', render: (v) => (v ? <Text type="secondary">{v}</Text> : null) },
   ];
 
   return (
@@ -96,15 +98,15 @@ export default function AuditLogPage() {
             >
               <HistoryOutlined />
             </div>
-            <Title level={3} style={{ margin: 0 }}>Denetim Kaydı</Title>
+            <Title level={3} style={{ margin: 0 }}>{t('auditLog.title')}</Title>
           </div>
-          <Text type="secondary">Panelde yapılan ekleme, güncelleme ve silme işlemlerinin geçmişi · son {kayitlar.length} kayıt</Text>
+          <Text type="secondary">{t('auditLog.subtitle', { count: kayitlar.length })}</Text>
         </div>
       </div>
 
       <Space wrap style={{ marginBottom: 12 }}>
         <Input.Search
-          placeholder="Kayıt adı veya yapan kişiye göre ara"
+          placeholder={t('auditLog.searchPlaceholder')}
           allowClear
           style={{ width: 260 }}
           value={aramaMetni}
@@ -114,17 +116,17 @@ export default function AuditLogPage() {
           value={modulFilter}
           onChange={setModulFilter}
           style={{ width: 180 }}
-          options={[{ value: 'tumu', label: 'Tüm modüller' }, ...modulSecenekleri.map((m) => ({ value: m, label: m }))]}
+          options={[{ value: 'tumu', label: t('auditLog.allModules') }, ...modulSecenekleri.map((m) => ({ value: m, label: m }))]}
         />
         <Select
           value={islemFilter}
           onChange={setIslemFilter}
           style={{ width: 160 }}
           options={[
-            { value: 'tumu', label: 'Tüm işlemler' },
-            { value: 'ekle', label: 'Eklendi' },
-            { value: 'guncelle', label: 'Güncellendi' },
-            { value: 'sil', label: 'Silindi' },
+            { value: 'tumu', label: t('auditLog.allActions') },
+            { value: 'ekle', label: t('auditLog.added') },
+            { value: 'guncelle', label: t('auditLog.updated') },
+            { value: 'sil', label: t('auditLog.deleted') },
           ]}
         />
       </Space>
@@ -134,7 +136,7 @@ export default function AuditLogPage() {
         loading={loading}
         columns={columns}
         dataSource={filtreliKayitlar}
-        locale={{ emptyText: <Empty description="Henüz denetim kaydı yok" /> }}
+        locale={{ emptyText: <Empty description={t('auditLog.empty')} /> }}
         pagination={{ pageSize: 20 }}
       />
     </div>

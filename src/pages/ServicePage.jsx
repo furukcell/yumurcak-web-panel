@@ -5,6 +5,7 @@ import { ref, onValue, get, update, remove, query, orderByChild, equalTo } from 
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { generateId } from '../utils/crudHelpers';
 import { usernameToEmail, normalizeUsername } from '../utils/authHelpers';
@@ -24,15 +25,16 @@ function formatTime(zaman) {
 // Mobildeki AdminVehicleListScreen/FormScreen + AdminServiceScreen +
 // AdminServiceStatsScreen'in web karşılığı — 3 sekmede birleştirildi.
 export default function ServicePage() {
+  const { t } = useTranslation();
   const items = [
-    { key: 'araclar', label: 'Araçlar', children: <VehiclesTab /> },
-    { key: 'atamalar', label: 'Çocuk Atamaları', children: <AssignmentsTab /> },
-    { key: 'takip', label: 'Günlük Takip', children: <DailyTrackingTab /> },
+    { key: 'araclar', label: t('service.vehicles'), children: <VehiclesTab /> },
+    { key: 'atamalar', label: t('service.assignments'), children: <AssignmentsTab /> },
+    { key: 'takip', label: t('service.dailyTracking'), children: <DailyTrackingTab /> },
   ];
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Servis</Title>
-      <Text type="secondary">Servis araçları, çocuk atamaları ve günlük takip</Text>
+      <Title level={3} style={{ marginBottom: 4 }}>{t('service.title')}</Title>
+      <Text type="secondary">{t('service.subtitle')}</Text>
       <Tabs items={items} style={{ marginTop: 16 }} />
     </div>
   );
@@ -40,6 +42,7 @@ export default function ServicePage() {
 
 function VehiclesTab() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [vehicles, setVehicles] = useState([]);
@@ -88,7 +91,7 @@ function VehiclesTab() {
       const oldServisci = oldServisciSnap?.exists?.() ? oldServisciSnap.val() : null;
 
       if (editingId && oldServisci?.authUid && (values.sifre || '').trim()) {
-        message.error('Bu görevli Firebase Auth hesabına bağlı. Şifresi bu ekrandan değiştirilemez.');
+        message.error(t('service.authPasswordError'));
         setSaving(false);
         return;
       }
@@ -96,7 +99,7 @@ function VehiclesTab() {
       const servisciId = oldServisciId || generateId();
       const now = Date.now();
       const kaydedilenSifre = (values.sifre || '').trim() || oldServisci?.sifre || '123456';
-      if (kaydedilenSifre.length < 6) { message.error('Şifre en az 6 karakter olmalı'); setSaving(false); return; }
+      if (kaydedilenSifre.length < 6) { message.error(t('service.passwordLength')); setSaving(false); return; }
 
       const email = oldServisci?.email || usernameToEmail(values.kullaniciAdi.trim());
       let authUid = oldServisci?.authUid || null;
@@ -123,11 +126,11 @@ function VehiclesTab() {
       updates[`servisler/${id}`] = { ...oldVehicle, plaka: values.plaka.trim(), ad: values.ad.trim(), servisciId, kresId: kresIdFinal, createdAt: oldVehicle?.createdAt || now, updatedAt: now };
 
       await update(ref(database), updates);
-      message.success(editingId ? 'Servis aracı güncellendi' : 'Servis aracı oluşturuldu');
+      message.success(editingId ? t('service.vehicleUpdated') : t('service.vehicleCreated'));
       setDrawerOpen(false);
     } catch (error) {
-      if (error?.code === 'auth/email-already-in-use') message.error('Bu kullanıcı adı için Firebase Auth hesabı zaten var.');
-      else message.error('Servis aracı kaydedilemedi.');
+      if (error?.code === 'auth/email-already-in-use') message.error(t('service.authExists'));
+      else message.error(t('service.vehicleSaveError'));
     } finally {
       setSaving(false);
     }
@@ -136,52 +139,52 @@ function VehiclesTab() {
   const handleDelete = async (vehicle) => {
     try {
       await remove(ref(database, `servisler/${vehicle.id}`));
-      message.success('Araç silindi');
+      message.success(t('service.vehicleDeleted'));
       setDrawerOpen(false);
     } catch {
-      message.error('Araç silinemedi.');
+      message.error(t('service.vehicleDeleteError'));
     }
   };
 
   const columns = [
-    { title: 'Servis Adı', dataIndex: 'ad', key: 'ad', render: (v) => v || 'İsimsiz Servis' },
-    { title: 'Plaka', dataIndex: 'plaka', key: 'plaka', render: (v) => v || <Text type="secondary">Girilmemiş</Text> },
-    { title: 'Görevli', key: 'servisci', render: (_, r) => { const s = servisciMap[r.servisciId]; return s ? `👤 ${s.ad || s.kullaniciAdi}` : <Text type="danger">⚠️ Hesap bulunamadı</Text>; } },
+    { title: t('service.vehicleName'), dataIndex: 'ad', key: 'ad', render: (v) => v || t('service.unnamedVehicle') },
+    { title: 'Plaka', dataIndex: 'plaka', key: 'plaka', render: (v) => v || <Text type="secondary">{t('service.notEntered')}</Text> },
+    { title: t('service.driver'), key: 'servisci', render: (_, r) => { const s = servisciMap[r.servisciId]; return s ? `👤 ${s.ad || s.kullaniciAdi}` : <Text type="danger">{t('service.accountMissing')}</Text>; } },
   ];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Yeni Servis Aracı</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('service.newVehicle')}</Button>
       </div>
-      <Table rowKey="id" loading={loading} columns={columns} dataSource={vehicles} onRow={(r) => ({ onClick: () => openEdit(r), style: { cursor: 'pointer' } })} locale={{ emptyText: <Empty description="Henüz servis aracı eklenmedi" /> }} pagination={{ pageSize: 10 }} />
+      <Table rowKey="id" loading={loading} columns={columns} dataSource={vehicles} onRow={(r) => ({ onClick: () => openEdit(r), style: { cursor: 'pointer' } })} locale={{ emptyText: <Empty description={t('service.noVehicles')} /> }} pagination={{ pageSize: 10 }} />
 
-      <Drawer title={editingId ? 'Servis Aracını Düzenle' : 'Yeni Servis Aracı'} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={420} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}>
+      <Drawer title={editingId ? t('service.editVehicle') : t('service.newVehicle')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={420} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('common.update') : t('common.create')}</Button>}>
         <Form form={form} layout="vertical">
-          <Text strong>Araç Bilgileri</Text>
-          <Form.Item name="ad" label="Servis Adı" rules={[{ required: true, message: 'Zorunlu' }]} style={{ marginTop: 10 }}>
+          <Text strong>{t('service.vehicleInfo')}</Text>
+          <Form.Item name="ad" label={t('service.vehicleName')} rules={[{ required: true, message: t('common.required') }]} style={{ marginTop: 10 }}>
             <Input placeholder="Örn: 1 Nolu Servis / Sabah Turu" />
           </Form.Item>
-          <Form.Item name="plaka" label="Plaka" rules={[{ required: true, message: 'Zorunlu' }]}>
+          <Form.Item name="plaka" label={t('service.plate')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: 48 AB 123" />
           </Form.Item>
 
-          <Text strong>Servis Görevlisi</Text>
+          <Text strong>Servis {t('service.driver')}si</Text>
           <Text type="secondary" style={{ display: 'block', fontSize: 12, marginTop: 4, marginBottom: 10 }}>Bu araca atanan görevli, kendi hesabıyla giriş yapıp çocukları alındı/bırakıldı işaretleyebilir.</Text>
-          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Zorunlu' }]}>
+          <Form.Item name="kullaniciAdi" label={t('service.username')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: servis1" />
           </Form.Item>
-          <Form.Item name="servisciAd" label="Ad Soyad" rules={[{ required: true, message: 'Zorunlu' }]}>
+          <Form.Item name="servisciAd" label={t('service.fullName')} rules={[{ required: true, message: '{t('common.required')}' }]}>
             <Input placeholder="Örn: Ayşe Yılmaz" />
           </Form.Item>
-          <Form.Item name="sifre" label="Şifre" extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}>
+          <Form.Item name="sifre" label={t('common.password')} extra={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa varsayılan şifre 123456 olur.'}>
             <Input.Password iconRender={(v) => (v ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
           </Form.Item>
         </Form>
 
         {editingId && (
           <Popconfirm title="Bu servis aracı silinsin mi?" okText="Sil" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={() => handleDelete({ id: editingId })}>
-            <Button danger block>Servis Aracını Sil</Button>
+            <Button danger block>{t('service.deleteVehicle')}</Button>
           </Popconfirm>
         )}
       </Drawer>
@@ -250,9 +253,9 @@ function AssignmentsTab() {
     setSavingId(childId);
     try {
       await update(ref(database, `servisBilgileri/${childId}`), { kresId, servisKullaniyor: !!draft.servisKullaniyor, servisId: draft.servisId || '', alisSaati: draft.alisSaati.trim(), birakisSaati: draft.birakisSaati.trim(), servisNotu: draft.servisNotu.trim(), updatedAt: Date.now() });
-      message.success('Servis bilgisi kaydedildi');
+      message.success(t('service.saved'));
     } catch {
-      message.error('Servis bilgisi kaydedilemedi.');
+      message.error(t('service.saveError'));
     } finally {
       setSavingId(null);
     }
@@ -262,7 +265,7 @@ function AssignmentsTab() {
 
   async function doPrint() {
     const serviceChildren = children.filter((c) => drafts[c.id]?.servisKullaniyor);
-    if (serviceChildren.length === 0) { message.warning('Servis kullanan çocuk kaydı yok.'); return; }
+    if (serviceChildren.length === 0) { message.warning(t('service.noServiceChildren')); return; }
     setPrinting(true);
     try {
       const kres = await fetchInstitutionInfo(kresId);
@@ -281,7 +284,7 @@ function AssignmentsTab() {
       const html = buildServiceListHtml({ kres, records });
       printHtmlDocument(html);
     } catch {
-      message.error('Servis listesi oluşturulamadı.');
+      message.error(t('service.printError'));
     } finally {
       setPrinting(false);
     }
@@ -292,17 +295,17 @@ function AssignmentsTab() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <Text type="secondary">{serviceChildCount} çocuk servis kullanıyor</Text>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+        <Text type="secondary">{serviceChildCount} {t('service.childrenUsing')}</Text>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </div>
-      {children.length === 0 ? <Empty description="Kayıtlı çocuk yok" /> : children.map((child) => {
+      {children.length === 0 ? <Empty description={t('service.noChildren')} /> : children.map((child) => {
         const draft = drafts[child.id] || { servisKullaniyor: false, servisId: '', alisSaati: '', birakisSaati: '', servisNotu: '' };
         return (
           <div key={child.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
                 <Text strong>{child.ad} {child.soyad}</Text>
-                <div><Text type="secondary" style={{ fontSize: 12 }}>{sinifMap[child.sinifId] || 'Sınıf yok'}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12 }}>{sinifMap[child.sinifId] || t('service.noClass')}</Text></div>
               </div>
               <Switch checked={!!draft.servisKullaniyor} onChange={(v) => updateDraft(child.id, 'servisKullaniyor', v)} />
             </div>
@@ -310,7 +313,7 @@ function AssignmentsTab() {
             {draft.servisKullaniyor && (
               <>
                 {vehicles.length === 0 ? (
-                  <Text type="secondary">⚠️ Henüz servis aracı eklenmedi. Önce "Araçlar" sekmesinden ekle.</Text>
+                  <Text type="secondary">⚠️ {t('service.noVehicles')}. Önce "Araçlar" sekmesinden ekle.</Text>
                 ) : (
                   <Space wrap style={{ marginBottom: 8 }}>
                     {vehicles.map((v) => (
@@ -321,14 +324,14 @@ function AssignmentsTab() {
                   </Space>
                 )}
                 <Space style={{ width: '100%', marginBottom: 8 }}>
-                  <Input value={draft.alisSaati} onChange={(e) => updateDraft(child.id, 'alisSaati', e.target.value)} placeholder="Alış saati (08:00)" style={{ width: 160 }} />
-                  <Input value={draft.birakisSaati} onChange={(e) => updateDraft(child.id, 'birakisSaati', e.target.value)} placeholder="Bırakış saati (16:30)" style={{ width: 160 }} />
+                  <Input value={draft.alisSaati} onChange={(e) => updateDraft(child.id, 'alisSaati', e.target.value)} placeholder={t('service.pickupPlaceholder')} style={{ width: 160 }} />
+                  <Input value={draft.birakisSaati} onChange={(e) => updateDraft(child.id, 'birakisSaati', e.target.value)} placeholder={t('service.dropoffPlaceholder')} style={{ width: 160 }} />
                 </Space>
-                <Input value={draft.servisNotu} onChange={(e) => updateDraft(child.id, 'servisNotu', e.target.value)} placeholder="Not" style={{ marginBottom: 8 }} />
+                <Input value={draft.servisNotu} onChange={(e) => updateDraft(child.id, 'servisNotu', e.target.value)} placeholder={t('service.note')} style={{ marginBottom: 8 }} />
               </>
             )}
 
-            <Button size="small" type="primary" loading={savingId === child.id} onClick={() => saveChild(child.id)}>Kaydet</Button>
+            <Button size="small" type="primary" loading={savingId === child.id} onClick={() => saveChild(child.id)}>{t('common.save')}</Button>
           </div>
         );
       })}
@@ -399,9 +402,9 @@ function DailyTrackingTab() {
   }
 
   const formatDateLabel = () => {
-    if (isToday) return 'Bugün';
+    if (isToday) return t('service.today');
     const dun = new Date(); dun.setDate(dun.getDate() - 1);
-    if (dateKey === toDateKey(dun)) return 'Dün';
+    if (dateKey === toDateKey(dun)) return t('service.yesterday');
     return selectedDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
   };
 
@@ -411,7 +414,7 @@ function DailyTrackingTab() {
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => shiftDay(-1)} />
         <div style={{ textAlign: 'center' }}>
           <Text strong style={{ fontSize: 16 }}>{formatDateLabel()}</Text>
-          {!isToday && <div><a onClick={() => setSelectedDate(new Date())}>Bugüne dön</a></div>}
+          {!isToday && <div><a onClick={() => setSelectedDate(new Date())}>{t('service.backToday')}</a></div>}
         </div>
         <Button icon={<RightOutlined />} shape="circle" disabled={isToday} onClick={() => !isToday && shiftDay(1)} />
       </div>
@@ -422,7 +425,7 @@ function DailyTrackingTab() {
         <>
           {isToday && alinmayanlar.length > 0 && (
             <div style={{ background: '#FFF1F3', border: `1px solid ${THEME.red}`, borderRadius: 12, padding: 12, marginBottom: 14 }}>
-              <Text strong style={{ color: THEME.red }}>⏳ Henüz Alınmayanlar ({alinmayanlar.length})</Text>
+              <Text strong style={{ color: THEME.red }}>{t('service.notPickedUp')} ({alinmayanlar.length})</Text>
               {alinmayanlar.map((c) => {
                 const child = childrenMap[c.id];
                 const vehicle = vehicles.find((v) => v.id === c.servisId);
@@ -432,7 +435,7 @@ function DailyTrackingTab() {
           )}
 
           {vehicles.length === 0 ? (
-            <Empty description="Henüz servis aracı eklenmedi" />
+            <Empty description={t('service.noVehicles')} />
           ) : (
             vehicles.map((vehicle) => {
               const durum = gunlukDurum[vehicle.id] || {};
@@ -442,10 +445,10 @@ function DailyTrackingTab() {
                 <div key={vehicle.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <Text strong>{vehicle.ad || vehicle.plaka}</Text>
-                    <Tag color={varmaSaat ? 'green' : 'orange'}>{varmaSaat ? `✅ Vardı ${varmaSaat}` : '⏳ Henüz varmadı'}</Tag>
+                    <Tag color={varmaSaat ? 'green' : 'orange'}>{varmaSaat ? `✅ Vardı ${varmaSaat}` : `⏳ ${t('service.notArrived')}`}</Tag>
                   </div>
                   {cocuklar.length === 0 ? (
-                    <Text type="secondary">Bu araca atanmış çocuk yok.</Text>
+                    <Text type="secondary">{t('service.noAssignedChildren')}</Text>
                   ) : (
                     cocuklar.map((c) => {
                       const child = childrenMap[c.id];

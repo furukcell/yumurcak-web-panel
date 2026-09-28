@@ -4,11 +4,13 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { usernameToEmail } from '../utils/authHelpers';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { girisYap, erisimHatasi } = useAuth();
+  const { t } = useTranslation();
   const [hata, setHata] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -24,7 +26,7 @@ export default function LoginPage() {
       const email = usernameToEmail(kullaniciAdi);
       await girisYap(email, password);
     } catch (err) {
-      setHata('Kullanıcı adı veya şifre hatalı.');
+      setHata(t('common.usernameOrPasswordInvalid'));
     } finally {
       setYukleniyor(false);
     }
@@ -43,7 +45,7 @@ export default function LoginPage() {
       <Card style={{ width: 360, borderRadius: 16, boxShadow: '0 8px 30px rgba(108,61,235,0.12)' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={3} style={{ color: THEME.primary, marginBottom: 0 }}>Yumurcak</Title>
-          <Text type="secondary">Yönetim Paneli</Text>
+          <Text type="secondary">{t('common.managementPanel')}</Text>
         </div>
 
         {(hata || erisimHatasi) && (
@@ -51,10 +53,10 @@ export default function LoginPage() {
         )}
 
         <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item name="kullaniciAdi" label="Kullanıcı Adı" rules={[{ required: true, message: 'Kullanıcı adı gerekli' }]}>
-            <Input prefix={<UserOutlined />} placeholder="Mobildeki kullanıcı adınla aynı" size="large" autoCapitalize="none" />
+          <Form.Item name="kullaniciAdi" label={t('common.username')} rules={[{ required: true, message: t('common.usernameRequired') }]}>
+            <Input prefix={<UserOutlined />} placeholder={t('common.mobileUsernameHint')} size="large" autoCapitalize="none" />
           </Form.Item>
-          <Form.Item name="password" label="Şifre" rules={[{ required: true, message: 'Şifre gerekli' }]}>
+          <Form.Item name="password" label={t('common.password')} rules={[{ required: true, message: t('common.passwordRequired') }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="••••••••" size="large" />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0 }}>
