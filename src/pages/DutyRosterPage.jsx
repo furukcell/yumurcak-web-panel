@@ -165,8 +165,8 @@ export default function DutyRosterPage() {
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('dutyRoster.copyPrevious')}</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>{t('dutyRoster.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>{t('common.printPdf')}</Button>
       </Space>
 
       <List
@@ -177,7 +177,7 @@ export default function DutyRosterPage() {
             <List.Item onClick={() => openDay(day.dateKey)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <Text strong style={{ width: 90 }}>{day.label}</Text>
-                {v.personel ? <Text type="secondary">{v.personel}{v.not ? ` · ${v.not}` : ''}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}{t('common.empty')}</Text>}
+                {v.personel ? <Text type="secondary">{v.personel}{v.not ? ` · ${v.not}` : ''}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}>{t('common.empty')}</Text>}
               </div>
             </List.Item>
           );
@@ -188,7 +188,7 @@ export default function DutyRosterPage() {
         {t('dutyRoster.publish', { month: monthLabel })}
       </Button>
 
-      <Drawer title={selectedDay?.label || ''} open={!!selectedDay} onClose={() => setSelectedDateKey('')} width={380} extra={<Button type="primary" onClick={saveDay}{t('common.save')}</Button>}>
+      <Drawer title={selectedDay?.label || ''} open={!!selectedDay} onClose={() => setSelectedDateKey('')} width={380} extra={<Button type="primary" onClick={saveDay}>{t('common.save')}</Button>}>
         <Form form={form} layout="vertical">
           <Form.Item name="personel" label={t('dutyRoster.personnelLabel')}>
             <Input placeholder={t('dutyRoster.personnelPlaceholder')} />
