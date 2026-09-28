@@ -8,15 +8,16 @@ import { THEME, cardStyle } from '../theme';
 import { asArray } from '../utils/crudHelpers';
 import { createUserNotification } from '../utils/notificationCenter';
 import { denetimKaydiYaz } from '../utils/auditLog';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
 const AY_ADLARI = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const DURUM_META = {
-  tum: { label: 'Tümü', color: THEME.primary },
-  odendi: { label: '✅ Ödendi', color: THEME.green },
-  bekliyor: { label: '⏳ Bekliyor', color: THEME.orange },
-  gecikti: { label: '❗ Gecikti', color: THEME.red },
+  tum: { label: t('payments.all'), color: THEME.primary },
+  odendi: { label: t('payments.paidStatus'), color: THEME.green },
+  bekliyor: { label: t('payments.pending'), color: THEME.orange },
+  gecikti: { label: t('payments.overdueStatus'), color: THEME.red },
 };
 
 function safeObject(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
@@ -64,6 +65,7 @@ function dueDateForMonth(yil, ay) { return `${Number(yil) || new Date().getFullY
 // Mobildeki PaymentListScreen.js + PaymentFormScreen.js'in web karşılığı.
 export default function PaymentsPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId || kullanici?.kurumId || null;
 
   const [odemeler, setOdemeler] = useState([]);
@@ -129,7 +131,7 @@ export default function PaymentsPage() {
   async function odendiYap(item) {
     try {
       await set(ref(database, `odemeler/${item.id}`), { ...item, durum: 'odendi', status: 'odendi', odemeTarihi: item.odemeTarihi || todayKey(), updatedAt: Date.now() });
-      message.success('Ödeme durumu güncellendi');
+      message.success(t('payments.statusUpdated'));
       denetimKaydiYaz({
         kresId,
         kullanici,
@@ -139,7 +141,7 @@ export default function PaymentsPage() {
         detay: `${item.donem || getDonem(item)} · ${formatMoney(item.tutarNumber ?? item.tutar)} · Ödendi olarak işaretlendi`,
       });
     } catch {
-      message.error('Ödeme durumu güncellenemedi.');
+      message.error(t('payments.statusError'));
     }
   }
 
@@ -169,10 +171,10 @@ export default function PaymentsPage() {
   const handleSave = async () => {
     let values;
     try { values = await form.validateFields(); } catch { return; }
-    if (!selectedChildId) { message.error('Çocuk seçmelisin.'); return; }
+    if (!selectedChildId) { message.error(t('payments.childRequired')); return; }
     const finalTutar = toNumber(values.tutar);
-    if (!finalTutar || finalTutar <= 0) { message.error('Geçerli bir tutar gir (0\'dan büyük olmalı).'); return; }
-    if (!Number.isInteger(selectedYear) || selectedYear < 2000 || selectedYear > 2100) { message.error('Geçerli bir yıl gir.'); return; }
+    if (!finalTutar || finalTutar <= 0) { message.error(t('payments.validAmount')); return; }
+    if (!Number.isInteger(selectedYear) || selectedYear < 2000 || selectedYear > 2100) { message.error(t('payments.validYear')); return; }
 
     setSaving(true);
     try {
@@ -200,7 +202,7 @@ export default function PaymentsPage() {
           await createUserNotification({ kresId, userIds: finalVeliIds, baslik: '💳 Yeni ödeme kaydı', mesaj: `${getChildName(cocuk)} için ${monthLabel(selectedMonth, selectedYear)} dönemine ait ${formatMoney(finalTutar)} ödeme kaydı oluşturuldu.`, tip: 'odeme', routeName: 'ParentPayments', createdBy: kullanici?.uid || kullanici?.id || '' });
         }
       }
-      message.success(editingId ? 'Ödeme güncellendi' : 'Ödeme kaydı oluşturuldu');
+      message.success(editingId ? t('payments.updated') : t('payments.created'));
       setDrawerOpen(false);
 
       denetimKaydiYaz({
@@ -212,7 +214,7 @@ export default function PaymentsPage() {
         detay: `${veri.donem} · ${formatMoney(finalTutar)} · Durum: ${DURUM_META[selectedDurum]?.label || selectedDurum}`,
       });
     } catch (error) {
-      message.error('Kayıt sırasında bir sorun oluştu.');
+      message.error(t('payments.saveError'));
     } finally {
       setSaving(false);
     }
@@ -222,17 +224,17 @@ export default function PaymentsPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Ödemeler</Title>
-          <Text type="secondary">Aidat ve ücret kayıtlarını buradan takip et</Text>
+          <Title level={3} style={{ margin: 0 }}>{t('payments.title')}</Title>
+          <Text type="secondary">{t('payments.subtitle')}</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Kayıt</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('payments.create')}</Button>
       </div>
 
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>Açık Tutar</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.primary)}><Text type="secondary" style={{ fontSize: 12 }}>Bu Ay</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.green)}><Text type="secondary" style={{ fontSize: 12 }}>Ödendi</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
-        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}>Geciken</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.openAmount')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{formatMoney(stats.acikTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.primary)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.thisMonth')}</Text><div><Text strong style={{ color: THEME.primary, fontSize: 18 }}>{formatMoney(stats.buAyTutar)}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.green)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.paid')}</Text><div><Text strong style={{ color: THEME.green, fontSize: 18 }}>{stats.odendi}</Text></div></Card></Col>
+        <Col xs={12} md={6}><Card size="small" style={cardStyle(THEME.red)}><Text type="secondary" style={{ fontSize: 12 }}{t('payments.overdue')}</Text><div><Text strong style={{ color: THEME.red, fontSize: 18 }}>{stats.gecikti}</Text></div></Card></Col>
       </Row>
 
       <Space wrap style={{ marginBottom: 14 }}>
@@ -244,7 +246,7 @@ export default function PaymentsPage() {
       <List
         loading={loading}
         dataSource={filtered}
-        locale={{ emptyText: <Empty description="Ödeme kaydı yok" /> }}
+        locale={{ emptyText: <Empty description={t('payments.empty')} /> }}
         renderItem={(item) => {
           const meta = DURUM_META[item.durum];
           return (
@@ -253,18 +255,18 @@ export default function PaymentsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div onClick={() => openEdit(item)} style={{ cursor: 'pointer', flex: 1 }}>
                     <Text strong style={{ fontSize: 15 }}>{item.cocukAd}</Text>
-                    <div><Text style={{ color: THEME.primary, fontSize: 13, fontWeight: 700 }}>{item.baslik || item.aciklama || 'Aylık ücret'}</Text></div>
+                    <div><Text style={{ color: THEME.primary, fontSize: 13, fontWeight: 700 }}>{item.baslik || item.aciklama || t('payments.monthlyFee')}</Text></div>
                     <div><Text type="secondary" style={{ fontSize: 12 }}>{item.donem}</Text></div>
                   </div>
                   <Tag color={meta.color}>{meta.label}</Tag>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: `1px solid ${THEME.border}` }}>
                   <div><Text type="secondary" style={{ fontSize: 11 }}>Tutar</Text><div><Text strong style={{ fontSize: 18 }}>{formatMoney(item.tutar || item.amount)}</Text></div></div>
-                  <div style={{ textAlign: 'right' }}><Text type="secondary" style={{ fontSize: 11 }}>{item.odemeTarihi ? 'Ödeme tarihi' : 'Son ödeme'}</Text><div><Text strong style={{ fontSize: 13 }}>{item.odemeTarihi || item.sonOdemeTarihi || '-'}</Text></div></div>
+                  <div style={{ textAlign: 'right' }}><Text type="secondary" style={{ fontSize: 11 }}>{item.odemeTarihi ? t('payments.paymentDate') : t('payments.dueDate')}</Text><div><Text strong style={{ fontSize: 13 }}>{item.odemeTarihi || item.sonOdemeTarihi || '-'}</Text></div></div>
                 </div>
                 <Space style={{ marginTop: 12, width: '100%' }}>
-                  <Button size="small" onClick={() => openEdit(item)}>Düzenle</Button>
-                  {item.durum !== 'odendi' && <Button size="small" type="primary" style={{ background: THEME.green, borderColor: THEME.green }} onClick={() => odendiYap(item)}>Ödendi Yap</Button>}
+                  <Button size="small" onClick={() => openEdit(item)}{t('payments.edit')}</Button>
+                  {item.durum !== 'odendi' && <Button size="small" type="primary" style={{ background: THEME.green, borderColor: THEME.green }} onClick={() => odendiYap(item)}{t('payments.markPaid')}</Button>}
                 </Space>
               </div>
             </List.Item>
@@ -272,17 +274,17 @@ export default function PaymentsPage() {
         }}
       />
 
-      <Drawer title={editingId ? 'Ödeme Kaydını Düzenle' : 'Yeni Ödeme Kaydı'} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={460} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? 'Güncelle' : 'Oluştur'}</Button>}>
-        <Text strong>Çocuk Seçimi</Text>
-        <Select style={{ width: '100%', marginTop: 6, marginBottom: 16 }} value={selectedChildId || undefined} onChange={setSelectedChildId} placeholder={children.length === 0 ? 'Bu kuruma bağlı çocuk yok' : 'Çocuk seçin'} disabled={children.length === 0} options={children.map((c) => ({ value: c.id, label: c.adSoyad }))} />
+      <Drawer title={editingId ? t('payments.editTitle') : t('payments.newTitle')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={460} extra={<Button type="primary" loading={saving} onClick={handleSave}>{editingId ? t('payments.update') : t('payments.createAction')}</Button>}>
+        <Text strong{t('payments.childSelection')}</Text>
+        <Select style={{ width: '100%', marginTop: 6, marginBottom: 16 }} value={selectedChildId || undefined} onChange={setSelectedChildId} placeholder={children.length === 0 ? t('payments.noChildren') : t('payments.selectChild')} disabled={children.length === 0} options={children.map((c) => ({ value: c.id, label: c.adSoyad }))} />
 
         <Space style={{ marginBottom: 12 }}>
-          <Button size="small" onClick={() => { const d = new Date(); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}>Bu Ay</Button>
-          <Button size="small" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() + 1); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}>Gelecek Ay</Button>
+          <Button size="small" onClick={() => { const d = new Date(); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}{t('payments.thisMonthBtn')}</Button>
+          <Button size="small" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() + 1); setSelectedMonth(d.getMonth() + 1); setSelectedYear(d.getFullYear()); form.setFieldsValue({ sonOdemeTarihi: dueDateForMonth(d.getFullYear(), d.getMonth() + 1) }); }}{t('payments.nextMonth')}</Button>
         </Space>
 
         <Form form={form} layout="vertical">
-          <Form.Item name="baslik" label="Başlık" rules={[{ required: true, message: 'Zorunlu' }]}>
+          <Form.Item name="baslik" label={t('payments.heading')} rules={[{ required: true, message: t('payments.required') }]}>
             <Input placeholder="Aylık Kreş Ücreti" />
           </Form.Item>
 
@@ -293,15 +295,15 @@ export default function PaymentsPage() {
             ))}
           </Space>
 
-          <Form.Item label="Yıl">
+          <Form.Item label={t('payments.year')}>
             <Input value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value.replace(/[^0-9]/g, '')) || new Date().getFullYear())} placeholder="2026" maxLength={4} />
           </Form.Item>
 
           <Form.Item
             name="tutar"
-            label="Tutar (₺)"
+            label={t('payments.amount')}
             rules={[
-              { required: true, message: 'Zorunlu' },
+              { required: true, message: t('payments.required') },
               { validator: (_, value) => (toNumber(value) > 0 ? Promise.resolve() : Promise.reject(new Error('0\'dan büyük bir tutar gir'))) },
             ]}
           >
@@ -315,13 +317,13 @@ export default function PaymentsPage() {
             ))}
           </Space>
 
-          <Form.Item name="sonOdemeTarihi" label="Son Ödeme Tarihi" extra={`Örnek: ${dueDateForMonth(selectedYear, selectedMonth)}`}>
+          <Form.Item name="sonOdemeTarihi" label={t('payments.dueDateLabel')} extra={`Örnek: ${dueDateForMonth(selectedYear, selectedMonth)}`}>
             <Input placeholder="YYYY-AA-GG" maxLength={10} />
           </Form.Item>
-          <Form.Item name="odemeTarihi" label="Ödeme Tarihi">
+          <Form.Item name="odemeTarihi" label={t('payments.paymentDateLabel')}>
             <Input placeholder="YYYY-AA-GG" maxLength={10} />
           </Form.Item>
-          <Form.Item name="aciklama" label="Açıklama">
+          <Form.Item name="aciklama" label={t('payments.description')}>
             <Input.TextArea rows={3} placeholder="Örn: Haziran aidatı" />
           </Form.Item>
         </Form>
