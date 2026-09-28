@@ -1,5 +1,6 @@
 import React from 'react';
 import { Result, Button } from 'antd';
+import i18n from '../i18n';
 
 // Tek bir sayfada beklenmeyen bir hata (ör. null erişimi) oluşursa tüm
 // paneli beyaz ekrana düşürmemesi için route seviyesinde kullanılan
@@ -32,7 +33,7 @@ export default class ErrorBoundary extends React.Component {
       return (
         <Result
           status="error"
-          title="Bu sayfada beklenmeyen bir hata oluştu"
+          title={i18n.t('common.unexpectedError')}
           subTitle="Sayfayı yenilemeyi deneyebilir ya da başka bir menüye geçebilirsin."
           extra={
             <Button type="primary" onClick={() => window.location.reload()}>
