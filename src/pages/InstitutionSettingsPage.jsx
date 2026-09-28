@@ -124,28 +124,28 @@ export default function InstitutionSettingsPage() {
         <div style={{ width: 84, height: 84, borderRadius: 42, background: 'rgba(255,255,255,0.16)', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 36 }}>🏫</span>}
         </div>
-        <Title level={3} style={{ color: '#fff', margin: 0 }}{t('institution.title')}</Title>
-        <Text style={{ color: 'rgba(255,255,255,0.82)' }}{t('institution.subtitle')}</Text>
+        <Title level={3} style={{ color: '#fff', margin: 0 }}>{t('institution.title')}</Title>
+        <Text style={{ color: 'rgba(255,255,255,0.82)' }}>{t('institution.subtitle')}</Text>
         <div style={{ marginTop: 10, display: 'flex', gap: 16, justifyContent: 'center' }}>
           <Upload showUploadList={false} beforeUpload={handleLogoUpload} accept="image/*">
             <Button type="link" loading={uploadingLogo} icon={<CameraOutlined />} style={{ color: '#fff', fontWeight: 700 }}>{logoUrl ? t('institution.changePhoto') : t('institution.addPhoto')}</Button>
           </Upload>
-          {logoUrl && <Button type="link" icon={<DeleteOutlined />} onClick={removeLogo} style={{ color: '#FFD9DF', fontWeight: 700 }}{t('institution.remove')}</Button>}
+          {logoUrl && <Button type="link" icon={<DeleteOutlined />} onClick={removeLogo} style={{ color: '#FFD9DF', fontWeight: 700 }}>{t('institution.remove')}</Button>}
         </div>
       </div>
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
-        <Text strong{t('institution.legal')}</Text>
-        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}{t('institution.legalDesc')}</Paragraph>
+        <Text strong>{t('institution.legal')}</Text>
+        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>{t('institution.legalDesc')}</Paragraph>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=terms')}{t('institution.terms')}</Button>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=privacy')}{t('institution.privacy')}</Button>
-          <Button block onClick={() => navigate('/yasal-belgeler?doc=kvkk')}{t('institution.kvkk')}</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=terms')}>{t('institution.terms')}</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=privacy')}>{t('institution.privacy')}</Button>
+          <Button block onClick={() => navigate('/yasal-belgeler?doc=kvkk')}>{t('institution.kvkk')}</Button>
         </div>
       </Card>
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
-        <Text strong{t('institution.backup')}</Text>
+        <Text strong>{t('institution.backup')}</Text>
         <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 10 }}>
           {t('institution.backupDesc')}
         </Paragraph>
@@ -165,7 +165,7 @@ export default function InstitutionSettingsPage() {
       <FormField label={t('institution.hours')} value={form.calismaSaatleri} onChange={(v) => setValue('calismaSaatleri', v)} placeholder="08:00 - 18:00" />
       <FormField label={t('institution.note')} value={form.not} onChange={(v) => setValue('not', v)} placeholder="Servis, kayıt, görüşme notu..." multiline />
 
-      <Button type="primary" block loading={saving} onClick={save} style={{ height: 46, marginTop: 8 }}{t('institution.save')}</Button>
+      <Button type="primary" block loading={saving} onClick={save} style={{ height: 46, marginTop: 8 }}>{t('institution.save')}</Button>
     </div>
   );
 }
