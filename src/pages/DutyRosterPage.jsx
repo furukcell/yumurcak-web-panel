@@ -4,6 +4,7 @@ import { LeftOutlined, RightOutlined, CopyOutlined, PrinterOutlined } from '@ant
 import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { THEME } from '../theme';
 import { fetchInstitutionInfo, buildMonthlyDocumentHtml, printHtmlDocument } from '../services/documentPdf';
 import {
@@ -29,6 +30,7 @@ function buildDutyRecord({ day, value, kresId, monthKey, monthLabel, kaynak, now
 // Mobildeki AdminMonthlyDutyRosterScreen.js'in web karşılığı.
 export default function DutyRosterPage() {
   const { kullanici } = useAuth();
+  const { t } = useTranslation();
   const kresId = kullanici?.kresId;
 
   const [monthDate, setMonthDate] = useState(new Date());
@@ -77,24 +79,24 @@ export default function DutyRosterPage() {
         nodePath: NODE_PATH, kresId, kaynak: KAYNAK, currentMonthDate: monthDate, days,
         valueMapper: (prevItem) => ({ personel: prevItem?.personel || '', not: prevItem?.not || '' }),
       });
-      if (!found) { message.warning(`${prevMonthKey} için yayınlanmış bir nöbet çizelgesi yok.`); return; }
+      if (!found) { message.warning(t('dutyRoster.noPrevious', { month: prevMonthKey })); return; }
       setValues((prev) => { const next = { ...prev }; Object.entries(copiedValues).forEach(([k, v]) => { if (v) next[k] = v; }); return next; });
-      message.success(`${found} günlük nöbet bilgisi geçen aydan kopyalandı.`);
+      message.success(t('dutyRoster.copied', { count: found }));
     } catch {
-      message.error('Geçen ay kopyalanamadı.');
+      message.error(t('dutyRoster.copyError'));
     } finally {
       setCopying(false);
     }
   }
 
   async function doPublish() {
-    if (!hasAny) { message.warning('Yayınlamak için en az bir güne bilgi gir.'); return; }
+    if (!hasAny) { message.warning(t('dutyRoster.publishRequired')); return; }
     setSaving(true);
     try {
       await publishMonth({ nodePath: NODE_PATH, kresId, monthKey, monthLabel, kaynak: KAYNAK, days, values, hasContent: hasDutyContent, buildRecord: buildDutyRecord });
-      message.success(`${monthLabel} nöbet çizelgesi yayınlandı`);
+      message.success(t('dutyRoster.published', { month: monthLabel }));
     } catch {
-      message.error('Nöbet çizelgesi yayınlanamadı.');
+      message.error(t('dutyRoster.publishError'));
     } finally {
       setSaving(false);
     }
@@ -104,9 +106,9 @@ export default function DutyRosterPage() {
     setUnpublishing(true);
     try {
       await unpublishMonth({ nodePath: NODE_PATH, kresId, monthKey, kaynak: KAYNAK });
-      message.success('Yayından kaldırıldı');
+      message.success(t('dutyRoster.unpublished'));
     } catch {
-      message.error('Yayından kaldırılamadı.');
+      message.error(t('dutyRoster.unpublishError'));
     } finally {
       setUnpublishing(false);
     }
@@ -120,7 +122,7 @@ export default function DutyRosterPage() {
       const html = buildMonthlyDocumentHtml({ docType: 'nobet', kres, monthLabel, records });
       printHtmlDocument(html);
     } catch {
-      message.error('Yazdırılacak belge oluşturulamadı.');
+      message.error(t('dutyRoster.printError'));
     } finally {
       setPrinting(false);
     }
@@ -141,14 +143,14 @@ export default function DutyRosterPage() {
 
   return (
     <div>
-      <Title level={3} style={{ marginBottom: 4 }}>Nöbet Çizelgesi</Title>
-      <Text type="secondary">Gün gün nöbetçi personel planı</Text>
+      <Title level={3} style={{ marginBottom: 4 }}{t('dutyRoster.title')}</Title>
+      <Text type="secondary">{t('dutyRoster.subtitle')}</Text>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: THEME.primary, borderRadius: 18, padding: '12px 18px', margin: '16px 0 12px' }}>
         <Button icon={<LeftOutlined />} shape="circle" onClick={() => changeMonth(-1)} />
         <div style={{ textAlign: 'center' }}>
           <Text style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{monthLabel}</Text>
-          <div><Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12 }}>{days.length} günlük plan</Text></div>
+          <div><Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12 }}>{t('dutyRoster.dayPlan', { count: days.length })}</Text></div>
         </div>
         <Button icon={<RightOutlined />} shape="circle" onClick={() => changeMonth(1)} />
       </div>
@@ -156,15 +158,15 @@ export default function DutyRosterPage() {
       {publishedCount > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <Text strong>✅ {monthLabel} yayında</Text>
-          <Popconfirm title="Yayından kaldırılsın mı?" okText="Kaldır" cancelText="Vazgeç" okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
-            <Button danger size="small" loading={unpublishing}>Yayından Kaldır</Button>
+          <Popconfirm title={t('dutyRoster.unpublishConfirm')} okText={t('dutyRoster.remove')} cancelText={t('common.cancel')} okButtonProps={{ danger: true }} onConfirm={doUnpublish}>
+            <Button danger size="small" loading={unpublishing}{t('dutyRoster.unpublish')}</Button>
           </Popconfirm>
         </div>
       )}
 
       <Space style={{ marginBottom: 14 }}>
-        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}>Geçen Ayı Kopyala</Button>
-        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}>Yazdır / PDF</Button>
+        <Button icon={<CopyOutlined />} loading={copying} onClick={handleCopyPreviousMonth}{t('dutyRoster.copyPrevious')}</Button>
+        <Button icon={<PrinterOutlined />} loading={printing} onClick={doPrint}{t('common.printPdf')}</Button>
       </Space>
 
       <List
@@ -175,7 +177,7 @@ export default function DutyRosterPage() {
             <List.Item onClick={() => openDay(day.dateKey)} style={{ cursor: 'pointer', border: `1px solid ${THEME.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <Text strong style={{ width: 90 }}>{day.label}</Text>
-                {v.personel ? <Text type="secondary">{v.personel}{v.not ? ` · ${v.not}` : ''}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}>Boş</Text>}
+                {v.personel ? <Text type="secondary">{v.personel}{v.not ? ` · ${v.not}` : ''}</Text> : <Text type="secondary" style={{ color: '#C7C9D6' }}{t('common.empty')}</Text>}
               </div>
             </List.Item>
           );
@@ -183,16 +185,16 @@ export default function DutyRosterPage() {
       />
 
       <Button type="primary" block loading={saving} onClick={doPublish} style={{ marginTop: 16, height: 46 }}>
-        {monthLabel} Çizelgesini Yayınla
+        {t('dutyRoster.publish', { month: monthLabel })}
       </Button>
 
-      <Drawer title={selectedDay?.label || ''} open={!!selectedDay} onClose={() => setSelectedDateKey('')} width={380} extra={<Button type="primary" onClick={saveDay}>Kaydet</Button>}>
+      <Drawer title={selectedDay?.label || ''} open={!!selectedDay} onClose={() => setSelectedDateKey('')} width={380} extra={<Button type="primary" onClick={saveDay}{t('common.save')}</Button>}>
         <Form form={form} layout="vertical">
-          <Form.Item name="personel" label="Nöbetçi Personel">
-            <Input placeholder="Örn: Ayşe Yılmaz" />
+          <Form.Item name="personel" label={t('dutyRoster.personnelLabel')}>
+            <Input placeholder={t('dutyRoster.personnelPlaceholder')} />
           </Form.Item>
-          <Form.Item name="not" label="Not (opsiyonel)">
-            <Input.TextArea rows={3} placeholder="Ek bilgi" />
+          <Form.Item name="not" label={t('dutyRoster.noteLabel')}>
+            <Input.TextArea rows={3} placeholder={t('dutyRoster.notePlaceholder')} />
           </Form.Item>
         </Form>
       </Drawer>
