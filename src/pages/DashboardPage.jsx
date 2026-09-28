@@ -307,7 +307,7 @@ export default function DashboardPage() {
     );
 
     return () => { odemelerUnsub(); childrenUnsub(); };
-  }, [kresId]);
+  }, [kresId, i18n.language]);
 
   // Doluluk oranı: sınıflardaki `kapasite` alanlarının toplamı (bkz.
   // ClassesPage.jsx). Kapasite girilmemiş sınıflar toplamı etkilemez —
@@ -327,7 +327,7 @@ export default function DashboardPage() {
       () => setDoluluk({ toplamKapasite: 0, kapasiteGirilenSinif: 0 })
     );
     return () => unsub();
-  }, [kresId, i18n.language]);
+  }, [kresId]);
 
   const adSoyad = `${kullanici?.ad || ''} ${kullanici?.soyad || ''}`.trim() || kullanici?.kullaniciAdi || t('common.administrator');
   const subStatus = getSubscriptionStatus(abonelik);
