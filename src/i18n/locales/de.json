@@ -987,5 +987,14 @@
         "badge": "Großer Kindergarten"
       }
     }
+  },
+  "legal": {
+    "title": "Rechtliche Dokumente",
+    "subtitle": "Nutzungsbedingungen, Datenschutzrichtlinie und KVKK-Hinweis.",
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "kvkk": "KVKK-Hinweis",
+    "updated": "Zuletzt aktualisiert",
+    "legalNote": "Dieser Text stellt keine Rechtsberatung dar."
   }
 }
