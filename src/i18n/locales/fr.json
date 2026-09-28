@@ -326,7 +326,10 @@
     "passwordMin": "Le mot de passe doit contenir au moins 6 caractères",
     "authPassword": "Cet enseignant est lié à un compte Firebase Auth. Le mot de passe ne peut pas être modifié ici.",
     "authExists": "Un compte Firebase Auth existe déjà pour ce nom d’utilisateur.",
-    "unnamed": "Enseignant sans nom"
+    "unnamed": "Enseignant sans nom",
+    "class": "Classe",
+    "phone": "Téléphone",
+    "status": "Statut"
   },
   "administrators": {
     "title": "Administrators",
