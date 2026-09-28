@@ -815,5 +815,28 @@
     "added": "Added",
     "updated": "Updated",
     "deleted": "Deleted"
+  },
+  "bell": {
+    "title": "Nursery Bell",
+    "subtitle": "Appears here when parents say \"I'm coming\" or \"I'm at the door\"",
+    "active": "Active",
+    "unread": "Unread",
+    "completed": "Completed",
+    "empty": "No nursery bell notifications yet",
+    "read": "Read",
+    "complete": "Completed",
+    "delivery": "Handover",
+    "time": "Time",
+    "noTime": "No time",
+    "noDelivery": "No handover information",
+    "leaving": "🏫 I'll drop off",
+    "pickingUp": "👋 I'll pick up",
+    "atDoor": "📍 I'm at the door",
+    "coming": "🚗 I'm coming",
+    "notification": "Notification",
+    "child": "Child",
+    "parent": "Parent",
+    "readError": "The notification could not be marked as read.",
+    "completeError": "The notification could not be completed."
   }
 }
