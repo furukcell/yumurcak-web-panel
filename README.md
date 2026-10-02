@@ -39,3 +39,30 @@ panel şu adreste yayında olur: **https://yumurcak-app.web.app**
 Panel, mobil uygulamadaki admin (yönetici) hesabıyla (aynı email/şifre)
 giriş yapıyor. `kullanicilar` kaydında `rol: 'yonetici'` olmayan hesaplar
 panele giremiyor.
+
+## Yönetici Kendi Kendine Ödeme (Feature Flag)
+
+Kurum yöneticisinin panelden fiyat/paket görmesi, ücretsiz deneme başlatması
+ve promosyon kodu uygulaması **şu an kapalıdır** (kod silinmedi, gizlendi).
+Ödemeler IBAN ile alınır; abonelik süper admin tarafından manuel tanımlanır.
+Mobil uygulamadaki (`Yumurcak-app`) aynı flag ile birebir aynı mantıktır.
+
+**Ayar dosyası:** `src/config/featureFlags.js`
+
+```js
+export const SELF_SERVICE_PAYMENT_ENABLED = false; // true: eski ekran geri gelir
+export const SUPPORT_WHATSAPP = '';                // ülke kodlu, + ve boşluksuz
+export const SUPPORT_EMAIL = '';                   // boşsa buton çıkmaz
+```
+
+| Durum | Yönetici `/ayarlar/abonelik` sayfasında ne görür |
+| ----- | ------------------------------------------------ |
+| `false` (şu an) | Abonelik durumu, kalan gün, öğrenci kullanımı ve "Abonelik ve Ödeme / iletişime geçin" kartı. Fiyat, paket, deneme ve promosyon yok. |
+| `true` | Eski sayfa: bilgi kutusu, deneme butonu, promosyon kodu, paket ve fiyat kartları. |
+
+### Tekrar aktif etme
+1. `SELF_SERVICE_PAYMENT_ENABLED = true` yap.
+2. Ana repodaki (`Yumurcak-app`) `database.rules.json` içinde yöneticinin
+   `abonelikler` / `promosyon*` yazma yetkisi kapatıldıysa tekrar aç.
+3. Mobil uygulamadaki flag'i de aynı şekilde aç (iki taraf tutarlı olsun).
+4. Push'la, GitHub Actions deploy etsin.
