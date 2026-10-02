@@ -932,6 +932,11 @@
     "period": "Dönem yok"
   },
   "subscription": {
+    "contactTitle": "Abonelik ve Ödeme",
+    "contactDesc": "Abonelik yenileme ve ödeme işlemleri için lütfen Yumurcak ekibiyle iletişime geçin.",
+    "contactWhatsapp": "WhatsApp ile yazın",
+    "contactEmail": "E-posta gönderin",
+    "overLimitContact": "Mevcut öğrenci sayısı paket limitini aşıyor. Paket güncellemesi için Yumurcak ekibiyle iletişime geçin.",
     "title": "Abonelik",
     "subtitle": "Öğrenci sayısına göre paket ve ödeme durumu",
     "mobilePurchase": "Ücretli plan satın alma mobil uygulama üzerinden yapılır",
