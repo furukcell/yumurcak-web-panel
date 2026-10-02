@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../theme';
 import { getSubscriptionStatus, getSubscriptionEndDate } from '../utils/subscriptionStatus';
 import { useTranslation } from 'react-i18next';
+import { SELF_SERVICE_PAYMENT_ENABLED, SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '../config/featureFlags';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -138,13 +139,15 @@ export default function SubscriptionPage() {
       <Title level={3} style={{ marginBottom: 4 }}>{t('subscription.title')}</Title>
       <Text type="secondary">{t('subscription.subtitle')}</Text>
 
-      <Alert
-        type="info"
-        showIcon
-        style={{ margin: '16px 0' }}
-        message={t('subscription.mobilePurchase')}
-        description={t('subscription.mobileDesc')}
-      />
+      {SELF_SERVICE_PAYMENT_ENABLED && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ margin: '16px 0' }}
+          message={t('subscription.mobilePurchase')}
+          description={t('subscription.mobileDesc')}
+        />
+      )}
 
       <Card style={{ marginBottom: 16, borderColor: THEME.border }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -163,14 +166,16 @@ export default function SubscriptionPage() {
             <Text type="secondary" style={{ fontSize: 12 }}>{studentCount} / {activeLimit || '-'}</Text>
           </div>
           <Progress percent={getUsagePercent(studentCount, activeLimit)} showInfo={false} strokeColor={overLimit ? THEME.red : THEME.primary} />
-          {overLimit && <Text type="danger" style={{ fontSize: 12 }}>{t('subscription.overLimit')}</Text>}
+          {overLimit && <Text type="danger" style={{ fontSize: 12 }}>{t(SELF_SERVICE_PAYMENT_ENABLED ? 'subscription.overLimit' : 'subscription.overLimitContact')}</Text>}
         </div>
 
-        {status.key === 'none' && (
+        {SELF_SERVICE_PAYMENT_ENABLED && status.key === 'none' && (
           <Button type="primary" block loading={saving} onClick={startTrial} style={{ marginTop: 16 }}>{t('subscription.trial')}</Button>
         )}
       </Card>
 
+      {SELF_SERVICE_PAYMENT_ENABLED && (
+        <>
       <Card style={{ marginBottom: 16, borderColor: THEME.border }} title={t('subscription.promo')}>
         <div style={{ display: 'flex', gap: 8 }}>
           <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder={t('subscription.promoPlaceholder') } style={{ flex: 1 }} />
@@ -193,6 +198,21 @@ export default function SubscriptionPage() {
           </Col>
         ))}
       </Row>
+        </>
+      )}
+      {!SELF_SERVICE_PAYMENT_ENABLED && (
+        <Card style={{ marginBottom: 16, borderColor: THEME.border }} title={t('subscription.contactTitle')}>
+          <Paragraph type="secondary">{t('subscription.contactDesc')}</Paragraph>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {SUPPORT_WHATSAPP ? (
+              <Button type="primary" href={`https://wa.me/${SUPPORT_WHATSAPP}`} target="_blank" rel="noopener noreferrer">{t('subscription.contactWhatsapp')}</Button>
+            ) : null}
+            {SUPPORT_EMAIL ? (
+              <Button href={`mailto:${SUPPORT_EMAIL}`}>{t('subscription.contactEmail')}</Button>
+            ) : null}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
