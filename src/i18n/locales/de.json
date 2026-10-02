@@ -932,6 +932,11 @@
     "period": "Kein Zeitraum"
   },
   "subscription": {
+    "contactTitle": "Abonnement & Zahlung",
+    "contactDesc": "Bitte kontaktieren Sie das Yumurcak-Team für Verlängerung und Zahlung des Abonnements.",
+    "contactWhatsapp": "Per WhatsApp schreiben",
+    "contactEmail": "E-Mail senden",
+    "overLimitContact": "Die aktuelle Schülerzahl überschreitet das Paketlimit. Bitte kontaktieren Sie das Yumurcak-Team, um Ihr Paket zu aktualisieren.",
     "title": "Abonnement",
     "subtitle": "Plan- und Zahlungsstatus nach Kinderzahl",
     "mobilePurchase": "Kostenpflichtige Pläne werden über die mobile App gekauft",
