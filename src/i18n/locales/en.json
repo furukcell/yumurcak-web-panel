@@ -932,6 +932,11 @@
     "period": "No period"
   },
   "subscription": {
+    "contactTitle": "Subscription & Payment",
+    "contactDesc": "Please contact the Yumurcak team for subscription renewal and payment.",
+    "contactWhatsapp": "Message on WhatsApp",
+    "contactEmail": "Send an email",
+    "overLimitContact": "The current student count exceeds the plan limit. Please contact the Yumurcak team to update your plan.",
     "title": "Subscription",
     "subtitle": "Plan and payment status based on student count",
     "mobilePurchase": "Paid plan purchases are made through the mobile app",
