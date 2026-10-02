@@ -932,6 +932,11 @@
     "period": "Période non indiquée"
   },
   "subscription": {
+    "contactTitle": "Abonnement et paiement",
+    "contactDesc": "Veuillez contacter l'équipe Yumurcak pour le renouvellement et le paiement de l'abonnement.",
+    "contactWhatsapp": "Écrire sur WhatsApp",
+    "contactEmail": "Envoyer un e-mail",
+    "overLimitContact": "Le nombre d'élèves actuel dépasse la limite du forfait. Veuillez contacter l'équipe Yumurcak pour mettre à jour votre forfait.",
     "title": "Abonnement",
     "subtitle": "État du forfait et des paiements selon le nombre d'enfants",
     "mobilePurchase": "Les forfaits payants sont achetés via l'application mobile",
