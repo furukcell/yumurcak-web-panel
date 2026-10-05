@@ -66,3 +66,23 @@ export const SUPPORT_EMAIL = '';                   // boşsa buton çıkmaz
    `abonelikler` / `promosyon*` yazma yetkisi kapatıldıysa tekrar aç.
 3. Mobil uygulamadaki flag'i de aynı şekilde aç (iki taraf tutarlı olsun).
 4. Push'la, GitHub Actions deploy etsin.
+
+## Ödeme Planı (Taksit) ve Aylık Özet
+
+Veli ödemeleri `odemeler/{id}` altında **her çocuk için her ay ayrı kayıt** olarak
+tutulur. Ödemeler sayfasında (`/odemeler`) yönetici:
+
+- **Tek ay** yerine **Ödeme planı** seçerek tek seferde 1–12 aylık kayıt oluşturabilir.
+  Her kayıtta `planId`, `taksitNo`, `taksitSayisi` alanları bulunur ve yazma tek toplu
+  `update()` ile yapılır. Veliye 12 değil, tek bildirim gider.
+- Planlı kayıtlarda **kalan** her zaman ödenmemiş kayıtlardan hesaplanır
+  ("5/12 ödendi · kalan 7 ay · 14.000 ₺"); ayrı sayaç tutulmaz.
+- **Seç** moduyla birden çok kaydı tek seferde "ödendi" yapabilir.
+- **Plan** butonuyla kalan ayların tutarını değiştirebilir veya planı iptal edebilir
+  (iptalde sadece ödenmemiş kayıtlar silinir, ödenenler kalır).
+- Aylık özet: Beklenen / Tahsil edilen / Kalan seçili aya göre; Geciken ve Yaklaşan tüm
+  aylar için hesaplanır. "Yaklaşan" = son ödemesine `UPCOMING_DAYS` (7) gün veya
+  daha az kalan, ödenmemiş kayıtlar.
+
+Mobil uygulamadaki (`Yumurcak-app`) `PaymentFormScreen` / `PaymentListScreen` ile aynı
+veri modelini ve mantığı kullanır.
