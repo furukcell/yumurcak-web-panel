@@ -476,7 +476,12 @@ export default function PaymentsPage() {
       };
 
       if (editingId) {
-        await set(ref(database, `odemeler/${editingId}`), veri);
+        // set() kaydı tamamen değiştirir ve planId/taksitNo/hatirlatmalar gibi alanları siler;
+        // update() sadece formdaki alanları günceller. Son ödeme tarihi değiştiyse
+        // hatırlatma geçmişi sıfırlanır ki yeni tarih için hatırlatma tekrar gitsin.
+        const eskiKayit = odemeler.find((o) => o.id === editingId);
+        const tarihDegisti = (values.sonOdemeTarihi || '') !== (eskiKayit?.sonOdemeTarihi || eskiKayit?.dueDate || '');
+        await update(ref(database, `odemeler/${editingId}`), tarihDegisti ? { ...veri, hatirlatmalar: null } : veri);
       } else {
         await push(ref(database, 'odemeler'), veri);
         if (finalVeliIds.length > 0) {
